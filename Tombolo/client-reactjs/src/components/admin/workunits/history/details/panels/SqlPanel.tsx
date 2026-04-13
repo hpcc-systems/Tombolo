@@ -1,16 +1,21 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Button, Card, Empty, Space, Table, Typography, message } from 'antd';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, Button, Card, Empty, Space, Table, Typography, message, Row, Col, Statistic, Tag } from 'antd';
 import { PlayCircleOutlined, SafetyOutlined, ReloadOutlined, StopOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
+import { formatHours, formatCurrency } from '@tombolo/shared';
 import { apiClient } from '@/services/api';
 import axios from 'axios';
 import { relevantMetrics, forbiddenSqlKeywords } from '@tombolo/shared';
 import Editor, { OnMount } from '@monaco-editor/react';
+import type { Monaco } from '@monaco-editor/react';
 import debounce from 'lodash/debounce';
 import styles from '../../workunitHistory.module.css';
+import { disposeSqlAutocomplete, registerSqlAutocomplete } from '@/components/common/sqlAutocomplete';
 
 const { Text } = Typography;
 
 interface Props {
+  wu: any;
   clusterId: string;
   wuid: string;
   clusterName?: string;
@@ -26,14 +31,13 @@ WHERE 1=1
 ORDER BY TimeElapsed DESC
 LIMIT 100`;
 
-const SqlPanel: React.FC<Props> = ({ clusterId, wuid, clusterName }) => {
+const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
   const storageKey = `wuSql.${clusterId}.${wuid}`;
   const [sql, setSql] = useState(() => localStorage.getItem(storageKey) || DEFAULT_SQL);
   const [executing, setExecuting] = useState(false);
   const [result, setResult] = useState<{ columns: string[]; rows: Record<string, unknown>[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const editorRef = useRef<unknown>(null);
-  const monacoRef = useRef<unknown>(null);
+  const completionProviderRef = useRef<{ dispose: () => void } | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const MIN_TABLE_ROWS = 15;
@@ -142,161 +146,156 @@ const SqlPanel: React.FC<Props> = ({ clusterId, wuid, clusterName }) => {
     return result.columns.map(col => ({ title: col, dataIndex: col, key: col, ellipsis: true }));
   }, [result]);
 
-  const handleEditorMount: OnMount = (editor, monaco) => {
-    editorRef.current = editor;
-    monacoRef.current = monaco;
-
-    const disposable = monaco.languages.registerCompletionItemProvider('sql', {
+  const registerCompletionProvider = useCallback((monaco: Monaco) => {
+    registerSqlAutocomplete({
+      monaco,
+      completionProviderRef,
+      getTables: () => ['work_unit_details'],
+      getColumns: () => SUGGEST_COLUMNS,
       triggerCharacters: ['.', ' ', '\n', '\t'],
-      provideCompletionItems: (model, position) => {
-        const word = model.getWordUntilPosition(position);
-        const range = {
-          startLineNumber: position.lineNumber,
-          endLineNumber: position.lineNumber,
-          startColumn: word.startColumn,
-          endColumn: word.endColumn,
-        };
-
-        const columnSuggestions = SUGGEST_COLUMNS.map(c => ({
-          label: c,
-          kind: monaco.languages.CompletionItemKind.Field,
-          insertText: c,
-          range,
-        }));
-
-        const keywordSuggestions = [
-          'SELECT',
-          'FROM',
-          'WHERE',
-          'AND',
-          'OR',
-          'ORDER BY',
-          'GROUP BY',
-          'LIMIT',
-          'ASC',
-          'DESC',
-          'COUNT',
-          'AVG',
-          'SUM',
-          'MIN',
-          'MAX',
-        ].map(k => ({
-          label: k,
-          kind: monaco.languages.CompletionItemKind.Keyword,
-          insertText: k,
-          range,
-        }));
-
-        const tableSuggestions = [{ label: 'work_unit_details', kind: monaco.languages.CompletionItemKind.Class }].map(
-          t => ({ ...t, insertText: t.label, range })
-        );
-
-        return { suggestions: [...keywordSuggestions, ...tableSuggestions, ...columnSuggestions] };
-      },
     });
+  }, []);
 
-    editor.onDidDispose(() => {
-      try {
-        disposable.dispose();
-      } catch (err) {
-        console.error('Failed to dispose SQL completion provider', err);
-      }
-    });
+  const handleEditorMount: OnMount = (_editor, monaco) => {
+    registerCompletionProvider(monaco);
   };
 
+  useEffect(() => {
+    return () => {
+      disposeSqlAutocomplete(completionProviderRef);
+    };
+  }, []);
+
   return (
-    <Card>
-      <Space direction="vertical" className={styles.fullWidth} size="middle">
-        <Alert
-          type="info"
-          showIcon
-          message={
-            <Space size="small">
-              <SafetyOutlined />
-              <Text strong>Read-only SQL</Text>
+    <Space direction="vertical" size={16} style={{ width: '100%' }}>
+      {/* Job Header */}
+      <Card>
+        <Row justify="space-between" align="middle">
+          <Col flex={1}>
+            <Space direction="vertical" size={4}>
+              <Space size={12} align="center">
+                <Typography.Title level={4} style={{ margin: 0 }}>
+                  {wu?.jobName || wu?.wuId}
+                </Typography.Title>
+                <Tag color={wu?.state === 'completed' ? 'success' : wu?.state === 'failed' ? 'error' : 'processing'}>
+                  {wu?.state?.toUpperCase()}
+                </Tag>
+              </Space>
+              <Typography.Text type="secondary">
+                {wu?.wuId} • {clusterName || wu?.clusterId} • Submitted{' '}
+                {dayjs(wu?.workUnitTimestamp).format('YYYY-MM-DD HH:mm:ss')}
+              </Typography.Text>
             </Space>
-          }
-          description={
-            <span>
-              Only SELECT statements against the <Text code>work_unit_details</Text> table are allowed. Queries are
-              automatically scoped to this workunit (<Text code>{wuid}</Text>) and cluster (
-              <Text code>{clusterName}</Text>), and server-limited to a maximum of 1000 rows.
-            </span>
-          }
-        />
+          </Col>
+          <Col>
+            <Row gutter={16}>
+              <Col>
+                <Statistic title="Total Runtime" value={formatHours(wu?.totalClusterTime)} />
+              </Col>
+              <Col>
+                <Statistic title="Total Cost" value={formatCurrency(wu?.totalCost)} />
+              </Col>
+            </Row>
+          </Col>
+        </Row>
+      </Card>
 
-        <div className={styles.editorContainer}>
-          <Editor
-            height="280px"
-            defaultLanguage="sql"
-            value={sql}
-            onChange={v => setSql(v ?? '')}
-            onMount={handleEditorMount}
-            options={{
-              minimap: { enabled: false },
-              fontSize: 13,
-              wordWrap: 'off',
-              lineNumbers: 'on',
-              scrollBeyondLastLine: false,
-              tabSize: 2,
-              automaticLayout: true,
-              suggestOnTriggerCharacters: true,
-            }}
-          />
-        </div>
-
-        {!lintSql.ok && (
+      {/* SQL Interface */}
+      <Card>
+        <Space direction="vertical" className={styles.fullWidth} size="middle">
           <Alert
-            type="warning"
+            type="info"
             showIcon
-            message="Query blocked by client-side safety checks"
-            description={lintSql.reason}
+            message={
+              <Space size="small">
+                <SafetyOutlined />
+                <Text strong>Read-only SQL</Text>
+              </Space>
+            }
+            description={
+              <span>
+                Only SELECT statements against the <Text code>work_unit_details</Text> table are allowed. Queries are
+                automatically scoped to this workunit (<Text code>{wuid}</Text>) and cluster (
+                <Text code>{clusterName}</Text>), and server-limited to a maximum of 1000 rows.
+              </span>
+            }
           />
-        )}
 
-        {error && <Alert type="error" showIcon message="SQL Error" description={error} />}
+          <div className={styles.editorContainer}>
+            <Editor
+              height="280px"
+              defaultLanguage="sql"
+              beforeMount={registerCompletionProvider}
+              value={sql}
+              onChange={v => setSql(v ?? '')}
+              onMount={handleEditorMount}
+              theme="vs-dark"
+              options={{
+                minimap: { enabled: false },
+                fontSize: 13,
+                wordWrap: 'off',
+                lineNumbers: 'on',
+                scrollBeyondLastLine: false,
+                tabSize: 2,
+                automaticLayout: true,
+                suggestOnTriggerCharacters: true,
+              }}
+            />
+          </div>
 
-        <div className={styles.justifyBetween}>
-          <Space>
-            <Button
-              type="primary"
-              icon={<PlayCircleOutlined />}
-              loading={executing}
-              onClick={runQuery}
-              disabled={executing || !lintSql.ok}>
-              Run
-            </Button>
-            <Button
-              icon={<StopOutlined />}
-              danger
-              disabled={!executing}
-              onClick={() => abortControllerRef.current?.abort()}>
-              Cancel
-            </Button>
-            <Button icon={<ReloadOutlined />} onClick={() => setSql(DEFAULT_SQL)} disabled={executing}>
-              Reset to default
-            </Button>
-          </Space>
-        </div>
-
-        <Card size="small" title="Results" className={styles.resultsCardMarginTop}>
-          {!result?.rows?.length ? (
-            <Empty description="No results" />
-          ) : (
-            <Table
-              size="small"
-              rowKey={(row, i) =>
-                String((row as Record<string, unknown>).id ?? (row as Record<string, unknown>).scopeId ?? i)
-              }
-              dataSource={result.rows}
-              columns={columns}
-              pagination={{ pageSize: 50 }}
-              scroll={{ x: true, y: TABLE_SCROLL_Y }}
+          {!lintSql.ok && (
+            <Alert
+              type="warning"
+              showIcon
+              message="Query blocked by client-side safety checks"
+              description={lintSql.reason}
             />
           )}
-        </Card>
-      </Space>
-    </Card>
+
+          {error && <Alert type="error" showIcon message="SQL Error" description={error} />}
+
+          <div className={styles.justifyBetween}>
+            <Space>
+              <Button
+                type="primary"
+                icon={<PlayCircleOutlined />}
+                loading={executing}
+                onClick={runQuery}
+                disabled={executing || !lintSql.ok}>
+                Run
+              </Button>
+              <Button
+                icon={<StopOutlined />}
+                danger
+                disabled={!executing}
+                onClick={() => abortControllerRef.current?.abort()}>
+                Cancel
+              </Button>
+              <Button icon={<ReloadOutlined />} onClick={() => setSql(DEFAULT_SQL)} disabled={executing}>
+                Reset to default
+              </Button>
+            </Space>
+          </div>
+
+          <Card size="small" title="Results" className={styles.resultsCardMarginTop}>
+            {!result?.rows?.length ? (
+              <Empty description="No results" />
+            ) : (
+              <Table
+                size="small"
+                rowKey={(row, i) =>
+                  String((row as Record<string, unknown>).id ?? (row as Record<string, unknown>).scopeId ?? i)
+                }
+                dataSource={result.rows}
+                columns={columns}
+                pagination={{ pageSize: 50 }}
+                scroll={{ x: true, y: TABLE_SCROLL_Y }}
+              />
+            )}
+          </Card>
+        </Space>
+      </Card>
+    </Space>
   );
 };
 

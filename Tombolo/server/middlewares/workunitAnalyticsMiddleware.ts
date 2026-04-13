@@ -59,10 +59,21 @@ const validateAnalyticsQuery = [
     })
     .bail()
     .custom(value => {
-      // Check for semicolons (multiple statements)
-      if (value.includes(';')) {
+      // Allow at most one statement terminator, and only as the final character
+      const firstSemicolonIndex = value.indexOf(';');
+      if (firstSemicolonIndex === -1) {
+        return true;
+      }
+
+      const lastSemicolonIndex = value.lastIndexOf(';');
+      const isSingleTrailingSemicolon =
+        firstSemicolonIndex === lastSemicolonIndex &&
+        firstSemicolonIndex === value.length - 1;
+
+      if (!isSingleTrailingSemicolon) {
         throw new Error('Multiple statements are not allowed');
       }
+
       return true;
     })
     .bail()
@@ -293,9 +304,20 @@ const sqlValidationRules = {
   },
 
   noMultipleStatements: value => {
-    if (value.includes(';')) {
+    const firstSemicolonIndex = value.indexOf(';');
+    if (firstSemicolonIndex === -1) {
+      return true;
+    }
+
+    const lastSemicolonIndex = value.lastIndexOf(';');
+    const isSingleTrailingSemicolon =
+      firstSemicolonIndex === lastSemicolonIndex &&
+      firstSemicolonIndex === value.length - 1;
+
+    if (!isSingleTrailingSemicolon) {
       throw new Error('Multiple statements are not allowed');
     }
+
     return true;
   },
 

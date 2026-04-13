@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { Spin, Button, message, Alert, Space } from 'antd';
 import { ArrowLeftOutlined, ReloadOutlined } from '@ant-design/icons';
 import workunitsService from '@/services/workunits.service';
+import type { WorkUnit } from '@tombolo/shared';
 import WorkUnitView from './WorkUnitView';
 import styles from '../workunitHistory.module.css';
 
@@ -19,9 +20,19 @@ const WorkUnitDetails: React.FC = () => {
   }, [clusters, clusterId]);
 
   const [loading, setLoading] = useState<boolean>(true);
-  const [wu, setWu] = useState<any>(null);
+  const [wu, setWu] = useState<WorkUnit | null>(null);
   const [details, setDetails] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  const handleBackNavigation = () => {
+    // Use browser's back functionality to return to previous page
+    if (history.length > 1) {
+      history.goBack();
+    } else {
+      // Fallback if no history (e.g., direct URL access)
+      history.push('/workunits/history');
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -92,8 +103,8 @@ const WorkUnitDetails: React.FC = () => {
               <Button size="small" onClick={fetchData} icon={<ReloadOutlined />}>
                 Retry
               </Button>
-              <Button size="small" onClick={() => history.push('/workunits/history')}>
-                Back to List
+              <Button size="small" onClick={handleBackNavigation}>
+                Back
               </Button>
             </Space>
           }
@@ -111,8 +122,8 @@ const WorkUnitDetails: React.FC = () => {
           type="warning"
           showIcon
           action={
-            <Button size="small" onClick={() => history.push('/workunits/history')}>
-              Back to List
+            <Button size="small" onClick={handleBackNavigation}>
+              Back
             </Button>
           }
         />
@@ -123,22 +134,13 @@ const WorkUnitDetails: React.FC = () => {
   return (
     <div>
       <div className={styles.headerBar}>
-        <Space wrap size="small">
-          <Button
-            size="small"
-            className={styles.compactBtn}
-            icon={<ArrowLeftOutlined />}
-            onClick={() => history.push('/workunits/history')}>
-            Back to Workunit History
-          </Button>
-          <Button size="small" className={styles.compactBtn} icon={<ReloadOutlined />} onClick={fetchData}>
-            Refresh
-          </Button>
-        </Space>
+        <Button size="small" className={styles.compactBtn} icon={<ArrowLeftOutlined />} onClick={handleBackNavigation}>
+          Back
+        </Button>
       </div>
 
       <div className={styles.contentPadding}>
-        <WorkUnitView wu={wu} details={details} clusterName={clusterName} />
+        <WorkUnitView wu={wu} details={details} clusterName={clusterName} onRefresh={fetchData} />
       </div>
     </div>
   );

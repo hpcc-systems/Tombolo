@@ -285,7 +285,30 @@ Integration-specific environment variables should only be configured when the re
 
   Leave this variable unset unless you are using the HPCC Tools integration. When unset, Tombolo uses the secure SSH default that is designed for containerized deployments.
 
-### 12. Test Configuration
+---
+
+### 12. Jobs Configuration
+
+- **JOBS_SERVICE_URL**
+  Base URL used by the server package to call the jobs package for manual and scheduled job operations.
+
+  Local development example:
+  `http://localhost:8678`
+
+  Docker example:
+  `http://jobs:8678`
+
+  Ensure this URL is reachable from the server process.
+
+- **JOBS_API_KEY**
+  Shared API key used to authenticate requests from the server package to the jobs package.
+
+  This key must be generated before use. You can generate a secure key with OpenSSL:
+  `openssl rand -hex 32`
+
+  Set the same generated value in every environment where the server and jobs packages communicate.
+
+### 13. Test Configuration
 
 - **RATE_LIMIT_REQUEST_MAX**
   The amount of requests per 15 minutes that will rate limit a user.

@@ -3,6 +3,7 @@
   "ui": "tui",
   "tasks": {
     "dev": {
+      "description": "Runs all packages in the repo in dev mode with hot reloading",
       "cache": false,
       "persistent": true,
       "dependsOn": ["^esm:build", "^db:migrate", "^db:seed"]
@@ -35,10 +36,12 @@
       "cache": false
     },
     "db:migrate": {
+      "description": "Runs db migrations with sequelize",
       "cache": false,
       "dependsOn": ["^esm:build"]
     },
     "db:seed": {
+      "description": "Seeds the database with sequelize",
       "cache": false,
       "dependsOn": ["db:migrate"]
     },
@@ -49,6 +52,7 @@
       "cache": false
     },
     "esm:build": {
+      "description": "transpiles the db, core and shared package for use in dev mode",
       "dependsOn": ["^esm:build"],
       "cache": true,
       "outputs": ["dist/**"]

@@ -29,7 +29,7 @@
   },
   "scripts": {
     "build": "tsup",
-    "esm:build": "tsup",
+    "esm:build": "tsup --no-clean",
     "typecheck": "tsc --noEmit",
     "build:check": "pnpm typecheck && pnpm build",
     "dev": "tsup --watch --no-clean --config tsup.config.dev.js",

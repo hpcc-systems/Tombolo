@@ -1,12 +1,16 @@
 import sequelize from 'sequelize';
 import express, { Request, Response } from 'express';
+import axios from 'axios';
+import fs from 'fs';
 
 import { validate } from '../../middlewares/validateRequestBody.js';
+import { validateUserRole } from '../../middlewares/rbacMiddleware.js';
 import {
   validateIntegrationDetails,
   validateToggleStatus,
   validateUpdateIntegrationSettings,
 } from '../../middlewares/integrationsMiddleware.js';
+import role from '../../config/roleTypes.js';
 import logger from '../../config/logger.js';
 import { sendError, sendSuccess } from '../../utils/response.js';
 import { Integration, IntegrationMapping } from '@tombolo/db';
@@ -159,6 +163,77 @@ router.put(
     } catch (err) {
       logger.error('integrations/read updateIntegrationSettings: ', err);
       return sendError(res, 'Failed to update integration details');
+    }
+  }
+);
+
+router.post(
+  '/hpccTools/manualSync/:id',
+  validateUserRole([role.OWNER, role.ADMIN]),
+  validate(validateIntegrationDetails),
+  async (req: Request, res: Response) => {
+    try {
+      const mapping = await IntegrationMapping.findOne({
+        where: { id: req.params.id },
+        include: [
+          {
+            model: Integration,
+            as: 'integration',
+            required: true,
+            where: { name: 'HPCC-Tools' },
+            attributes: ['id', 'name'],
+          },
+        ],
+      });
+
+      if (!mapping) {
+        return sendError(
+          res,
+          'HPCC Tools integration mapping not found for this application',
+          404
+        );
+      }
+
+      const defaultJobsServiceUrl = fs.existsSync('/.dockerenv')
+        ? 'http://jobs:8678'
+        : 'http://localhost:8678';
+      const jobsServiceUrl =
+        process.env.JOBS_SERVICE_URL || defaultJobsServiceUrl;
+      const jobsApiKey =
+        process.env.JOBS_API_KEY || process.env.BULL_BOARD_API_KEY;
+
+      const response = await axios.post(
+        `${jobsServiceUrl}/queue/hpcc-tools/sync`,
+        {
+          integrationMappingId: req.params.id,
+          trigger: 'manual',
+        },
+        {
+          headers: jobsApiKey ? { 'x-api-key': jobsApiKey } : undefined,
+          timeout: 15_000,
+        }
+      );
+
+      return sendSuccess(res, response.data, 'HPCC Tools sync job queued', 202);
+    } catch (err) {
+      logger.error('integrations/read hpccTools manualSync: ', err);
+
+      if (axios.isAxiosError(err)) {
+        const status = err.response?.status;
+        if (status === 401 || status === 403) {
+          return sendError(res, 'Jobs service authorization failed', 502);
+        }
+
+        if (status) {
+          return sendError(
+            res,
+            `Jobs service rejected manual sync request with status ${status}`,
+            502
+          );
+        }
+      }
+
+      return sendError(res, 'Failed to queue HPCC Tools sync job');
     }
   }
 );

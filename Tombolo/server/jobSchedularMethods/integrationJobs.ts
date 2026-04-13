@@ -22,8 +22,8 @@ async function createIntegrationCreationJob(this: any): Promise<void> {
     name: uniqueJobName,
     path: resolveJobPath(defaultDistPath),
   };
-  this.bree.add(job);
-  this.bree.start(uniqueJobName);
+  await this.bree.add(job);
+  await this.bree.start(uniqueJobName);
   logger.info('📈 INTEGRATION CREATION JOB STARTED ...');
 }
 

@@ -143,7 +143,7 @@ class JobScheduler {
         }
 
         if (message?.action === 'remove') {
-          this.bree.remove(worker.name);
+          await this.bree.remove(worker.name);
           logger.info(`Job removed:  ${workerName}`);
         }
       },
@@ -181,7 +181,7 @@ class JobScheduler {
     return logBreeJobs.call(this);
   }
 
-  createNewBreeJob({
+  async createNewBreeJob({
     uniqueJobName,
     cron,
     jobfileName,
@@ -221,8 +221,8 @@ class JobScheduler {
     jobId?: string;
     title?: string;
     jobExecutionGroupId?: string;
-  }): any {
-    return createNewBreeJob.call(this, {
+  }): Promise<any> {
+    return await createNewBreeJob.call(this, {
       uniqueJobName,
       cron,
       jobfileName,
@@ -265,12 +265,12 @@ class JobScheduler {
     return await stopAllJobs.call(this);
   }
 
-  startJob(jobName: string): any {
-    return startJob.call(this, jobName);
+  async startJob(jobName: string): Promise<any> {
+    return await startJob.call(this, jobName);
   }
 
-  startAllJobs(): any {
-    return startAllJobs.call(this);
+  async startAllJobs(): Promise<any> {
+    return await startAllJobs.call(this);
   }
 
   // Job that fetches workunit info

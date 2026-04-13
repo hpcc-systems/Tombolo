@@ -12,7 +12,7 @@ const SUBMIT_LOGICAL_FILEMONITORING_FILE_NAME =
   'submitLogicalFileMonitoring.js';
 // const FILE_MONITORING = `fileMonitoringPoller.${JOB_EXTENSION}`;
 
-function createLandingZoneFileMonitoringBreeJob(
+async function createLandingZoneFileMonitoringBreeJob(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   this: any,
   {
@@ -20,7 +20,7 @@ function createLandingZoneFileMonitoringBreeJob(
     name,
     cron,
   }: { filemonitoring_id: string; name: string; cron: string }
-): void {
+): Promise<void> {
   const defaultDistPath = join(
     __dirname,
     '..',
@@ -37,10 +37,10 @@ function createLandingZoneFileMonitoringBreeJob(
       workerData: { filemonitoring_id },
     },
   };
-  this.bree.add(job);
+  await this.bree.add(job);
 }
 
-function createLogicalFileMonitoringBreeJob(
+async function createLogicalFileMonitoringBreeJob(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   this: any,
   {
@@ -48,7 +48,7 @@ function createLogicalFileMonitoringBreeJob(
     name,
     cron,
   }: { filemonitoring_id: string; name: string; cron: string }
-): void {
+): Promise<void> {
   const defaultDistPath2 = join(
     __dirname,
     '..',
@@ -65,7 +65,7 @@ function createLogicalFileMonitoringBreeJob(
       workerData: { filemonitoring_id },
     },
   };
-  this.bree.add(job);
+  await this.bree.add(job);
 }
 
 async function scheduleFileMonitoringBreeJob(
@@ -84,13 +84,13 @@ async function scheduleFileMonitoringBreeJob(
   }
 ): Promise<void> {
   if (monitoringAssetType === 'landingZoneFile') {
-    createLandingZoneFileMonitoringBreeJob.call(this, {
+    await createLandingZoneFileMonitoringBreeJob.call(this, {
       filemonitoring_id,
       name,
       cron,
     });
   } else if (monitoringAssetType === 'logicalFile') {
-    createLogicalFileMonitoringBreeJob.call(this, {
+    await createLogicalFileMonitoringBreeJob.call(this, {
       filemonitoring_id,
       name,
       cron,

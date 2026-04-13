@@ -45,7 +45,7 @@ async function startLzFileMovementMonitoring(this: any): Promise<void> {
   try {
     const jobName =
       'landing-zone-file-movement-monitoring' + new Date().getTime();
-    this.bree.add({
+    await this.bree.add({
       name: jobName,
       // interval: '20s', // For development
       interval: humanReadableIntervalForJobMonitoring,
@@ -67,7 +67,7 @@ async function startLzFileMovementMonitoring(this: any): Promise<void> {
         },
       },
     });
-    this.bree.start(jobName);
+    await this.bree.start(jobName);
     logger.info('Landing zone file movement job initialized ...');
   } catch (err) {
     logger.error(err.message);
@@ -79,7 +79,7 @@ async function startLzFileMovementMonitoring(this: any): Promise<void> {
 async function startLzFileCountMonitoring(this: any): Promise<void> {
   try {
     const jobName = 'landing-zone-file-count-monitoring' + new Date().getTime();
-    this.bree.add({
+    await this.bree.add({
       name: jobName,
       // interval: '20s', // For development
       interval: humanReadableIntervalForFileCountMonitoring,
@@ -101,7 +101,7 @@ async function startLzFileCountMonitoring(this: any): Promise<void> {
         },
       },
     });
-    this.bree.start(jobName);
+    await this.bree.start(jobName);
     logger.info('Landing zone file count job initialized ...');
   } catch (err) {
     logger.error(err.message);
@@ -114,7 +114,7 @@ async function startLzSpaceUsageMonitoring(this: any): Promise<void> {
   try {
     const jobName =
       'landing-zone-space-usage-monitoring' + new Date().getTime();
-    this.bree.add({
+    await this.bree.add({
       name: jobName,
       // interval: '20s', // For development
       interval: humanReadableIntervalForSpaceUsageMonitoring,
@@ -136,7 +136,7 @@ async function startLzSpaceUsageMonitoring(this: any): Promise<void> {
         },
       },
     });
-    this.bree.start(jobName);
+    await this.bree.start(jobName);
     logger.info('Landing zone space usage job initialized ...');
   } catch (err) {
     logger.error(err.message);

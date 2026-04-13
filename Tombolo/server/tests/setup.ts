@@ -40,6 +40,14 @@ vi.mock('@tombolo/db', () => {
     Integration: {
       findOne: vi.fn(),
     },
+    IntegrationMapping: {
+      findAll: vi.fn(),
+      findOne: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      destroy: vi.fn(),
+      restore: vi.fn(),
+    },
     AsrDomain: {
       findOne: vi.fn(),
       findByPk: vi.fn(),
