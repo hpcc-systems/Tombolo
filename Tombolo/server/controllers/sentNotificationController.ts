@@ -4,14 +4,14 @@ import { Op } from 'sequelize';
 
 //Local imports
 import logger from '../config/logger.js';
-import { SentNotification, sequelize } from '../models/index.js';
+import { SentNotification, sequelize } from '@tombolo/db';
 import emailNotificationHtmlCode from '../utils/emailNotificationHtmlCode.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 
 async function createSentNotification(req: Request, res: Response) {
   try {
     const response = await SentNotification.create(
-      { ...req.body, createdBy: (req as any).user.id },
+      { ...req.body, createdBy: req.user.id },
       { raw: true }
     );
     return sendSuccess(
@@ -112,8 +112,7 @@ async function updateSentNotifications(req: Request, res: Response) {
 
       // Organize all notifications to be updated the way they are to be updated
       notificationsToBeUpdated.forEach(n => {
-        let updatedNotification;
-        updatedNotification = {
+        const updatedNotification = {
           ...req.body,
           id: n.id,
           metaData: {
@@ -134,7 +133,7 @@ async function updateSentNotifications(req: Request, res: Response) {
     if (allNotificationToBeUpdated.length > 0) {
       const transaction = await sequelize.transaction();
       try {
-        for (let item of allNotificationToBeUpdated) {
+        for (const item of allNotificationToBeUpdated) {
           await SentNotification.update(item, { where: { id: item.id } });
         }
         await transaction.commit();

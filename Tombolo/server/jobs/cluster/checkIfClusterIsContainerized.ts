@@ -1,8 +1,8 @@
 import { logOrPostMessage } from '../jobUtils.js';
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 
 // Local imports
-import { Cluster } from '../../models/index.js';
+import { Cluster } from '@tombolo/db';
 import { decryptString } from '@tombolo/shared';
 
 (async () => {
@@ -25,7 +25,7 @@ import { decryptString } from '@tombolo/shared';
     });
 
     // Make call to each cluster
-    for (let clusterInfo of clusters) {
+    for (const clusterInfo of clusters) {
       try {
         // Decrypt password if hash exists
         let password = null;
@@ -48,7 +48,7 @@ import { decryptString } from '@tombolo/shared';
         const endpoint = `${clusterInfo.thor_host}:${clusterInfo.thor_port}/WsSMC/GetBuildInfo.json`;
 
         // Prepare axios config
-        const axiosConfig: any = {
+        const axiosConfig: AxiosRequestConfig = {
           method: 'GET',
           url: endpoint,
           timeout: 30000, // 30 second timeout

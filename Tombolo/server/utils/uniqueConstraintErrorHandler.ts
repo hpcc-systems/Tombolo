@@ -10,7 +10,7 @@ function uniqueConstraintErrorHandler(
   err: any,
   defaultMessage: string
 ): ErrorHandlerResult {
-  let result: ErrorHandlerResult = {
+  const result: ErrorHandlerResult = {
     responseObject: { success: false, message: defaultMessage },
     statusCode: 500,
   };

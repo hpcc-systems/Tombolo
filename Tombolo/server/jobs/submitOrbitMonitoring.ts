@@ -5,7 +5,7 @@ import {
   OrbitMonitoring,
   OrbitBuilds,
   MonitoringNotification,
-} from '../models/index.js';
+} from '@tombolo/db';
 import { v4 as uuidv4 } from 'uuid';
 import {
   orbitMonitoringEmailBody,
@@ -78,8 +78,8 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
       notifyCondition.includes('updateIntervalDays')
     ) {
       //update interval is in days, so multiply by 86400000 to get number of milliseconds between updates
-      let updateInterval = monitoringCondition?.updateInterval;
-      let updateIntervalDays = monitoringCondition?.updateIntervalDays;
+      // let updateInterval = monitoringCondition?.updateInterval;
+      // let updateIntervalDays = monitoringCondition?.updateIntervalDays;
 
       // TODO: This code block references undefined variables 'modified' and 'newModified'
       // Commenting out until the proper implementation is available
@@ -148,7 +148,7 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
       // update orbit monitoring last monitored date
       const date = new Date();
       const currentTimeStamp = date.getTime();
-      let metaData = orbitMonitoringDetails.metaData;
+      const metaData = orbitMonitoringDetails.metaData;
       metaData.lastMonitored = currentTimeStamp;
 
       await OrbitMonitoring.update({ metaData }, { where: { id } });
@@ -212,7 +212,7 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
 
     // notifications.channel === "eMail"
 
-    for (let notification of notifications) {
+    for (const notification of notifications) {
       if (notification.channel === 'eMail') {
         emailNotificationDetails = notification;
       }
@@ -223,7 +223,7 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
 
     const sentNotifications: any[] = [];
 
-    let notificationDetails: any = {};
+    const notificationDetails: any = {};
 
     if (metaDifference.length > 0) {
       // Note - this does not cover Orbit Build size not in range
@@ -297,11 +297,11 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
     if (teamsNotificationDetails && notificationDetails.text) {
       const { recipients } = teamsNotificationDetails;
 
-      for (let recipient of recipients) {
-        let title = 'Orbit Monitoring alert has been triggered by Tombolo';
+      for (const recipient of recipients) {
+        const title = 'Orbit Monitoring alert has been triggered by Tombolo';
 
         try {
-          let body = orbitMonitoringMessageCard(
+          const body = orbitMonitoringMessageCard(
             title,
             buildDetails,
             notification_id
@@ -340,6 +340,10 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
   } catch (err) {
     logger.error('submitOrbitMonitoring - err: ', err);
   } finally {
-    parentPort ? parentPort.postMessage('done') : process.exit(0);
+    if (parentPort) {
+      parentPort.postMessage('done');
+    } else {
+      process.exit(0);
+    }
   }
 })();

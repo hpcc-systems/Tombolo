@@ -11,7 +11,7 @@ import {
   MonitoringLog,
   NotificationQueue,
   JobMonitoringData,
-} from '../../models/index.js';
+} from '@tombolo/db';
 import { decryptString } from '@tombolo/shared';
 import {
   matchJobName,
@@ -154,7 +154,7 @@ const monitoring_name = 'Job Monitoring';
     /* Fetch basic information for all work units per cluster */
     const wuBasicInfoByCluster = {};
     const failedToReachClusters = [];
-    for (let clusterInfo of clustersInfo) {
+    for (const clusterInfo of clustersInfo) {
       try {
         const wuService = new WorkunitsService(
           getClusterOptions(
@@ -171,7 +171,7 @@ const monitoring_name = 'Job Monitoring';
         const clusterExtended = clusterInfo as any;
         const startTime = clusterExtended.startTime.toISOString();
 
-        let {
+        const {
           Workunits: { ECLWorkunit },
         } = await wuService.WUQuery({
           StartDate: startTime,
@@ -192,7 +192,7 @@ const monitoring_name = 'Job Monitoring';
 
     // If no new workunits are found for any clusters, exit
     let newWorkUnitsFound = false;
-    for (let keys in wuBasicInfoByCluster) {
+    for (const keys in wuBasicInfoByCluster) {
       if (wuBasicInfoByCluster[keys].length > 0) {
         newWorkUnitsFound = true;
       } else {
@@ -207,7 +207,7 @@ const monitoring_name = 'Job Monitoring';
         id => !failedToReachClusters.includes(id)
       );
 
-      for (let id of scanned_clusters) {
+      for (const id of scanned_clusters) {
         // grab existing metaData
         const log = await MonitoringLog.findOne({
           where: { monitoring_type_id: monitoringTypeId, cluster_id: id },
@@ -256,7 +256,7 @@ const monitoring_name = 'Job Monitoring';
     const historyStoringConditions = ['TimeSeriesAnalysis'];
     const jobMonitoringObj = {}; // For easy access late
 
-    for (let monitoring of jobMonitorings) {
+    for (const monitoring of jobMonitorings) {
       jobMonitoringObj[monitoring.id] = monitoring;
       const {
         monitoringName,
@@ -280,7 +280,7 @@ const monitoring_name = 'Job Monitoring';
       try {
         const cluster = clustersInfo.find(cluster => cluster.id === clusterId);
 
-        let clusterWUs = wuBasicInfoByCluster[clusterId];
+        const clusterWUs = wuBasicInfoByCluster[clusterId];
 
         const matchedWus = clusterWUs.filter(wu => {
           return matchJobName({
@@ -304,13 +304,13 @@ const monitoring_name = 'Job Monitoring';
     const intermediateStateJobs = [];
 
     // Check if any jobs are in undesired state
-    for (let jmId in jmWithNewWUs) {
+    for (const jmId in jmWithNewWUs) {
       const notificationConditions =
         jobMonitoringObj[jmId]?.metaData?.notificationMetaData
           ?.notificationCondition || [];
       // Iterating over an object
       const wus = jmWithNewWUs[jmId];
-      for (let wu of wus) {
+      for (const wu of wus) {
         const isJobInIntermediateState = intermediateStates.includes(
           wu.State.toLowerCase()
         );
@@ -381,11 +381,11 @@ const monitoring_name = 'Job Monitoring';
     }
 
     // Create notifications for failed state jobs
-    for (let failedJob of failedStateJobs) {
+    for (const failedJob of failedStateJobs) {
       const { jmId, ...wu } = failedJob;
       const jobMonitoring = jobMonitoringObj[jmId];
       const {
-        monitoringName,
+        _monitoringName,
         jobName,
         clusterId,
         metaData: {
@@ -508,7 +508,7 @@ const monitoring_name = 'Job Monitoring';
     );
 
     // Update monitoring logs
-    for (let id of scannedClusters) {
+    for (const id of scannedClusters) {
       try {
         //Get existing metadata
         const log = await MonitoringLog.findOne({

@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import type { Transaction } from 'sequelize';
 import logger from '../config/logger.js';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
@@ -10,7 +11,7 @@ import {
   AccountVerificationCode,
   NotificationQueue,
   sequelize,
-} from '../models/index.js';
+} from '@tombolo/db';
 import { trimURL, checkPasswordSecurityViolations } from '../utils/authUtil.js';
 
 // Main controller function
@@ -180,6 +181,7 @@ const createInstanceSettingFirstRun = async (req: Request, res: Response) => {
 };
 
 // Helper: Send SSE updates to the client
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sendUpdate = (res: Response, data: any) => {
   res.write(`data: ${JSON.stringify(data)}\n\n`);
   res.flush();
@@ -193,7 +195,7 @@ const createUser = async (
     email,
     password,
   }: { firstName: string; lastName: string; email: string; password: string },
-  transaction: any
+  transaction: Transaction
 ) => {
   const errors = checkPasswordSecurityViolations({
     password: password,
@@ -237,7 +239,7 @@ const createUser = async (
 };
 
 // Helper: Assign owner role
-const assignOwnerRole = async (userId: string, transaction: any) => {
+const assignOwnerRole = async (userId: string, transaction: Transaction) => {
   const { id: ownerId } = await RoleType.findOne({
     where: { roleName: 'owner' },
   });
@@ -258,7 +260,7 @@ const manageInstanceSettings = async (
     userId,
     description,
   }: { name: string; userId: string; description: string },
-  transaction: any
+  transaction: Transaction
 ) => {
   await InstanceSettings.destroy({ where: {}, transaction });
   await InstanceSettings.create(
@@ -277,7 +279,16 @@ const manageInstanceSettings = async (
 };
 
 // Helper: Send verification email
-const sendVerificationEmail = async (user: any, transaction: any) => {
+type VerificationEmailUser = {
+  id: string;
+  firstName: string;
+  email: string;
+};
+
+const sendVerificationEmail = async (
+  user: VerificationEmailUser,
+  transaction: Transaction
+) => {
   let verificationCode = uuidv4();
   const notificationId = uuidv4();
 

@@ -408,6 +408,9 @@ importers:
       '@hpcc-js/comms':
         specifier: 'catalog:'
         version: 3.15.4
+      '@tombolo/core':
+        specifier: workspace:*
+        version: link:../core
       '@tombolo/db':
         specifier: workspace:*
         version: link:../db
@@ -532,6 +535,9 @@ importers:
       '@types/uuid':
         specifier: 'catalog:'
         version: 8.3.4
+      '@types/xml2js':
+        specifier: 0.4.14
+        version: 0.4.14
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 4.1.2(vitest@4.1.2(@types/node@24.12.2)(jsdom@29.0.1(@noble/hashes@1.8.0))(vite@8.0.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/node@24.12.2)(esbuild@0.27.7)(tsx@4.21.0)))
@@ -1992,6 +1998,9 @@ packages:
 
   '@types/validator@13.15.10':
     resolution: {integrity: sha512-T8L6i7wCuyoK8A/ZeLYt1+q0ty3Zb9+qbSSvrIVitzT3YjZqkTZ40IbRsPanlB4h1QB3JVL1SYCdR6ngtFYcuA==}
+
+  '@types/xml2js@0.4.14':
+    resolution: {integrity: sha512-4YnrRemBShWRO2QjvUin8ESA41rH+9nQGLUGZV/1IDhi3SL9OhdpNC/MrulTWuptXKwhx/aDxE7toV0f/ypIXQ==}
 
   '@typescript-eslint/eslint-plugin@8.58.0':
     resolution: {integrity: sha512-RLkVSiNuUP1C2ROIWfqX+YcUfLaSnxGE/8M+Y57lopVwg9VTYYfhuz15Yf1IzCKgZj6/rIbYTmJCUSqr76r0Wg==}
@@ -6965,6 +6974,10 @@ snapshots:
   '@types/uuid@8.3.4': {}
 
   '@types/validator@13.15.10': {}
+
+  '@types/xml2js@0.4.14':
+    dependencies:
+      '@types/node': 24.12.2
 
   '@typescript-eslint/eslint-plugin@8.58.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4)(typescript@5.9.3))(eslint@9.39.4)(typescript@5.9.3)':
     dependencies:

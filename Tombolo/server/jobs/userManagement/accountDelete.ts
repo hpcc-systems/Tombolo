@@ -4,12 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 //Local Imports
 import { logOrPostMessage } from '../jobUtils.js';
-import {
-  User,
-  UserRole,
-  RoleType,
-  NotificationQueue,
-} from '../../models/index.js';
+import { User, UserRole, RoleType, NotificationQueue } from '@tombolo/db';
 import { trimURL, deleteUser } from '../../utils/authUtil.js';
 import { accountDeleteAlertDaysForUser } from '../../config/monitorings.js';
 
@@ -101,7 +96,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
 
     for (const user of filteredUsers) {
       //pull out the internal user object for easier use below
-      let userInternal = user.dataValues;
+      const userInternal = user.dataValues;
       const lastLoginAt = userInternal.lastLoginAt;
       const daysToExpiry =
         Math.floor(
@@ -123,7 +118,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
             ' days of account deletion due to inactivity.',
         });
 
-        let version = 'first';
+        const version = 'first';
         await updateUserAndSendNotification(user, daysToExpiry, version);
       }
 
@@ -141,7 +136,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
             daysToExpiry +
             ' days of account deletion due to inactivity.',
         });
-        let version = 'second';
+        const version = 'second';
         await updateUserAndSendNotification(user, daysToExpiry, version);
       }
       if (
@@ -159,7 +154,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
             ' days of account deletion due to inactivity',
         });
 
-        let version = 'third';
+        const version = 'third';
         await updateUserAndSendNotification(user, daysToExpiry, version);
       }
 

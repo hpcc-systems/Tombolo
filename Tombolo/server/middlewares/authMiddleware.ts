@@ -13,7 +13,7 @@ import jwt from 'jsonwebtoken';
 import { sendError } from '../utils/response.js';
 
 import logger from '../config/logger.js';
-import { User } from '../models/index.js';
+import { User } from '@tombolo/db';
 
 // Validate registration payload
 const validateNewUserPayload = [
@@ -74,7 +74,7 @@ const verifyValidTokenExists = (
     jwt.verify(accessToken, process.env.JWT_SECRET!);
 
     // Attach token to req object for further processing in the controller
-    (req as any).accessToken = accessToken;
+    req.accessToken = accessToken;
     next(); // Proceed to the controller
   } catch (err: any) {
     logger.error('Authorization: Invalid or expired access token', err.message);
@@ -135,7 +135,7 @@ const validateRefreshTokenRequest = (
   }
 
   // Attach token to req object for controller processing
-  (req as any).accessToken = token;
+  req.accessToken = token;
   next();
 };
 

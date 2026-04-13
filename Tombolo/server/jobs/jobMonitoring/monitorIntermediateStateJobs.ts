@@ -10,7 +10,7 @@ import {
   MonitoringType,
   MonitoringLog,
   JobMonitoringData,
-} from '../../models/index.js';
+} from '@tombolo/db';
 import { decryptString } from '@tombolo/shared';
 
 import {
@@ -132,7 +132,7 @@ import { getClusterOptions } from '../../utils/getClusterOptions.js';
         const clusterDetail = clustersInfoObj[clusterId];
         const {
           Wuid,
-          jobName,
+          _jobName,
           jobMonitoringData: {
             id: jobMonitoringId,
             applicationId,
@@ -424,7 +424,7 @@ import { getClusterOptions } from '../../utils/getClusterOptions.js';
     }
 
     // Insert notification in queue
-    for (let notification of notificationsToBeQueued) {
+    for (const notification of notificationsToBeQueued) {
       await NotificationQueue.create(notification);
     }
 
@@ -441,18 +441,18 @@ import { getClusterOptions } from '../../utils/getClusterOptions.js';
     }
 
     //Remove wu that are not longer in intermediate state.
-    for (let log of monitoringLogs) {
+    for (const log of monitoringLogs) {
       try {
         const { id, metaData } = log;
         const { wuInIntermediateState = [] } = metaData;
 
         // Remove completed jobs
-        let wuStillInIntermediateState = wuInIntermediateState.filter(
+        const wuStillInIntermediateState = wuInIntermediateState.filter(
           wu => !wuToStopMonitoring.includes(wu.Wuid)
         );
 
         // If state of intermediate WU has changed, update
-        for (let wu of wuStillInIntermediateState) {
+        for (const wu of wuStillInIntermediateState) {
           if (wuWithNewIntermediateState[wu.Wuid]) {
             wu.State = wuWithNewIntermediateState[wu.Wuid];
           }

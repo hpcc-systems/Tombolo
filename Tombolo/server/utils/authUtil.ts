@@ -23,7 +23,7 @@ import {
   InstanceSettings,
   NotificationQueue,
   AccountVerificationCode,
-} from '../models/index.js';
+} from '@tombolo/db';
 import { generateToken } from '../middlewares/csrfMiddleware.js';
 
 const csrfHeaderName = 'x-csrf-token';
@@ -201,9 +201,9 @@ const getSupportContactEmails = async (): Promise<string[]> => {
   // Get Instance Setting
   const instanceSetting = await InstanceSettings.findOne({ raw: true });
 
-  let supportEmailRecipientsEmail =
+  const supportEmailRecipientsEmail =
     instanceSetting.metaData.supportEmailRecipients || [];
-  let supportEmailRecipientsRoles =
+  const supportEmailRecipientsRoles =
     instanceSetting.metaData.supportEmailRecipientsRoles || [];
   const supportRolesEmail = [];
 
@@ -249,9 +249,9 @@ const getAccessRequestContactEmails = async (): Promise<string[]> => {
   // Get Instance Setting
   const instanceSetting = await InstanceSettings.findOne({ raw: true });
 
-  let accessRequestEmailRecipientsEmail =
+  const accessRequestEmailRecipientsEmail =
     instanceSetting.metaData.accessRequestEmailRecipientsEmail || [];
-  let accessRequestEmailRecipientsRoles =
+  const accessRequestEmailRecipientsRoles =
     instanceSetting.metaData.accessRequestEmailRecipientsRoles || [];
   const accessRequestRolesEmail = [];
 
@@ -395,7 +395,7 @@ const checkPasswordSecurityViolations = ({
 
 const setPreviousPasswords = async (user: any): Promise<any> => {
   //get existing previous passwords
-  let previousPasswords = user.metaData.previousPasswords || [];
+  const previousPasswords = user.metaData.previousPasswords || [];
 
   //add current password to the list
   previousPasswords.push(user.hash);

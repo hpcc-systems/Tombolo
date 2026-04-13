@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { Request, Response } from 'express';
 import axios from 'axios';
+import { getCluster } from '@tombolo/core';
 import {
-  getCluster,
   getClusterAuth,
   getSuperFiles,
   getSuperFile,
@@ -9,7 +11,7 @@ import {
   logicalFileDetails,
   getDirectories,
 } from '../utils/hpcc-util.js';
-import { Cluster } from '../models/index.js';
+import { Cluster } from '@tombolo/db';
 import { DFUService, WorkunitsService, TopologyService } from '@hpcc-js/comms';
 import lodash from 'lodash';
 
@@ -34,13 +36,13 @@ async function fileSearch(req: Request, res: Response) {
   try {
     let results = [];
 
-    let clusterAuth = getClusterAuth(cluster);
-    let contentType = req.body.indexSearch ? 'key' : '';
-    let dfuService = new DFUService(
+    const clusterAuth = getClusterAuth(cluster);
+    const contentType = req.body.indexSearch ? 'key' : '';
+    const dfuService = new DFUService(
       getClusterOptions(
         {
           baseUrl: cluster.thor_host + ':' + cluster.thor_port,
-          userID: clusterAuth ? clusterAuth.user : '',
+          userID: clusterAuth ? clusterAuth.username : '',
           password: clusterAuth ? clusterAuth.password : '',
         },
         cluster.allowSelfSigned
@@ -68,7 +70,7 @@ async function fileSearch(req: Request, res: Response) {
       response.DFULogicalFiles.DFULogicalFile &&
       response.DFULogicalFiles.DFULogicalFile.length > 0
     ) {
-      let searchResults = response.DFULogicalFiles.DFULogicalFile;
+      const searchResults = response.DFULogicalFiles.DFULogicalFile;
       searchResults.forEach(logicalFile => {
         results.push({
           text: logicalFile.Name,
@@ -117,7 +119,7 @@ async function superfileSearch(req: Request, res: Response) {
       logicalFileName = '*' + req.body.keyword + '*';
     }
 
-    let superfile = await getSuperFiles(req.body.clusterid, logicalFileName);
+    const superfile = await getSuperFiles(req.body.clusterid, logicalFileName);
 
     return sendSuccess(res, superfile);
   } catch (err) {
@@ -145,12 +147,12 @@ async function querySearch(req: Request, res: Response) {
 
   try {
     let querySearchAutoComplete = [];
-    let clusterAuth = getClusterAuth(cluster);
-    let wsWorkunits = new WorkunitsService(
+    const clusterAuth = getClusterAuth(cluster);
+    const wsWorkunits = new WorkunitsService(
       getClusterOptions(
         {
           baseUrl: cluster.thor_host + ':' + cluster.thor_port,
-          userID: clusterAuth ? clusterAuth.user : '',
+          userID: clusterAuth ? clusterAuth.username : '',
           password: clusterAuth ? clusterAuth.password : '',
           type: 'get',
         },
@@ -195,7 +197,7 @@ async function jobSearch(req: Request, res: Response) {
 
     //If no * add to start and end
     // If there are one or more astrik leave as they are
-    let jobName = keyword.includes('*') ? keyword : `*${keyword}*`;
+    const jobName = keyword.includes('*') ? keyword : `*${keyword}*`;
     const response = await wuService.WUQuery({
       Jobname: jobName,
       Cluster: clusterType,
@@ -264,11 +266,16 @@ async function getLogicalFileDetails(req: Request, res: Response) {
       clusterid as string
     );
     // Removing unnecessary data before sending to client
-    details.DFUFilePartsOnClusters
-      ? delete details.DFUFilePartsOnClusters
-      : null;
-    details.Ecl ? delete details.Ecl : null;
-    details.Stat ? delete details.Stat : null;
+    if (details.DFUFilePartsOnClusters) {
+      delete details.DFUFilePartsOnClusters;
+    }
+    if (details.Ecl) {
+      delete details.Ecl;
+    }
+    if (details.Stat) {
+      delete details.Stat;
+    }
+
     return sendSuccess(res, details);
   } catch (error) {
     logger.error('hpcc/read getLogicalFileDetails: ', error);
@@ -280,12 +287,12 @@ async function hpccGetData(req: Request, res: Response) {
   try {
     const cluster = await getCluster(req.query.clusterid as string);
 
-    let clusterAuth = getClusterAuth(cluster);
-    let wuService = new WorkunitsService(
+    const clusterAuth = getClusterAuth(cluster);
+    const wuService = new WorkunitsService(
       getClusterOptions(
         {
           baseUrl: cluster.thor_host + ':' + cluster.thor_port,
-          userID: clusterAuth ? clusterAuth.user : '',
+          userID: clusterAuth ? clusterAuth.username : '',
           password: clusterAuth ? clusterAuth.password : '',
         },
         cluster.allowSelfSigned
@@ -323,7 +330,7 @@ async function getFileProfile(req: Request, res: Response) {
     const response = await axios.get(
       `${cluster.thor_host}:${cluster.thor_port}/WsWorkunits/WUResult.json?LogicalName=${req.query.fileName}.profile`,
       {
-        auth: getClusterAuth(cluster) as any as any,
+        auth: getClusterAuth(cluster),
       }
     );
 
@@ -361,23 +368,23 @@ async function getFileProfileHtml(req: Request, res: Response) {
       `${cluster.thor_host}:${cluster.thor_port}/WsWorkunits/WUInfo.json`,
       new URLSearchParams({
         Wuid: wuid,
-        TruncateEclTo64k: 'true' as any,
-        IncludeResourceURLs: 'true' as any,
-        IncludeExceptions: 'false' as any,
-        IncludeGraphs: 'false' as any,
-        IncludeSourceFiles: 'false' as any,
-        IncludeResults: 'false' as any,
-        IncludeResultsViewNames: 'false' as any,
-        IncludeVariables: 'false' as any,
-        IncludeTimers: 'false' as any,
-        IncludeDebugValues: 'false' as any,
-        IncludeApplicationValues: 'false' as any,
-        IncludeWorkflows: 'false' as any,
-        IncludeXmlSchemas: 'false' as any,
-        SuppressResultSchemas: 'true' as any,
-      } as any).toString(),
+        TruncateEclTo64k: 'true',
+        IncludeResourceURLs: 'true',
+        IncludeExceptions: 'false',
+        IncludeGraphs: 'false',
+        IncludeSourceFiles: 'false',
+        IncludeResults: 'false',
+        IncludeResultsViewNames: 'false',
+        IncludeVariables: 'false',
+        IncludeTimers: 'false',
+        IncludeDebugValues: 'false',
+        IncludeApplicationValues: 'false',
+        IncludeWorkflows: 'false',
+        IncludeXmlSchemas: 'false',
+        SuppressResultSchemas: 'true',
+      }).toString(),
       {
-        auth: getClusterAuth(cluster) as any,
+        auth: getClusterAuth(cluster),
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
       }
     );
@@ -423,7 +430,7 @@ async function getDropZones(req: Request, res: Response) {
     const url = `${cluster.thor_host}:${cluster.thor_port}/WsTopology/TpDropZoneQuery.json`;
 
     const response = await axios.get(url, {
-      auth: getClusterAuth(cluster) as any,
+      auth: getClusterAuth(cluster),
     });
 
     const result = response.data;
@@ -495,7 +502,7 @@ async function getDropzoneDirectoryDetails(req: Request, res: Response) {
     if ((directories as any).FileListResponse?.files) {
       const { PhysicalFileStruct: assets } = (directories as any)
         .FileListResponse.files;
-      for (let asset of assets) {
+      for (const asset of assets) {
         asset.age = moment(asset.modifiedtime).fromNow(true);
         if (asset.isDir) {
           directoryCount++;
@@ -506,7 +513,9 @@ async function getDropzoneDirectoryDetails(req: Request, res: Response) {
           if (!oldestFile) {
             oldestFile = asset;
           } else {
-            let currentOldestFileModifiedTime = moment(oldestFile.modifiedtime);
+            const currentOldestFileModifiedTime = moment(
+              oldestFile.modifiedtime
+            );
             const currentFileModifiedTime = moment(asset.modifiedtime);
             const diff = currentOldestFileModifiedTime.diff(
               currentFileModifiedTime,
@@ -542,11 +551,11 @@ async function dropzoneFileSearch(req: Request, res: Response) {
         NameFilter: `*${req.body.nameFilter}*`,
         '__dropZoneMachine.label': req.body.server,
         '__dropZoneMachine.value': req.body.server,
-        '__dropZoneMachine.selected': 'true' as any,
-        rawxml_: 'true' as any,
-      } as any).toString(),
+        '__dropZoneMachine.selected': 'true',
+        rawxml_: 'true',
+      }).toString(),
       {
-        auth: getClusterAuth(cluster) as any,
+        auth: getClusterAuth(cluster),
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
       }
     );
@@ -565,7 +574,10 @@ async function dropzoneFileSearch(req: Request, res: Response) {
 
 async function getSuperfileDetails(req: Request, res: Response) {
   try {
-    const { fileName, clusterid } = req.query;
+    const { fileName, clusterid } = req.query as {
+      fileName: string;
+      clusterid: string;
+    };
 
     const details = await getSuperFile(clusterid, fileName);
 
@@ -582,7 +594,7 @@ async function getClusterMetaData(req: Request, res: Response) {
     //Validate cluster Id
     //If cluster id is valid ->      const { clusterId } = req.query;
     //Get cluster details
-    let cluster = await getCluster(clusterId as string);
+    const cluster = await getCluster(clusterId as string);
     const { thor_host, thor_port, username, hash, allowSelfSigned } = cluster;
     const clusterDetails = getClusterOptions(
       {

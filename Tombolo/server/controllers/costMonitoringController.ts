@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { CostMonitoring, sequelize } from '../models/index.js';
+import { CostMonitoring, sequelize } from '@tombolo/db';
 import logger from '../config/logger.js';
 import { Op } from 'sequelize';
 import { uniqueConstraintErrorHandler } from '../utils/uniqueConstraintErrorHandler.js';
@@ -9,7 +9,7 @@ import { APPROVAL_STATUS } from '../config/constants.js';
 
 async function createCostMonitoring(req: Request, res: Response) {
   try {
-    const { id: userId } = (req as any).user;
+    const { id: userId } = req.user;
 
     const createResult = await CostMonitoring.create({
       ...req.body,
@@ -34,7 +34,7 @@ async function createCostMonitoring(req: Request, res: Response) {
 
 async function updateCostMonitoring(req: Request, res: Response) {
   try {
-    const updatedData = { ...req.body, lastUpdatedBy: (req as any).user.id };
+    const updatedData = { ...req.body, lastUpdatedBy: req.user.id };
     const affected = await CostMonitoring.update(updatedData, {
       where: { id: updatedData.id },
     });
@@ -91,7 +91,7 @@ async function deleteCostMonitoring(req: Request, res: Response) {
   try {
     const result = await CostMonitoring.handleDelete({
       id: req.params.id as string,
-      deletedByUserId: (req as any).user.id,
+      deletedByUserId: req.user.id,
       transaction,
     });
 
@@ -110,7 +110,7 @@ async function deleteCostMonitoring(req: Request, res: Response) {
 
 async function evaluateCostMonitoring(req: Request, res: Response) {
   try {
-    const { id: approverId } = (req as any).user;
+    const { id: approverId } = req.user;
     const approvalStatus = req.body.approvalStatus;
     const isApproved = approvalStatus === APPROVAL_STATUS.APPROVED;
     await CostMonitoring.update(
@@ -149,7 +149,7 @@ async function toggleCostMonitoringActive(req: Request, res: Response) {
   try {
     transaction = await CostMonitoring.sequelize.transaction();
     const { ids, action } = req.body;
-    const { id: userId } = (req as any).user;
+    const { id: userId } = req.user;
 
     const costMonitorings = await CostMonitoring.findAll({
       where: { id: { [Op.in]: ids }, approvalStatus: APPROVAL_STATUS.APPROVED },
@@ -199,7 +199,7 @@ async function bulkDeleteCostMonitoring(req: Request, res: Response) {
   try {
     await CostMonitoring.handleDelete({
       id: req.body.ids,
-      deletedByUserId: (req as any).user.id,
+      deletedByUserId: req.user.id,
       transaction,
     });
 

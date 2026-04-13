@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { FileMonitoring, Cluster, sequelize } from '../models/index.js';
+import { FileMonitoring, Cluster, sequelize } from '@tombolo/db';
 import logger from '../config/logger.js';
 import { uniqueConstraintErrorHandler } from '../utils/uniqueConstraintErrorHandler.js';
 import { getUserFkIncludes } from '../utils/getUserFkIncludes.js';
@@ -18,7 +18,7 @@ const getCommonIncludes = () => [
 
 async function createFileMonitoring(req: Request, res: Response) {
   try {
-    const { id: userId } = (req as any).user;
+    const { id: userId } = req.user;
 
     const createResult = await FileMonitoring.create({
       ...req.body,
@@ -52,7 +52,7 @@ async function updateFileMonitoring(req: Request, res: Response) {
   try {
     const { id } = req.params;
 
-    const updatedData = { ...req.body, lastUpdatedBy: (req as any).user.id };
+    const updatedData = { ...req.body, lastUpdatedBy: req.user.id };
     const result = await FileMonitoring.update(updatedData, {
       where: { id },
     });
@@ -138,7 +138,7 @@ async function evaluateFileMonitoring(req: Request, res: Response) {
           approvalStatus,
           approverComment,
           isActive: !!(approvalStatus === APPROVAL_STATUS.APPROVED && isActive),
-          lastUpdatedBy: (req as any).user.id,
+          lastUpdatedBy: req.user.id,
         },
         {
           where: { id: fileMonitoring.id },
@@ -196,7 +196,7 @@ async function toggleFileMonitoringActive(req: Request, res: Response) {
       eligibleForToggle.map(fileMonitoring =>
         fileMonitoring.update({
           isActive,
-          lastUpdatedBy: (req as any).user.id,
+          lastUpdatedBy: req.user.id,
         })
       )
     );
@@ -225,7 +225,7 @@ async function deleteFileMonitoring(req: Request, res: Response) {
 
     // First update the deletedBy field
     await FileMonitoring.update(
-      { deletedBy: (req as any).user.id },
+      { deletedBy: req.user.id },
       { where: { id: ids }, transaction }
     );
 

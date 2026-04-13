@@ -103,6 +103,10 @@ jobs:
         working-directory: Tombolo/db
         run: pnpm build
 
+      - name: Build core package
+        working-directory: Tombolo/core
+        run: pnpm build
+
       - name: Setup server config files
         working-directory: Tombolo/server
         run: cp cluster-whitelist.sample.js cluster-whitelist.js

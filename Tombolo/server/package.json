@@ -30,6 +30,7 @@
   "license": "ISC",
   "dependencies": {
     "@hpcc-js/comms": "catalog:",
+    "@tombolo/core": "workspace:*",
     "@tombolo/db": "workspace:*",
     "@tombolo/shared": "workspace:*",
     "akeyless": "catalog:",
@@ -73,6 +74,7 @@
     "@types/nodemailer": "^7.0.10",
     "@types/supertest": "^7.2.0",
     "@types/uuid": "catalog:",
+    "@types/xml2js": "0.4.14",
     "@vitest/coverage-v8": "catalog:",
     "cross-env": "^7.0.3",
     "nodemon": "catalog:",

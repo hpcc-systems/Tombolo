@@ -5,7 +5,7 @@ import {
   OrbitBuilds,
   MonitoringNotification,
   NotificationQueue,
-} from '../models/index.js';
+} from '@tombolo/db';
 
 import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
 
@@ -34,7 +34,7 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
       //if megaphone is not active, stop here and don't run
       if (!integration?.dataValues?.metaData?.megaPhoneAlerts?.active) return;
 
-      let application_id = integration.dataValues?.application_id;
+      const application_id = integration.dataValues?.application_id;
 
       const query = `select * from orbitreport.DimReceiveInstance where SubStatus_Code = 'MEGAPHONE' order by DateUpdated desc limit 1`;
       const result = await runMySQLQuery(query, orbitDbConfig);
@@ -45,7 +45,7 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
       await Promise.all(
         result[0].map(async build => {
           //check if the build already exists
-          let orbitBuild = await OrbitBuilds.findOne({
+          const orbitBuild = await OrbitBuilds.findOne({
             where: {
               build_id: build.ReceiveInstanceIdKey,
               application_id: application_id,

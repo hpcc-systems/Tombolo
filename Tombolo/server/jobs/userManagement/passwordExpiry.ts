@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 //Local Imports
 import { logOrPostMessage } from '../jobUtils.js';
-import { User, NotificationQueue } from '../../models/index.js';
+import { User, NotificationQueue } from '@tombolo/db';
 import { trimURL, getSupportContactEmails } from '../../utils/authUtil.js';
 import { passwordExpiryAlertDaysForUser } from '../../config/monitorings.js';
 
@@ -64,7 +64,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
 
     for (const user of users) {
       //pull out the internal user object for easier use below
-      let userInternal = user.dataValues;
+      const userInternal = user.dataValues;
 
       const daysToExpiry =
         Math.floor(
@@ -86,7 +86,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
             ' days of password expiry.',
         });
 
-        let version = 'first';
+        const version = 'first';
         await updateUserAndSendNotification(user, daysToExpiry, version);
       }
 
@@ -104,7 +104,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
             daysToExpiry +
             ' days of password expiry.',
         });
-        let version = 'second';
+        const version = 'second';
         await updateUserAndSendNotification(user, daysToExpiry, version);
       }
       if (
@@ -122,7 +122,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
             ' days of password expiry.',
         });
 
-        let version = 'third';
+        const version = 'third';
         await updateUserAndSendNotification(user, daysToExpiry, version);
       }
 
@@ -138,7 +138,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
             ' has an expired password.',
         });
 
-        let emails = 'mailto:' + (await getSupportContactEmails());
+        const emails = 'mailto:' + (await getSupportContactEmails());
 
         // Queue notification
         await NotificationQueue.create({

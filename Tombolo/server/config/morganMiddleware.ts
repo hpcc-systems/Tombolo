@@ -7,7 +7,7 @@ const stream = {
   write: (message: string) => logger.http(message.trim()), // Use the http level to have logs available in prod and dev
 };
 
-const skip = (req: Request, res: Response): boolean => {
+const skip = (req: Request, _res: Response): boolean => {
   const url = req.originalUrl || req.url;
   if (url.includes('/api/bree/all')) return true; // do not log any bree route polling
   if (url.includes('/api/dataflowgraph/save')) return true; // do not log graph changes route
@@ -16,9 +16,7 @@ const skip = (req: Request, res: Response): boolean => {
 };
 
 morgan.token('user', (req: Request): string => {
-  return (
-    (req as any).authInfo?.email || (req as any).user?.email || 'unknown user'
-  );
+  return req.authInfo?.email || req.user?.email || 'unknown user';
 });
 
 morgan.token('URL', (req: Request): string => {

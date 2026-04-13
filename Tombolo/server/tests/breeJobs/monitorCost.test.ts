@@ -16,7 +16,7 @@ const {
 } = mockedModels;
 
 import { Workunit } from '@hpcc-js/comms';
-import { getClusters } from '../../utils/hpcc-util.js';
+import { getClusters } from '@tombolo/core';
 import { getClusterOptions } from '../../utils/getClusterOptions.js';
 import { parentPort } from 'worker_threads';
 
@@ -30,7 +30,7 @@ const mockedWorkunitQuery = Workunit.query as unknown as ReturnType<
 const workerParentPort = parentPort as NonNullable<typeof parentPort>;
 
 vi.mock('@hpcc-js/comms');
-vi.mock('../../utils/hpcc-util.js');
+vi.mock('@tombolo/core');
 vi.mock('../../utils/getClusterOptions.js');
 
 describe('monitorCost', () => {
@@ -61,26 +61,29 @@ describe('monitorCost', () => {
   describe('handleMonitorLogs', () => {
     it('should create a new MonitoringLog if none exists', async () => {
       MonitoringLog.create.mockResolvedValue({});
-      await handleMonitorLogs(null, 1, 2, new Date());
+      await handleMonitorLogs(null, '1', '2', new Date());
       expect(MonitoringLog.create).toHaveBeenCalledWith({
-        cluster_id: 1,
-        monitoring_type_id: 2,
+        cluster_id: '1',
+        monitoring_type_id: '2',
         scan_time: expect.any(Date),
         metaData: {},
       });
     });
 
     it('should update scan_time if MonitoringLog exists', async () => {
-      const mockLog = { scan_time: null, save: vi.fn() };
-      await handleMonitorLogs(mockLog, 1, 2, new Date());
+      const mockLog = {
+        scan_time: null,
+        save: vi.fn().mockResolvedValue(undefined),
+      } as unknown as NonNullable<Parameters<typeof handleMonitorLogs>[0]>;
+      await handleMonitorLogs(mockLog, '1', '2', new Date());
       expect(mockLog.save).toHaveBeenCalled();
     });
 
     it('should throw error if MonitoringLog create fails', async () => {
       MonitoringLog.create.mockRejectedValue(new Error('fail'));
-      await expect(handleMonitorLogs(null, 1, 2, new Date())).rejects.toThrow(
-        'fail'
-      );
+      await expect(
+        handleMonitorLogs(null, '1', '2', new Date())
+      ).rejects.toThrow('fail');
     });
   });
 
@@ -285,7 +288,7 @@ describe('monitorCost', () => {
       logger.default.error = vi.fn();
 
       // Re-import dependencies after mocking worker_threads
-      const models = await import('../../models/index.js');
+      const models = await import('@tombolo/db');
       const monitorCostModule =
         await import('../../jobs/costMonitoring/monitorCost.js');
 

@@ -1,8 +1,12 @@
 import { Request, Response } from 'express';
-import { InstanceSettings, User } from '../models/index.js';
+import { InstanceSettings, User } from '@tombolo/db';
 import logger from '../config/logger.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import CustomError from '../utils/customError.js';
+
+type InstanceSettingsUpdatePayload = Partial<
+  Pick<InstanceSettings, 'name' | 'metaData'>
+>;
 
 // Get a single instance setting by name
 const getInstanceSetting = async (req: Request, res: Response) => {
@@ -51,7 +55,7 @@ const updateInstanceSetting = async (req: Request, res: Response) => {
     // Get rest of the fields from the request body
     const reqData = { ...req.body };
 
-    const payload: any = {};
+    const payload: InstanceSettingsUpdatePayload = {};
 
     if (reqData.name) {
       payload.name = reqData.name;

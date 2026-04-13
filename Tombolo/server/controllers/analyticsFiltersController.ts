@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { AnalyticsFilter } from '../models/index.js';
+import { AnalyticsFilter } from '@tombolo/db';
 import { sendSuccess, sendError } from '../utils/response.js';
 import logger from '../config/logger.js';
 
@@ -8,8 +8,7 @@ import logger from '../config/logger.js';
  */
 export async function getAnalyticsFilters(req: Request, res: Response) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const userId = (req as any).user?.id;
+    const userId = req.user?.id;
 
     const filters = await AnalyticsFilter.findAll({
       where: {
@@ -40,8 +39,7 @@ export async function getAnalyticsFilters(req: Request, res: Response) {
  */
 export async function getAnalyticsFilterById(req: Request, res: Response) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const userId = (req as any).user?.id;
+    const userId = req.user?.id;
     const { id } = req.params;
 
     const filter = await AnalyticsFilter.findOne({
@@ -75,8 +73,7 @@ export async function getAnalyticsFilterById(req: Request, res: Response) {
  */
 export async function createAnalyticsFilter(req: Request, res: Response) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const userId = (req as any).user?.id;
+    const userId = req.user?.id;
     const { name, conditions, description } = req.body;
 
     // Check if filter with same name already exists for this user
@@ -111,8 +108,7 @@ export async function createAnalyticsFilter(req: Request, res: Response) {
  */
 export async function updateAnalyticsFilter(req: Request, res: Response) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const userId = (req as any).user?.id;
+    const userId = req.user?.id;
     const { id } = req.params;
     const { name, conditions, description } = req.body;
 
@@ -160,8 +156,7 @@ export async function updateAnalyticsFilter(req: Request, res: Response) {
  */
 export async function deleteAnalyticsFilter(req: Request, res: Response) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const userId = (req as any).user?.id;
+    const userId = req.user?.id;
     const { id } = req.params;
 
     const filter = await AnalyticsFilter.findOne({

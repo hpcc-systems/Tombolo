@@ -5,7 +5,7 @@ import {
   NotificationQueue,
   AsrProduct,
   AsrDomain,
-} from '../../models/index.js';
+} from '@tombolo/db';
 import { logOrPostMessage } from '../jobUtils.js';
 import { decryptString } from '@tombolo/shared';
 import { FileSprayService } from '@hpcc-js/comms';
@@ -173,7 +173,7 @@ const monitoring_name = 'Landing Zone Monitoring';
     });
 
     // Iterate over allMatchedFiles and evaluate whether the file has passed the threshold
-    for (let f of allMatchedFiles) {
+    for (const f of allMatchedFiles) {
       const { lzFileMovementMonitoringId, modifiedtime } = f;
       const cid =
         lzFileMovementMonitoringAsObj[lzFileMovementMonitoringId].clusterId;
@@ -268,7 +268,7 @@ const monitoring_name = 'Landing Zone Monitoring';
           }
         }
 
-        let notificationId = generateNotificationId({
+        const notificationId = generateNotificationId({
           notificationPrefix,
           timezoneOffset: uniqueClustersObj[clusterId].timezone_offset,
         });
