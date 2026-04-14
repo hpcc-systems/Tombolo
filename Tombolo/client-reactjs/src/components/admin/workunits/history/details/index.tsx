@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { Spin, Button, message, Alert, Space } from 'antd';
 import { ArrowLeftOutlined, ReloadOutlined } from '@ant-design/icons';
 import workunitsService from '@/services/workunits.service';
-import type { WorkUnit } from '@tombolo/shared';
+import type { WorkUnit, WorkUnitFileEntry } from '@tombolo/shared';
 import WorkUnitView from './WorkUnitView';
 import styles from '../workunitHistory.module.css';
 
@@ -22,6 +22,8 @@ const WorkUnitDetails: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [wu, setWu] = useState<WorkUnit | null>(null);
   const [details, setDetails] = useState<any[]>([]);
+  const [inputFiles, setInputFiles] = useState<WorkUnitFileEntry[]>([]);
+  const [outputFiles, setOutputFiles] = useState<WorkUnitFileEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const handleBackNavigation = () => {
@@ -66,6 +68,16 @@ const WorkUnitDetails: React.FC = () => {
       } catch (error) {
         console.error('Error fetching workunit details (expected for 404):', error);
         setDetails([]);
+      }
+
+      try {
+        const filesData = await workunitsService.getFiles(clusterId, wuid);
+        setInputFiles(filesData.inputFiles || []);
+        setOutputFiles(filesData.outputFiles || []);
+      } catch (error) {
+        console.error('Error fetching workunit files:', error);
+        setInputFiles([]);
+        setOutputFiles([]);
       }
     } catch (err: any) {
       console.error('Error fetching workunit details:', err);
@@ -140,7 +152,14 @@ const WorkUnitDetails: React.FC = () => {
       </div>
 
       <div className={styles.contentPadding}>
-        <WorkUnitView wu={wu} details={details} clusterName={clusterName} onRefresh={fetchData} />
+        <WorkUnitView
+          wu={wu}
+          details={details}
+          inputFiles={inputFiles}
+          outputFiles={outputFiles}
+          clusterName={clusterName}
+          onRefresh={fetchData}
+        />
       </div>
     </div>
   );
