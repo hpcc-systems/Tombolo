@@ -32,27 +32,33 @@ interface ValidationOptions {
   arrMin?: number;
 }
 
+type SourceBuilder = typeof body | typeof param | typeof query;
+type ChainMutator<TArgs extends unknown[] = unknown[]> = (
+  chain: ValidationChain,
+  ...args: TArgs
+) => ValidationChain;
+
 /**
  * Creates a validator function with a specified default error message generator.
  */
 const createValidationFactory = (
   defaultMessageFn: (field: string) => string
 ): ((
-  source: typeof body | typeof param | typeof query,
-  validationFn: (v: any, ...args: any[]) => any,
+  source: SourceBuilder,
+  validationFn: ChainMutator,
   field: string,
   options?: ValidationOptions,
-  ...args: any[]
+  ...args: unknown[]
 ) => ValidationChain) => {
   /**
    * Creates express-validator middleware for a specific source, validation function, and field.
    */
   return (
-    source: typeof body | typeof param | typeof query,
-    validationFn: (v: any, ...args: any[]) => any,
+    source: SourceBuilder,
+    validationFn: ChainMutator,
     field: string,
     options: ValidationOptions = {},
-    ...args: any[]
+    ...args: unknown[]
   ): ValidationChain => {
     let validator = validationFn(source(field), ...args);
     const message = options.msg || defaultMessageFn(field);

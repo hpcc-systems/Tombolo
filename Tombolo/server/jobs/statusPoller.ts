@@ -1,13 +1,10 @@
 import { parentPort } from 'worker_threads';
 import { workunitInfo } from '../utils/hpcc-util.js';
-// Neither assetUtil or workflowutil exist
-// import assetUtil from '../utils/assets.js';
-// import workflowUtil from '../utils/workflow-util.js';
 import workerUtils from './workerUtils.js';
 
 const { log, dispatch } = workerUtils(parentPort);
 
-// eslint-disable-next-line no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let isCancelled = false;
 if (parentPort) {
   parentPort.once('message', message => {
@@ -158,6 +155,10 @@ if (parentPort) {
   } catch (error) {
     log('error', 'Error in Status Poller', error);
   } finally {
-    parentPort ? parentPort.postMessage('done') : process.exit(0);
+    if (parentPort) {
+      parentPort.postMessage('done');
+    } else {
+      process.exit(0);
+    }
   }
 })();

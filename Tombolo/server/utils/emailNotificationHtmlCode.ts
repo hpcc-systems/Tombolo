@@ -5,15 +5,19 @@ import { getDirname } from './polyfills.js';
 
 const __dirname = getDirname(import.meta.url);
 
-interface EmailTemplateOptions {
+type EmailTemplateData = Record<string, unknown>;
+
+interface EmailTemplateOptions<
+  TData extends EmailTemplateData = EmailTemplateData,
+> {
   templateName: string;
-  data: any;
+  data: TData;
 }
 
-const emailNotificationHtmlCode = ({
+const emailNotificationHtmlCode = <TData extends EmailTemplateData>({
   templateName,
   data,
-}: EmailTemplateOptions): string => {
+}: EmailTemplateOptions<TData>): string => {
   // Check if running from compiled dist or source
   const isCompiledVersion = __dirname.includes('/dist/');
   const templatePath = isCompiledVersion

@@ -1,10 +1,17 @@
 // Local imports
 import { AsrDomain, AsrProduct } from '@tombolo/db';
+import type { NotificationQueue } from '@tombolo/db';
+import type { CreationAttributes } from 'sequelize';
 
 //Package(s)
 import moment from 'moment';
 import cronParser from 'cron-parser';
 import logger from '../../config/logger.js';
+
+type NotificationQueuePayload = CreationAttributes<NotificationQueue>;
+type WorkunitTimePoint = {
+  When: string | number | Date;
+};
 
 // All possible intermediate states
 const intermediateStates = [
@@ -95,7 +102,7 @@ const matchJobName = ({
 };
 
 // Find start and end time of a work unit since js communication library does not give that
-function findStartAndEndTimes(data: any[]): {
+function findStartAndEndTimes(data: WorkunitTimePoint[]): {
   startTime: string;
   endTime: string;
   timeTaken: number;
@@ -302,9 +309,10 @@ function calculateRunOrCompleteByTimeForMonthlyJobs({
     localDateTimeAtCluster.getTime() - backDateInMs
   );
 
-  const window: any = {
+  const window = {
     currentTime: localDateTimeAtCluster,
     frequency: 'monthly',
+    scheduleBy: undefined,
   };
 
   if (scheduleBy === 'dates') {
@@ -405,6 +413,7 @@ function calculateRunOrCompleteByTimeForYearlyJobs({
   const window = {
     frequency: 'yearly',
     currentTime: localDateTimeAtCluster,
+    scheduleBy: undefined,
   };
 
   if (scheduleBy === 'month-date') {
@@ -421,7 +430,7 @@ function calculateRunOrCompleteByTimeForYearlyJobs({
     }
 
     // Add schedule by to the window object
-    (window as any).scheduleBy = 'month-date';
+    window.scheduleBy = 'month-date';
 
     // Calculate start and end time
     const startAndEnd = calculateStartAndEndDateTime({
@@ -467,7 +476,7 @@ function calculateRunOrCompleteByTimeForYearlyJobs({
     const daySchedule = schedule.find(s => s.day === dayString);
 
     // Add schedule by to the window object
-    (window as any).scheduleBy = 'week-day-month';
+    window.scheduleBy = 'week-day-month';
 
     // Calculate start and end time
     const startAndEnd = calculateStartAndEndDateTime({
@@ -745,7 +754,7 @@ const createNotificationPayload = ({
   notificationDescription,
   notificationOrigin = 'Job Monitoring',
   idempotencyKey = null,
-}) => {
+}): NotificationQueuePayload => {
   const secondary = Array.isArray(recipients.secondaryContacts)
     ? recipients.secondaryContacts
     : [];
@@ -759,7 +768,7 @@ const createNotificationPayload = ({
     templateName,
     notificationOrigin: notificationOrigin,
     originationId,
-    deliveryType: 'immediate',
+    deliveryType: 'immediate' as const,
     metaData: {
       idempotencyKey,
       notificationOrigin: notificationOrigin,

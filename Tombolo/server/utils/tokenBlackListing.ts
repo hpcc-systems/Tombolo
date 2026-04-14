@@ -1,6 +1,11 @@
 import { TokenBlackList } from '@tombolo/db';
 import logger from '../config/logger.js';
 
+interface BlacklistedTokenRecord {
+  id: string;
+  exp: number;
+}
+
 // Create the Map (tokenId as key and expiration time as value)
 const tokenBlacklist = new Map<string, number>();
 
@@ -10,8 +15,9 @@ if (process.env.NODE_ENV !== 'test') {
   (async () => {
     try {
       logger.info('Syncing blacklisted tokens from the database');
-      const tokens = await TokenBlackList.findAll();
-      tokens.forEach(({ id, exp }: any) => {
+      const tokens =
+        (await TokenBlackList.findAll()) as unknown as BlacklistedTokenRecord[];
+      tokens.forEach(({ id, exp }) => {
         tokenBlacklist.set(id, exp);
       });
     } catch (err) {

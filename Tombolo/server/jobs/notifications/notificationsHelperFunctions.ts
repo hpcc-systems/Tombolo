@@ -27,12 +27,10 @@ const calculateRetryAfter = ({
 async function updateNotificationQueueOnError({
   notificationId,
   attemptCount,
-  _notification,
   error,
 }: {
   notificationId: string;
   attemptCount: number;
-  _notification: any;
   error: Error;
 }): Promise<void> {
   try {
