@@ -9,6 +9,7 @@ import { WorkunitsService } from '@hpcc-js/comms';
 import shallowCopyWithoutNested from '../../utils/shallowCopyWithoutNested.js';
 import { WUInfoOptions } from './monitorJobsUtil.js';
 import { getClusterOptions } from '../../utils/getClusterOptions.js';
+import type { ClusterWithPassword } from '../../types/cluster.js';
 
 // Self Invoking function
 (async () => {
@@ -24,6 +25,7 @@ import { getClusterOptions } from '../../utils/getClusterOptions.js';
     // Get cluster information
     const clusterInfo = await Cluster.findOne({
       where: { id: clusterId },
+      raw: true,
       attributes: [
         'id',
         'name',
@@ -33,6 +35,7 @@ import { getClusterOptions } from '../../utils/getClusterOptions.js';
         'roxie_port',
         'username',
         'hash',
+        'allowSelfSigned',
       ],
     });
 
@@ -45,27 +48,23 @@ import { getClusterOptions } from '../../utils/getClusterOptions.js';
       return;
     }
 
-    // If cluster information & hash present - decrypt
-    if (clusterInfo) {
-      if (clusterInfo.hash) {
-        (clusterInfo as any).password = decryptString(
-          clusterInfo.hash,
-          process.env.ENCRYPTION_KEY
-        );
-      } else {
-        (clusterInfo as any).password = null;
-      }
-    }
+    // Add decrypted password to a typed cluster object for auth
+    const clusterInfoWithPassword: ClusterWithPassword = {
+      ...clusterInfo,
+      password: clusterInfo.hash
+        ? decryptString(clusterInfo.hash, process.env.ENCRYPTION_KEY)
+        : null,
+    };
 
     // Create WorkunitService
     const wuService = new WorkunitsService(
       getClusterOptions(
         {
-          baseUrl: `${clusterInfo.thor_host}:${clusterInfo.thor_port}/`,
-          userID: clusterInfo.username || '',
-          password: (clusterInfo as any).password || '',
+          baseUrl: `${clusterInfoWithPassword.thor_host}:${clusterInfoWithPassword.thor_port}/`,
+          userID: clusterInfoWithPassword.username || '',
+          password: clusterInfoWithPassword.password || '',
         },
-        clusterInfo.allowSelfSigned
+        clusterInfoWithPassword.allowSelfSigned
       )
     );
 

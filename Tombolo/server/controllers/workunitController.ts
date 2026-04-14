@@ -7,6 +7,7 @@ import { sendSuccess, sendError } from '../utils/response.js';
 import logger from '../config/logger.js';
 import { getClusterOptions } from '../utils/getClusterOptions.js';
 import { findFuzzyMatches } from '@tombolo/shared';
+import type { WorkUnitDetailsResponse } from '@tombolo/shared';
 
 type ScopeNode = InferAttributes<WorkUnitDetails> & { children: ScopeNode[] };
 
@@ -187,12 +188,21 @@ async function getWorkunitDetails(req: Request, res: Response) {
 
     const graphs = buildScopeHierarchy(details);
 
+    const rawCreatedAt = details[0].createdAt;
+    const normalizedCreatedAt =
+      rawCreatedAt instanceof Date
+        ? rawCreatedAt
+        : new Date(rawCreatedAt ?? Date.now());
+    const fetchedAt = Number.isNaN(normalizedCreatedAt.getTime())
+      ? new Date().toISOString()
+      : normalizedCreatedAt.toISOString();
+
     return sendSuccess(res, {
       wuId: wuid,
       clusterId,
-      fetchedAt: details[0].createdAt || new Date(),
+      fetchedAt,
       graphs,
-    });
+    } satisfies WorkUnitDetailsResponse);
   } catch (err) {
     logger.error('Get workunit details error: ', err);
     return sendError(res, 'Failed to fetch details', 500);

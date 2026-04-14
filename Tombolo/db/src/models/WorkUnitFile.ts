@@ -72,6 +72,10 @@ export class WorkUnitFile extends Model<
   @Column(DataType.ENUM('input', 'output'))
   declare fileType: 'input' | 'output';
 
+  @AllowNull(false)
+  @Column({ type: DataType.BOOLEAN, defaultValue: false })
+  declare isSuperFile: CreationOptional<boolean>;
+
   @CreatedAt
   @AllowNull(false)
   @Column({ type: DataType.DATE, defaultValue: DataType.NOW })

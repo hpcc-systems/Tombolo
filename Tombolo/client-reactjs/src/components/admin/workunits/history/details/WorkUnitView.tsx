@@ -19,6 +19,7 @@ import SqlPanel from './panels/SqlPanel';
 import HistoryPanel from './panels/HistoryPanel';
 import styles from '../workunitHistory.module.css';
 import { getRoleNameArray } from '@/components/common/AuthUtil';
+import type { WorkUnit } from '@tombolo/shared';
 
 dayjs.extend(duration);
 
@@ -26,7 +27,7 @@ const { Title, Text } = Typography;
 const { TabPane } = Tabs as any;
 
 interface Props {
-  wu: any;
+  wu: WorkUnit;
   details: any[];
   clusterName?: string;
   onRefresh?: () => void;

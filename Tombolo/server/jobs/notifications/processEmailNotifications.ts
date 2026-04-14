@@ -1,5 +1,6 @@
 // Packages
 import { Op } from 'sequelize';
+import type { Attributes, CreationAttributes } from 'sequelize';
 
 //Local Imports
 import { NotificationQueue, SentNotification } from '@tombolo/db';
@@ -9,22 +10,71 @@ const { maxRetries } = retryOptions;
 import { updateNotificationQueueOnError } from './notificationsHelperFunctions.js';
 import emailNotificationHtmlCode from '../../utils/emailNotificationHtmlCode.js';
 
+type NotificationMetaData = {
+  mainRecipients?: string[];
+  cc?: string[];
+  subject: string;
+  body?: string;
+  notificationId?: string;
+  applicationId?: string;
+  [key: string]: unknown;
+};
+
+type NotificationQueueRecord = Omit<
+  Attributes<NotificationQueue>,
+  'metaData' | 'reTryAfter' | 'lastScanned' | 'deliveryTime'
+> & {
+  metaData?: NotificationMetaData | null;
+  reTryAfter?: Date | string | null;
+  lastScanned?: Date | string | null;
+  deliveryTime?: Date | string | null;
+};
+
+type EmailPayload = {
+  notificationQueueId: string;
+  receiver: string;
+  cc?: string;
+  subject: string;
+  plainTextBody?: string;
+  htmlBody?: string;
+  notificationId?: string;
+  applicationId?: string;
+  notificationOrigin?: string;
+  [key: string]: unknown;
+};
+
+type SuccessfulDeliveryRecord = EmailPayload & {
+  templateName: string;
+};
+
+const toTimestamp = (dateValue?: Date | string | null): number | undefined => {
+  if (!dateValue) {
+    return undefined;
+  }
+
+  const timestamp =
+    dateValue instanceof Date
+      ? dateValue.getTime()
+      : new Date(dateValue).getTime();
+  return Number.isNaN(timestamp) ? undefined : timestamp;
+};
+
 (async () => {
   try {
     const now = Date.now();
-    let notifications: any[];
-    const notificationsToBeSent: any[] = []; // Notification that meets the criteria to be sent
-    const successfulDelivery: any[] = [];
+    let notifications: NotificationQueueRecord[] = [];
+    const notificationsToBeSent: NotificationQueueRecord[] = []; // Notification that meets the criteria to be sent
+    const successfulDelivery: SuccessfulDeliveryRecord[] = [];
 
     // Get notifications with attempt count less than maxRetries and type email
     try {
-      notifications = await NotificationQueue.findAll({
+      notifications = (await NotificationQueue.findAll({
         where: {
           type: 'email',
           attemptCount: { [Op.lt]: maxRetries },
         },
         raw: true,
-      });
+      })) as NotificationQueueRecord[];
     } catch (err) {
       logger.error('Failed to retrieve notifications from db: ', err);
       return;
@@ -34,14 +84,21 @@ import emailNotificationHtmlCode from '../../utils/emailNotificationHtmlCode.js'
     for (const notification of notifications) {
       const { deliveryType, reTryAfter, lastScanned, deliveryTime } =
         notification;
+      const retryAfterTime = toTimestamp(reTryAfter);
+      const deliveryTimeValue = toTimestamp(deliveryTime);
+      const lastScannedValue =
+        toTimestamp(lastScanned) ?? Number.NEGATIVE_INFINITY;
 
       // Check if it meets the criteria to be sent
       if (
-        (deliveryType === 'immediate' && (reTryAfter < now || !reTryAfter)) ||
-        (deliveryType === 'scheduled' && (reTryAfter < now || !reTryAfter)) ||
+        (deliveryType === 'immediate' &&
+          (!retryAfterTime || retryAfterTime < now)) ||
         (deliveryType === 'scheduled' &&
-          deliveryTime < now &&
-          deliveryTime > lastScanned)
+          (!retryAfterTime || retryAfterTime < now)) ||
+        (deliveryType === 'scheduled' &&
+          deliveryTimeValue !== undefined &&
+          deliveryTimeValue < now &&
+          deliveryTimeValue > lastScannedValue)
       ) {
         notificationsToBeSent.push(notification);
       }
@@ -63,22 +120,29 @@ import emailNotificationHtmlCode from '../../utils/emailNotificationHtmlCode.js'
       } = notification;
 
       try {
+        const {
+          mainRecipients,
+          cc: metadataCc,
+          subject,
+          ...metaDataWithoutEmailHeaders
+        } = metaData ?? {};
+
         //Common email details applicable for all emails
         const commonEmailDetails = {
-          receiver: metaData?.mainRecipients?.join(',') || '',
-          cc: metaData?.cc?.join(',') || '',
-          subject: metaData.subject,
+          receiver: mainRecipients?.join(',') || '',
+          cc: metadataCc?.join(',') || '',
+          subject,
         };
 
         //E-mail payload
-        let emailPayload: any;
+        let emailPayload: EmailPayload;
 
         // Notification origin is manual - send the email as it is
         if (notificationOrigin === 'manual') {
           emailPayload = {
             notificationQueueId,
             ...commonEmailDetails,
-            ...metaData,
+            ...metaDataWithoutEmailHeaders,
             plainTextBody: metaData.body,
           };
         } else {
@@ -90,7 +154,7 @@ import emailNotificationHtmlCode from '../../utils/emailNotificationHtmlCode.js'
           emailPayload = {
             notificationQueueId,
             ...commonEmailDetails,
-            ...metaData,
+            ...metaDataWithoutEmailHeaders,
             htmlBody: emailBody,
           };
 
@@ -108,7 +172,6 @@ import emailNotificationHtmlCode from '../../utils/emailNotificationHtmlCode.js'
         await updateNotificationQueueOnError({
           notificationId: notificationQueueId,
           attemptCount,
-          _notification: notification,
           error: error as Error,
         });
       }
@@ -131,20 +194,27 @@ import emailNotificationHtmlCode from '../../utils/emailNotificationHtmlCode.js'
     try {
       // clean successfully delivered notifications
       for (const notification of successfulDelivery) {
-        const notificationCopy = { ...notification };
-        delete notificationCopy.htmlBody;
-        delete notificationCopy.notificationQueueId;
+        const { htmlBody, notificationQueueId, ...notificationDetails } =
+          notification;
+        void htmlBody;
+        void notificationQueueId;
 
-        notificationCopy.searchableNotificationId = notification.notificationId;
-        notificationCopy.notificationChannel = 'email';
-        notificationCopy.notificationTitle = notification.subject;
-        notificationCopy.applicationId = notification.applicationId;
-        notificationCopy.status = 'Pending Review';
-        notificationCopy.createdBy = { name: 'System' };
-        notificationCopy.createdAt = now;
-        notificationCopy.updatedAt = now;
-        notificationCopy.metaData = { notificationDetails: notification };
-        await SentNotification.create(notificationCopy);
+        const sentNotificationPayload: CreationAttributes<SentNotification> = {
+          ...(notificationDetails as Partial<
+            CreationAttributes<SentNotification>
+          >),
+          searchableNotificationId: notification.notificationId ?? '',
+          notificationChannel: 'email',
+          notificationTitle: notification.subject,
+          applicationId: notification.applicationId,
+          status: 'Pending Review',
+          createdBy: { name: 'System' },
+          createdAt: new Date(now),
+          updatedAt: new Date(now),
+          metaData: { notificationDetails: notification },
+        };
+
+        await SentNotification.create(sentNotificationPayload);
       }
     } catch (error) {
       logger.error(
