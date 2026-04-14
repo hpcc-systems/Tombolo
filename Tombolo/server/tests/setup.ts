@@ -244,6 +244,22 @@ vi.mock('@tombolo/db', () => {
         __rollback: rollback,
       },
     },
+    WorkUnitFile: {
+      findAll: vi.fn(),
+      findOne: vi.fn(),
+      findByPk: vi.fn(),
+      create: vi.fn(),
+      save: vi.fn(),
+      bulkCreate: vi.fn(),
+      update: vi.fn(),
+      destroy: vi.fn(),
+      handleDelete: vi.fn(),
+      sequelize: {
+        transaction,
+        __commit: commit,
+        __rollback: rollback,
+      },
+    },
     UserArchive: {
       create: vi.fn(),
     },

@@ -1,5 +1,5 @@
 import { apiClient } from '@/services/api';
-import type { WorkUnit, WorkUnitDetailsResponse } from '@tombolo/shared';
+import type { WorkUnit, WorkUnitDetailsResponse, WorkUnitFilesResponse } from '@tombolo/shared';
 
 const workunitsService = {
   getAll: async (params: Record<string, any> = {}): Promise<any> => {
@@ -14,6 +14,11 @@ const workunitsService = {
 
   getDetails: async (clusterId: string, wuid: string): Promise<WorkUnitDetailsResponse> => {
     const response = await apiClient.get(`/workunits/${clusterId}/${wuid}/details`);
+    return response.data;
+  },
+
+  getFiles: async (clusterId: string, wuid: string): Promise<WorkUnitFilesResponse> => {
+    const response = await apiClient.get(`/workunits/${clusterId}/${wuid}/files`);
     return response.data;
   },
 

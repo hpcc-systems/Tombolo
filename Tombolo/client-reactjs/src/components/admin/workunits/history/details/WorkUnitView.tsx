@@ -6,6 +6,7 @@ import {
   ClockCircleOutlined,
   DatabaseOutlined,
   FieldTimeOutlined,
+  FileTextOutlined,
   HistoryOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -17,9 +18,10 @@ import OverviewPanel from './panels/OverviewPanel';
 import TimelinePanel from './panels/TimelinePanel';
 import SqlPanel from './panels/SqlPanel';
 import HistoryPanel from './panels/HistoryPanel';
+import FilesPanel from './panels/FilesPanel';
 import styles from '../workunitHistory.module.css';
 import { getRoleNameArray } from '@/components/common/AuthUtil';
-import type { WorkUnit } from '@tombolo/shared';
+import type { WorkUnit, WorkUnitFileEntry } from '@tombolo/shared';
 
 dayjs.extend(duration);
 
@@ -29,11 +31,13 @@ const { TabPane } = Tabs as any;
 interface Props {
   wu: WorkUnit;
   details: any[];
+  inputFiles: WorkUnitFileEntry[];
+  outputFiles: WorkUnitFileEntry[];
   clusterName?: string;
   onRefresh?: () => void;
 }
 
-const WorkUnitView: React.FC<Props> = ({ wu, details, clusterName, onRefresh }) => {
+const WorkUnitView: React.FC<Props> = ({ wu, details, inputFiles, outputFiles, clusterName, onRefresh }) => {
   const roleArray = getRoleNameArray();
   const isAdminOrOwner = roleArray.includes('owner') || roleArray.includes('administrator');
 
@@ -46,6 +50,7 @@ const WorkUnitView: React.FC<Props> = ({ wu, details, clusterName, onRefresh }) 
   return (
     <div className={`${styles.pageContainer} ${styles.pageBgLighter}`}>
       <Tabs
+        size="small"
         defaultActiveKey="overview"
         activeKey={activeTab}
         onChange={setActiveTab}
@@ -172,6 +177,16 @@ const WorkUnitView: React.FC<Props> = ({ wu, details, clusterName, onRefresh }) 
               </Row>
             </Space>
           )}
+        </TabPane>
+
+        <TabPane
+          key="files"
+          tab={
+            <span>
+              <FileTextOutlined /> Files
+            </span>
+          }>
+          <FilesPanel inputFiles={inputFiles} outputFiles={outputFiles} />
         </TabPane>
 
         <TabPane
