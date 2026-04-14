@@ -219,7 +219,7 @@ async function getWorkUnits(
       pageStartFrom += pageSize;
 
       // Add a small delay between requests to be gentle on the HPCC system
-      await new Promise(resolve => setTimeout(resolve, 3_500));
+      await new Promise(resolve => setTimeout(resolve, 2_000));
     }
 
     logger.info(
