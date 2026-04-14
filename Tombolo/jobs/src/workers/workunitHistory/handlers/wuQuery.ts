@@ -110,7 +110,7 @@ async function fetchWorkunitPage(
   startDate: string,
   endDate: string,
   pageStartFrom = 0,
-  pageSize = 250
+  pageSize = 1_000
 ) {
   return await retryWithBackoff(async () => {
     const workunits = await Workunit.query(clusterOptions, {
@@ -147,7 +147,7 @@ async function getWorkUnits(
   clusterId: string,
   timezoneOffset = 0
 ): Promise<{ totalFetched: number; totalInserted: number }> {
-  const pageSize = 250;
+  const pageSize = 1_000;
   let pageStartFrom = 0;
   let totalFetched = 0;
   let totalInserted = 0;
@@ -219,7 +219,7 @@ async function getWorkUnits(
       pageStartFrom += pageSize;
 
       // Add a small delay between requests to be gentle on the HPCC system
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      await new Promise(resolve => setTimeout(resolve, 3_500));
     }
 
     logger.info(
