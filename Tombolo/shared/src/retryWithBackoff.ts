@@ -3,7 +3,7 @@ export interface RetryableError extends Error {
 }
 
 export interface Logger {
-  warn: (message: string, ...args: any[]) => void;
+  warn: (message: string, ...args: unknown[]) => void;
 }
 
 /**
@@ -18,10 +18,10 @@ async function retryWithBackoff<T>(
   fn: () => Promise<T>,
   logger?: Logger,
   maxRetries: number = 3,
-  delay: number = 2000
+  delay: number = 2_000
 ): Promise<T> {
   // Maximum delay cap to prevent setTimeout overflow (max ~24.8 days = 2^31-1 ms)
-  const MAX_DELAY = 60000; // Cap at 60 seconds
+  const MAX_DELAY = 60_000; // Cap at 60 seconds
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
