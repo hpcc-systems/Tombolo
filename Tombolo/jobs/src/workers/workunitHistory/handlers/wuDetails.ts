@@ -55,9 +55,28 @@ type OutOfRangeTimeValue = {
   maxAllowed?: number;
 };
 
+type DroppedActivityTimeLocalExecuteValue = {
+  clusterId: string;
+  wuId: string;
+  scopeName: string | undefined;
+  scopeType: string | undefined;
+  rawValue: string | undefined;
+  reason:
+    | 'missing_value'
+    | 'non_numeric'
+    | 'non_finite'
+    | 'negative'
+    | 'exceeds_max';
+};
+
 // Global array to track out-of-range time values
 // Cleared at the start of each execution
 const outOfRangeTimeValues: OutOfRangeTimeValue[] = [];
+
+// Global array to track activity TimeLocalExecute drops during conversion
+// Cleared at the start of each execution
+const droppedActivityTimeLocalExecuteValues: DroppedActivityTimeLocalExecuteValue[] =
+  [];
 
 /**
  * Logs current memory usage
@@ -154,6 +173,34 @@ function logOutOfRangeSummary() {
       );
     });
   }
+}
+
+/**
+ * Logs summary of activity TimeLocalExecute values that were dropped during conversion
+ */
+function logDroppedActivityTimeLocalExecuteSummary() {
+  if (droppedActivityTimeLocalExecuteValues.length === 0) return;
+
+  logger.warn(
+    `Dropped ${droppedActivityTimeLocalExecuteValues.length} activity TimeLocalExecute value(s) during conversion`
+  );
+
+  const byReason = droppedActivityTimeLocalExecuteValues.reduce(
+    (acc, item) => {
+      acc[item.reason] = (acc[item.reason] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
+  logger.warn(
+    `Dropped activity TimeLocalExecute breakdown by reason: ${JSON.stringify(byReason, null, 2)}`
+  );
+
+  const sample = droppedActivityTimeLocalExecuteValues.slice(0, 5);
+  logger.warn(
+    `Dropped activity TimeLocalExecute sample (up to 5): ${JSON.stringify(sample, null, 2)}`
+  );
 }
 
 /**
@@ -306,14 +353,55 @@ function extractPerformanceMetrics(
   // Unit lookup and converters
 
   const convertByUnit = (name: string, raw: string | undefined) => {
-    if (raw === undefined || raw === null) return null;
+    const shouldTrackDroppedTimeLocalExecute =
+      name === 'TimeLocalExecute' && scopeType === 'activity';
+
+    if (raw === undefined || raw === null) {
+      if (shouldTrackDroppedTimeLocalExecute) {
+        droppedActivityTimeLocalExecuteValues.push({
+          clusterId,
+          wuId,
+          scopeName,
+          scopeType,
+          rawValue: raw,
+          reason: 'missing_value',
+        });
+      }
+      return null;
+    }
 
     // Coerce numeric strings to numbers
     let num: string | number = raw;
     if (typeof num === 'string' && num.trim() !== '' && !isNaN(Number(num))) {
       num = Number(num);
     }
-    if (typeof num !== 'number' || !isFinite(num)) return null;
+    if (typeof num !== 'number') {
+      if (shouldTrackDroppedTimeLocalExecute) {
+        droppedActivityTimeLocalExecuteValues.push({
+          clusterId,
+          wuId,
+          scopeName,
+          scopeType,
+          rawValue: raw,
+          reason: 'non_numeric',
+        });
+      }
+      return null;
+    }
+
+    if (!isFinite(num)) {
+      if (shouldTrackDroppedTimeLocalExecute) {
+        droppedActivityTimeLocalExecuteValues.push({
+          clusterId,
+          wuId,
+          scopeName,
+          scopeType,
+          rawValue: raw,
+          reason: 'non_finite',
+        });
+      }
+      return null;
+    }
 
     const unit = UNIT_LOOKUP[name];
     switch (unit) {
@@ -341,6 +429,17 @@ function extractPerformanceMetrics(
             `Out-of-range time value detected: ${name} = ${rounded}s (negative value, likely clock skew) in wuId=${wuId}, clusterId=${clusterId}, scopeName=${scopeName}, scopeType=${scopeType}`
           );
 
+          if (shouldTrackDroppedTimeLocalExecute) {
+            droppedActivityTimeLocalExecuteValues.push({
+              clusterId,
+              wuId,
+              scopeName,
+              scopeType,
+              rawValue: raw,
+              reason: 'negative',
+            });
+          }
+
           return null;
         }
 
@@ -363,6 +462,17 @@ function extractPerformanceMetrics(
           logger.warn(
             `Out-of-range time value detected: ${name} = ${rounded}s (${days} days, exceeds max ${MAX_DECIMAL_13_6}s) in wuId=${wuId}, clusterId=${clusterId}, scopeName=${scopeName}, scopeType=${scopeType}`
           );
+
+          if (shouldTrackDroppedTimeLocalExecute) {
+            droppedActivityTimeLocalExecuteValues.push({
+              clusterId,
+              wuId,
+              scopeName,
+              scopeType,
+              rawValue: raw,
+              reason: 'exceeds_max',
+            });
+          }
 
           return null;
         }
@@ -585,6 +695,7 @@ async function getWorkunitDetails() {
 
   // Clear out-of-range time values from previous execution
   outOfRangeTimeValues.length = 0;
+  droppedActivityTimeLocalExecuteValues.length = 0;
 
   logger.info('Starting WorkUnit Details job');
 
@@ -823,6 +934,7 @@ async function getWorkunitDetails() {
 
     // Log summary of out-of-range time values
     logOutOfRangeSummary();
+    logDroppedActivityTimeLocalExecuteSummary();
 
     logger.info(
       `WorkUnit Details job completed successfully in ${executionTime}ms`
