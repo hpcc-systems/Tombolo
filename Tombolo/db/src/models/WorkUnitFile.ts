@@ -61,7 +61,7 @@ export class WorkUnitFile extends Model<
   declare wuId: string;
 
   @AllowNull(false)
-  @Column(DataType.TEXT)
+  @Column(DataType.STRING(255))
   declare fileName: string;
 
   @AllowNull(false)

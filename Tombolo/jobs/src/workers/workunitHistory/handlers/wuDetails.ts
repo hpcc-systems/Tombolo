@@ -28,7 +28,7 @@ type WorkUnitDetailRow = {
   label: string | null;
   kind: number | null;
   fileName: string | null;
-  [key: string]: string | number | ScopeType; // Dynamic metric fields
+  [key: string]: string | number | Date | ScopeType; // Dynamic metric fields
 };
 
 // Constants
@@ -220,7 +220,7 @@ function logOutOfRangeError(error: Error, batch: WorkUnitDetailRow[]) {
       const timeFields = Object.keys(problematicRow).filter(k =>
         k.startsWith('Time')
       );
-      const timeValues: Record<string, string | number | null> = {};
+      const timeValues: Record<string, string | number | Date | null> = {};
       timeFields.forEach(field => {
         const val = problematicRow[field];
         if (val !== null && val !== undefined) {
@@ -379,6 +379,30 @@ function extractPerformanceMetrics(
       case 'int': {
         return Math.trunc(num);
       }
+      case 'cost': {
+        // Cost metrics arrive as micro-units (e.g. 682944433 -> 682.944433).
+        const cost = num / 1e6;
+        return Math.round(cost * 1e6) / 1e6;
+      }
+      case 'epoch': {
+        // K8s "When*" metrics are epoch/timeseries timestamps, not durations.
+        // Convert to Date so Sequelize can persist to DATETIME/TIMESTAMP columns.
+        const abs = Math.abs(num);
+
+        let ms = num;
+        if (abs >= 1e18) {
+          ms = num / 1e6; // nanoseconds -> milliseconds
+        } else if (abs >= 1e15) {
+          ms = num / 1e3; // microseconds -> milliseconds
+        } else if (abs >= 1e12) {
+          ms = num; // milliseconds
+        } else {
+          ms = num * 1e3; // seconds -> milliseconds
+        }
+
+        const timestamp = new Date(Math.trunc(ms));
+        return isNaN(timestamp.getTime()) ? null : timestamp;
+      }
       default:
         return num;
     }
@@ -392,7 +416,7 @@ function extractPerformanceMetrics(
         prop.RawValue !== undefined ? prop.RawValue : prop.Formatted;
       const converted = convertByUnit(propName, value);
       if (converted !== null) {
-        (metrics as Record<string, number>)[propName] = converted;
+        (metrics as Record<string, number | Date>)[propName] = converted;
       }
     }
   });
@@ -415,7 +439,6 @@ function processScopeToRow(
 
   // Filter out irrelevant scopes early
   if (!ACCEPTED_SCOPE_TYPES.includes(scopeType)) return null;
-  if (scopeName && scopeName.startsWith('>compile')) return null;
 
   const metrics = extractPerformanceMetrics(
     scope,
@@ -454,10 +477,10 @@ function processScopeToRow(
     scopeType: (scopeType || null) as ScopeType, // Convert empty string to null (not a valid ENUM value)
     label:
       typeof label === 'string'
-        ? truncateString(sanitizeScopeLabel(label), 250)
+        ? truncateString(sanitizeScopeLabel(label), 255, 'end')
         : null,
     kind: kind ? parseInt(kind, 10) : null,
-    fileName: filename ? truncateString(filename, 125) : null,
+    fileName: filename ?? null,
     ...metrics,
   };
 }
