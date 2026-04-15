@@ -12,11 +12,10 @@
     "noEmit": true,
     "allowJs": true,
     "checkJs": false,
-    "baseUrl": "./src",
     "paths": {
-      "@/*": ["*"],
-      "@tombolo/shared": ["../../shared/src/index.ts"],
-      "@tombolo/shared/*": ["../../shared/src/*"]
+      "@/*": ["./src/*"],
+      "@tombolo/shared": ["../shared/src/index.ts"],
+      "@tombolo/shared/*": ["../shared/src/*"]
     },
     "types": ["vite/client", "vitest/globals"]
   },

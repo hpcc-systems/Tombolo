@@ -27,6 +27,18 @@ export interface WorkUnitDetailsResponse {
   graphs: WorkUnitGraph[];
 }
 
+export interface WorkUnitFileEntry {
+  fileName: string;
+  isSuperFile: boolean;
+}
+
+export interface WorkUnitFilesResponse {
+  wuId: string;
+  clusterId: string;
+  inputFiles: WorkUnitFileEntry[];
+  outputFiles: WorkUnitFileEntry[];
+}
+
 export interface WorkUnitGraph {
   id?: string | number;
   scopeId?: string | null;
