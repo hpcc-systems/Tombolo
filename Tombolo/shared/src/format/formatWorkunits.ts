@@ -51,6 +51,17 @@ const formatBytes = (bytes: number | string | null | undefined): string => {
 const formatPercentage = (p: number | string | null | undefined): string =>
   p == null || isNaN(Number(p)) ? '-' : `${Number(p).toFixed(2)}%`;
 
+// Format an ISO timestamp value as a canonical ISO date string.
+const formatDate = (ts: number | string | Date | null | undefined): string => {
+  if (ts == null) return '-';
+  const date = ts instanceof Date ? ts : new Date(ts);
+  return isNaN(date.getTime()) ? '-' : date.toISOString();
+};
+
+// Cost values are received as micro-units (e.g. 682944433 -> 682.944433).
+const formatCost = (n: number | string | null | undefined): string =>
+  n == null || isNaN(Number(n)) ? '-' : (Number(n) / 1e6).toFixed(6);
+
 // Currency formatting: default 2 decimals
 const formatCurrency = (
   n: number | string | null | undefined,
@@ -125,6 +136,7 @@ function renderAnyMetric(
     lower.includes('execute')
   )
     return formatSeconds(value);
+  if (lower.includes('whenk8s')) return formatDate(String(value));
   if (lower.startsWith('num') || lower.includes('count'))
     return formatNumber(value);
   if (
@@ -165,6 +177,8 @@ export {
   formatBytes,
   formatLabel,
   formatPercentage,
+  formatCost,
+  formatDate,
   parseWorkunitTimestamp,
   renderAnyMetric,
 };

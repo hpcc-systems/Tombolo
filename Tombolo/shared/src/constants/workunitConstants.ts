@@ -3,11 +3,19 @@ import {
   formatNumber,
   formatBytes,
   formatPercentage,
+  formatCost,
+  formatDate,
 } from '../format/index.js';
 
-type FormatFunction = (value: any) => string;
+type FormatFunction = (value: number | string | null | undefined) => string;
 
 const relevantMetrics = [
+  // Cost metrics
+  'CostCompile',
+  'CostExecute',
+  'CostFileAccess',
+  'CostSavingPotential',
+
   // Time-based metrics
   'TimeElapsed',
   'TimeAvgElapsed',
@@ -45,6 +53,8 @@ const relevantMetrics = [
   'TimeMaxLookAhead',
   'TimeStdDevLookAhead',
   'TimeFirstRow',
+  'WhenK8sLaunched',
+  'WhenK8sStarted',
 
   // Disk I/O metrics
   'NumDiskRowsRead',
@@ -168,6 +178,12 @@ const relevantMetrics = [
 ] as const;
 
 const FORMAT_LOOKUP: Record<string, FormatFunction> = {
+  CostCompile: formatCost,
+  CostExecute: formatCost,
+  CostFileAccess: formatCost,
+  CostSavingPotential: formatCost,
+  cost: formatCost,
+
   TimeElapsed: formatSeconds,
   TimeAvgElapsed: formatSeconds,
   TimeMinElapsed: formatSeconds,
@@ -204,6 +220,8 @@ const FORMAT_LOOKUP: Record<string, FormatFunction> = {
   TimeMaxLookAhead: formatSeconds,
   TimeStdDevLookAhead: formatSeconds,
   TimeFirstRow: formatSeconds,
+  WhenK8sLaunched: formatDate,
+  WhenK8sStarted: formatDate,
 
   NumDiskRowsRead: formatNumber,
   NumAvgDiskRowsRead: formatNumber,
@@ -326,6 +344,11 @@ const FORMAT_LOOKUP: Record<string, FormatFunction> = {
 };
 
 const UNIT_LOOKUP: Record<string, string> = {
+  CostExecute: 'cost',
+  CostCompile: 'cost',
+  CostFileAccess: 'cost',
+  CostSavingPotential: 'int',
+
   TimeElapsed: 'nanoseconds',
   TimeAvgElapsed: 'nanoseconds',
   TimeMinElapsed: 'nanoseconds',
@@ -362,6 +385,8 @@ const UNIT_LOOKUP: Record<string, string> = {
   TimeMaxLookAhead: 'nanoseconds',
   TimeStdDevLookAhead: 'nanoseconds',
   TimeFirstRow: 'nanoseconds',
+  WhenK8sLaunched: 'epoch',
+  WhenK8sStarted: 'epoch',
 
   NumDiskRowsRead: 'int',
   NumAvgDiskRowsRead: 'int',
