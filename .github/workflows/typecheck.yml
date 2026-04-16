@@ -36,6 +36,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Setup server config files
+        working-directory: Tombolo/server
+        run: cp cluster-whitelist.sample.js cluster-whitelist.js
+
       - name: Transpile required packages for typecheck
         run: pnpm esm:build
         env:
