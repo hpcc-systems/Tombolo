@@ -489,8 +489,9 @@ function extractPerformanceMetrics(
       case 'int': {
         return Math.trunc(num);
       }
-      case 'cost': {
-        // Cost metrics arrive as micro-units (e.g. 682944433 -> 682.944433).
+      case 'cost':
+      case 'costValue': {
+        // Cost-like metrics arrive as micro-units (e.g. 682944433 -> 682.944433).
         const cost = num / 1e6;
         return Math.round(cost * 1e6) / 1e6;
       }

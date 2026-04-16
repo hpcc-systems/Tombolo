@@ -130,6 +130,8 @@ function renderAnyMetric(
   value: number | string | null | undefined
 ): string {
   const lower = String(key).toLowerCase();
+  if (lower.includes('costvalue')) return formatCost(value);
+  if (lower.includes('cost')) return formatCost(value);
   if (
     lower.includes('time') ||
     lower.includes('elapsed') ||

@@ -347,7 +347,8 @@ const UNIT_LOOKUP: Record<string, string> = {
   CostExecute: 'cost',
   CostCompile: 'cost',
   CostFileAccess: 'cost',
-  CostSavingPotential: 'int',
+  // Same storage/input shape as cost (micro-units), but semantically not currency.
+  CostSavingPotential: 'costValue',
 
   TimeElapsed: 'nanoseconds',
   TimeAvgElapsed: 'nanoseconds',
