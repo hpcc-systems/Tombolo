@@ -36,6 +36,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Transpile required packages for typecheck
+        run: pnpm esm:build
+        env:
+          CI: true
+          TURBO_UI: stream
+
       - name: Run typecheck from root
         run: pnpm typecheck
         env:
