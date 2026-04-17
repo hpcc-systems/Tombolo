@@ -177,23 +177,27 @@ const AnalyticsWorkspace = () => {
 
   const getCurrentSql = useCallback(() => currentSqlRef.current, []);
 
-  const setEditorSql = useCallback((nextSql: string, options?: { markUnexecuted?: boolean }) => {
-    const shouldMarkUnexecuted = options?.markUnexecuted ?? true;
-    currentSqlRef.current = nextSql;
-    setHasWhereClauseInEditor(hasWhere(nextSql));
-
-    if (editorRef.current && editorRef.current.getValue() !== nextSql) {
-      editorRef.current.setValue(nextSql);
-    }
-
-    if (shouldMarkUnexecuted) {
-      setIsQueryExecuted(false);
-    }
+  const setQueryExecutedState = useCallback((executed: boolean) => {
+    isQueryExecutedRef.current = executed;
+    setIsQueryExecuted(executed);
   }, []);
 
-  useEffect(() => {
-    isQueryExecutedRef.current = isQueryExecuted;
-  }, [isQueryExecuted]);
+  const setEditorSql = useCallback(
+    (nextSql: string, options?: { markUnexecuted?: boolean }) => {
+      const shouldMarkUnexecuted = options?.markUnexecuted ?? true;
+      currentSqlRef.current = nextSql;
+      setHasWhereClauseInEditor(hasWhere(nextSql));
+
+      if (editorRef.current && editorRef.current.getValue() !== nextSql) {
+        editorRef.current.setValue(nextSql);
+      }
+
+      if (shouldMarkUnexecuted) {
+        setQueryExecutedState(false);
+      }
+    },
+    [setQueryExecutedState]
+  );
 
   useEffect(() => {
     schemaDataRef.current = schemaData;
@@ -393,7 +397,7 @@ const AnalyticsWorkspace = () => {
       localStorage.setItem('analytics_query_history', JSON.stringify(newHistory));
 
       // Mark query as executed
-      setIsQueryExecuted(true);
+      setQueryExecutedState(true);
 
       handleSuccess(`Query executed successfully (${formatTime(executionTime)})`);
     } catch (error: unknown) {
@@ -427,7 +431,7 @@ const AnalyticsWorkspace = () => {
     setQueryResults(null);
     setExecutionStats(null);
     setAppliedFilterId(null);
-    setIsQueryExecuted(false);
+    setQueryExecutedState(false);
   };
 
   // Save query
@@ -670,7 +674,7 @@ const AnalyticsWorkspace = () => {
       // Update local state - keep appliedFilterId set so recall button remains visible
       const updated = (savedFilters || []).map(f => (f.id === appliedFilterId ? updatedFilter : f));
       setSavedFilters(updated);
-      setIsQueryExecuted(false);
+      setQueryExecutedState(false);
       handleSuccess(`Updated "${appliedFilter.name}" successfully`);
     } catch (error: any) {
       console.error('Failed to update filter:', error);
@@ -1501,7 +1505,7 @@ const AnalyticsWorkspace = () => {
                         currentSqlRef.current = nextValue;
                         setHasWhereClauseInEditor(hasWhere(nextValue));
                         if (isQueryExecutedRef.current) {
-                          setIsQueryExecuted(false);
+                          setQueryExecutedState(false);
                         }
                       });
                       // Add keybinding for execute
