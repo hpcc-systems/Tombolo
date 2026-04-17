@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tombolo-server
+  namespace: {{ include "tombolo.namespace" . }}
+spec:
+  replicas: {{ .Values.server.replicaCount }}
+  selector:
+    matchLabels:
+      app: tombolo-server
+  template:
+    metadata:
+      labels:
+        app: tombolo-server
+      annotations:
+        configmap.reloader.stakater.com/reload: tombolo-server-config,tombolo-runtime-config
+        secret.reloader.stakater.com/reload: tombolo-server-secrets,tombolo-runtime-secrets
+    spec:
+{{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+{{- toYaml .Values.imagePullSecrets | nindent 8 }}
+{{- end }}
+      containers:
+        - name: server
+          image: "{{ .Values.server.image.repository }}:{{ .Values.server.image.tag }}"
+          imagePullPolicy: {{ .Values.server.image.pullPolicy }}
+          command: ["sh", "/app/docker-entry.sh"]
+          args: ["$(DB_HOSTNAME)", "$(DB_PORT)"]
+          ports:
+            - name: http
+              containerPort: {{ .Values.server.containerPort }}
+          envFrom:
+            - configMapRef:
+                name: tombolo-server-config
+            - secretRef:
+                name: tombolo-server-secrets
+            - configMapRef:
+                name: tombolo-runtime-config
+                optional: true
+            - secretRef:
+                name: tombolo-runtime-secrets
+                optional: true
+          resources:
+{{- toYaml .Values.server.resources | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.server.startupProbe.path }}
+              port: http
+            failureThreshold: {{ .Values.server.startupProbe.failureThreshold }}
+            periodSeconds: {{ .Values.server.startupProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.server.startupProbe.timeoutSeconds }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.server.livenessProbe.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.server.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.server.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.server.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.server.livenessProbe.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.server.readinessProbe.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.server.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.server.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.server.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.server.readinessProbe.failureThreshold }}

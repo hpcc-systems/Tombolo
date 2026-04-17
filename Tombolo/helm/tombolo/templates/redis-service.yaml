@@ -1,0 +1,14 @@
+{{- if .Values.redis.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: tombolo-redis
+  namespace: {{ include "tombolo.namespace" . }}
+spec:
+  selector:
+    app: tombolo-redis
+  ports:
+    - name: redis
+      port: {{ .Values.redis.service.port }}
+      targetPort: redis
+{{- end }}

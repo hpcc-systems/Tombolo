@@ -1,0 +1,40 @@
+server:
+  replicaCount: 1
+  image:
+    repository: tombolo-server
+    tag: dev-20260408b
+  config:
+    RUN_DB_BOOTSTRAP_ON_START: "true"
+    MYSQL_SSL_ENABLED: "false"
+
+runtime:
+  config:
+    DB_HOSTNAME: host.docker.internal
+    DB_PORT: "3306"
+
+client:
+  replicaCount: 1
+  image:
+    repository: tombolo-client
+    tag: dev
+jobs:
+  replicaCount: 1
+  image:
+    repository: tombolo-jobs
+    tag: dev
+ingress:
+  hosts:
+    - host: tombolo-dev.example.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: server
+          servicePort: 3001
+        - path: /socket.io
+          pathType: Prefix
+          service: server
+          servicePort: 3001
+        - path: /
+          pathType: Prefix
+          service: client
+          servicePort: 80

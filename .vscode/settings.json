@@ -3,6 +3,15 @@
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
   "editor.formatOnPaste": false,
+  "files.associations": {
+    "Tombolo/helm/**/templates/*.yaml": "helm-template",
+    "Tombolo/helm/**/templates/*.yml": "helm-template",
+    "Tombolo/helm/**/*.tpl": "helm-template"
+  },
+  "[helm-template]": {
+    "editor.formatOnSave": false,
+    "editor.formatOnPaste": false
+  },
   "jest.rootPath": "Tombolo/server",
   "cSpell.words": ["monitorings", "AKEYLESS"]
 }

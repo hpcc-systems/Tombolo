@@ -1,0 +1,72 @@
+{{- if .Values.redis.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tombolo-redis
+  namespace: {{ include "tombolo.namespace" . }}
+spec:
+  serviceName: tombolo-redis
+  replicas: {{ .Values.redis.replicaCount }}
+  selector:
+    matchLabels:
+      app: tombolo-redis
+  template:
+    metadata:
+      labels:
+        app: tombolo-redis
+      annotations:
+        secret.reloader.stakater.com/reload: tombolo-runtime-secrets
+    spec:
+      containers:
+        - name: redis
+          image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+          imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.redis.containerPort }}
+              name: redis
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.auth.secretName }}
+                  key: {{ .Values.redis.auth.passwordKey }}
+                  optional: true
+          command:
+            - sh
+            - -c
+            - |
+              if [ -n "${REDIS_PASSWORD}" ]; then
+                exec redis-server --requirepass "${REDIS_PASSWORD}" --maxmemory {{ .Values.redis.runtime.maxMemory }} --maxmemory-policy {{ .Values.redis.runtime.maxMemoryPolicy }};
+              else
+                exec redis-server --maxmemory {{ .Values.redis.runtime.maxMemory }} --maxmemory-policy {{ .Values.redis.runtime.maxMemoryPolicy }};
+              fi
+          livenessProbe:
+            tcpSocket:
+              port: redis
+            initialDelaySeconds: {{ .Values.redis.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.redis.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.redis.livenessProbe.timeoutSeconds }}
+          readinessProbe:
+            tcpSocket:
+              port: redis
+            initialDelaySeconds: {{ .Values.redis.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.redis.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.redis.readinessProbe.timeoutSeconds }}
+          resources:
+{{- toYaml .Values.redis.resources | nindent 12 }}
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: redis-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+{{- if .Values.redis.persistence.storageClass }}
+        storageClassName: {{ .Values.redis.persistence.storageClass }}
+{{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.redis.persistence.size }}
+{{- end }}

@@ -1,0 +1,95 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tombolo-client-nginx
+  namespace: {{ include "tombolo.namespace" . }}
+  # Kubernetes uses this ConfigMap as the source of truth for client nginx config.
+  # Docker Compose continues to use nginx configs bundled in Tombolo/client-reactjs/nginx.
+data:
+  nginx.conf: |
+    user nginx;
+    worker_processes auto;
+    error_log /var/log/nginx/error.log;
+    pid /var/run/nginx.pid;
+
+    events {
+      worker_connections 1024;
+    }
+
+    http {
+      log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+      access_log /var/log/nginx/access.log main;
+
+      server_tokens off;
+      sendfile on;
+      tcp_nopush on;
+      tcp_nodelay on;
+      keepalive_timeout 65;
+      types_hash_max_size 2048;
+      server_names_hash_bucket_size 128;
+
+      include /etc/nginx/mime.types;
+      default_type application/octet-stream;
+      include /etc/nginx/conf.d/*.conf;
+    }
+
+  tombolo-nginx.conf: |
+    server {
+      listen 80;
+      server_name localhost;
+
+      add_header X-XSS-Protection "1; mode=block";
+      add_header X-Permitted-Cross-Domain-Policies "none";
+      add_header X-Frame-Options "deny";
+      add_header X-Content-Type-Options "nosniff";
+      add_header Content-Security-Policy "script-src 'self'; object-src 'self'; worker-src 'self' blob:;";
+      add_header Cache-Control "no-store";
+      add_header Pragma "no-cache";
+
+      error_log /var/log/nginx/tombolo-error.log;
+      access_log /var/log/nginx/tombolo-access.log;
+
+      location / {
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+        proxy_hide_header X-Powered-By;
+        expires -1;
+
+        root /usr/share/nginx/html;
+        index index.html index.htm;
+        try_files $uri $uri/ /index.html;
+      }
+
+      location /api {
+        proxy_pass http://tombolo-server:{{ .Values.server.service.port }};
+        proxy_set_header X-Frame-Options "deny";
+        proxy_hide_header X-Powered-By;
+      }
+
+      location /socket.io {
+        proxy_pass http://tombolo-server:{{ .Values.server.service.port }};
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+      }
+
+      location /api/cluster/addClusterWithProgress {
+        proxy_pass http://tombolo-server:{{ .Values.server.service.port }};
+        proxy_set_header Connection keep-alive;
+        proxy_buffering off;
+        proxy_cache off;
+        chunked_transfer_encoding off;
+        add_header Cache-Control no-cache;
+      }
+
+      error_page 500 502 503 504 /50x.html;
+      location = /50x.html {
+        root /usr/share/nginx/html;
+      }
+    }

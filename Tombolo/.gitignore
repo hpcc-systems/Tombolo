@@ -25,3 +25,5 @@ customCerts/*.crt
 customCerts/*.pem
 dockerLogs/
 redis-data/
+helm/tombolo/values-secrets*.yaml
+!helm/tombolo/values-secrets.example.yaml

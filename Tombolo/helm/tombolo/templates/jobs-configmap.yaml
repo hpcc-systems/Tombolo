@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tombolo-jobs-config
+  namespace: {{ include "tombolo.namespace" . }}
+data:
+{{- range $key, $value := .Values.jobs.config }}
+  {{ $key }}: {{ $value | quote }}
+{{- end }}

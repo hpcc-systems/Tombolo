@@ -9,6 +9,8 @@ title: Configurations
 
 To get Tombolo up and running, you'll need to configure two essential files. For your convenience, sample .env files are already included in the project. Simply copy these sample files and adjust the values to suit your specific environment.
 
+If you are deploying on Kubernetes, use the [Kubernetes Deployment](./Kubernetes) and [Kubernetes Environment Variables](./Kubernetes-Environment-Variables) guides for ConfigMap/Secret patterns and runtime secret loading with Akeyless.
+
 1. **General Environment File**:
    This file contains server-related configurations and Docker-related settings. It is located in the root directory of the project: `Tombolo/Tombolo/.env`.
 
