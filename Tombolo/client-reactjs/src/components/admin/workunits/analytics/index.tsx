@@ -1496,7 +1496,6 @@ const AnalyticsWorkspace = () => {
                     onMount={(editor, monaco) => {
                       editorRef.current = editor;
                       currentSqlRef.current = editor.getValue();
-                      registerSqlCompletionProvider(monaco);
                       editor.onDidChangeModelContent(() => {
                         const nextValue = editor.getValue();
                         currentSqlRef.current = nextValue;
