@@ -8,6 +8,7 @@ import axios from 'axios';
 import { relevantMetrics, forbiddenSqlKeywords } from '@tombolo/shared';
 import Editor, { OnMount } from '@monaco-editor/react';
 import type { Monaco } from '@monaco-editor/react';
+import type { editor as MonacoEditor } from 'monaco-editor';
 import debounce from 'lodash/debounce';
 import styles from '../../workunitHistory.module.css';
 import { disposeSqlAutocomplete, registerSqlAutocomplete } from '@/components/common/sqlAutocomplete';
@@ -31,9 +32,41 @@ WHERE 1=1
 ORDER BY TimeElapsed DESC
 LIMIT 100`;
 
+const validateSql = (rawSql: string) => {
+  const original = rawSql || '';
+  const trimmed = original.trim();
+  if (!trimmed) {
+    return { ok: false, reason: 'SQL is empty' };
+  }
+
+  const withoutComments = trimmed
+    .replace(/--.*$/gm, '')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .trim();
+
+  if (withoutComments.includes(';')) {
+    return { ok: false, reason: 'Multiple statements are not allowed (remove semicolons)' };
+  }
+
+  if (!/^select\b/i.test(withoutComments)) {
+    return { ok: false, reason: 'Only SELECT statements are allowed' };
+  }
+
+  for (const kw of forbiddenSqlKeywords) {
+    const re = new RegExp(`\\b${kw}\\b`, 'i');
+    if (re.test(withoutComments)) {
+      return { ok: false, reason: `Disallowed keyword detected: ${kw.toUpperCase()}` };
+    }
+  }
+
+  return { ok: true, reason: undefined };
+};
+
 const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
   const storageKey = `wuSql.${clusterId}.${wuid}`;
-  const [sql, setSql] = useState(() => localStorage.getItem(storageKey) || DEFAULT_SQL);
+  const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
+  const currentSqlRef = useRef(localStorage.getItem(storageKey) || DEFAULT_SQL);
+  const [sqlForValidation, setSqlForValidation] = useState(currentSqlRef.current);
   const [executing, setExecuting] = useState(false);
   const [result, setResult] = useState<{ columns: string[]; rows: Record<string, unknown>[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +79,21 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
 
   const saveRef = useRef<ReturnType<typeof debounce> | null>(null);
   const DEBOUNCE_MS = 300;
+
+  const getCurrentSql = useCallback(() => currentSqlRef.current, []);
+
+  const setEditorSql = useCallback(
+    (nextSql: string) => {
+      currentSqlRef.current = nextSql;
+      setSqlForValidation(nextSql);
+      saveRef.current?.(storageKey, nextSql);
+
+      if (editorRef.current && editorRef.current.getValue() !== nextSql) {
+        editorRef.current.setValue(nextSql);
+      }
+    },
+    [storageKey]
+  );
 
   useEffect(() => {
     saveRef.current = debounce((key: string, value: string) => {
@@ -63,42 +111,20 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
   }, []);
 
   useEffect(() => {
-    saveRef.current?.(storageKey, sql);
-  }, [sql, storageKey]);
+    const storedSql = localStorage.getItem(storageKey) || DEFAULT_SQL;
+    setEditorSql(storedSql);
+  }, [storageKey, setEditorSql]);
 
   const lintSql = useMemo(() => {
-    const original = sql || '';
-    const trimmed = original.trim();
-    if (!trimmed) {
-      return { ok: false, reason: 'SQL is empty' };
-    }
-
-    const withoutComments = trimmed
-      .replace(/--.*$/gm, '')
-      .replace(/\/\*[\s\S]*?\*\//g, '')
-      .trim();
-
-    if (withoutComments.includes(';')) {
-      return { ok: false, reason: 'Multiple statements are not allowed (remove semicolons)' };
-    }
-
-    if (!/^select\b/i.test(withoutComments)) {
-      return { ok: false, reason: 'Only SELECT statements are allowed' };
-    }
-
-    for (const kw of forbiddenSqlKeywords) {
-      const re = new RegExp(`\\b${kw}\\b`, 'i');
-      if (re.test(withoutComments)) {
-        return { ok: false, reason: `Disallowed keyword detected: ${kw.toUpperCase()}` };
-      }
-    }
-
-    return { ok: true, reason: undefined };
-  }, [sql]);
+    return validateSql(sqlForValidation);
+  }, [sqlForValidation]);
 
   const runQuery = async () => {
-    if (!lintSql.ok) {
-      message.warning(lintSql.reason || 'SQL did not pass validation');
+    const currentSql = getCurrentSql();
+    const validation = validateSql(currentSql);
+
+    if (!validation.ok) {
+      message.warning(validation.reason || 'SQL did not pass validation');
       return;
     }
 
@@ -112,7 +138,7 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
       const response = await apiClient.post(
         '/workunitAnalytics/query',
         {
-          sql,
+          sql: currentSql,
           options: {
             scopeToWuid: wuid,
             scopeToClusterId: clusterId,
@@ -156,8 +182,17 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
     });
   }, []);
 
-  const handleEditorMount: OnMount = (_editor, monaco) => {
+  const handleEditorMount: OnMount = (editor, monaco) => {
+    editorRef.current = editor;
+    currentSqlRef.current = editor.getValue();
     registerCompletionProvider(monaco);
+
+    editor.onDidChangeModelContent(() => {
+      const nextValue = editor.getValue();
+      currentSqlRef.current = nextValue;
+      setSqlForValidation(nextValue);
+      saveRef.current?.(storageKey, nextValue);
+    });
   };
 
   useEffect(() => {
@@ -226,8 +261,7 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
               height="280px"
               defaultLanguage="sql"
               beforeMount={registerCompletionProvider}
-              value={sql}
-              onChange={v => setSql(v ?? '')}
+              defaultValue={currentSqlRef.current}
               onMount={handleEditorMount}
               theme="vs-dark"
               options={{
@@ -271,7 +305,7 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
                 onClick={() => abortControllerRef.current?.abort()}>
                 Cancel
               </Button>
-              <Button icon={<ReloadOutlined />} onClick={() => setSql(DEFAULT_SQL)} disabled={executing}>
+              <Button icon={<ReloadOutlined />} onClick={() => setEditorSql(DEFAULT_SQL)} disabled={executing}>
                 Reset to default
               </Button>
             </Space>
