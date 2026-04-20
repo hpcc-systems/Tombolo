@@ -86,8 +86,8 @@ import {
   formatTime,
 } from './utils';
 import type { WhereClauseRow } from './utils';
-import { compareQueryValues } from './sorting';
-import type { ColumnTypeMetadata } from './sorting';
+import { compareQueryValues } from '@/components/common/sqlResultsSorting';
+import type { ColumnTypeMetadata } from '@/components/common/sqlResultsSorting';
 
 const { Sider, Content } = Layout;
 const { Panel } = Collapse;

@@ -12,6 +12,8 @@ import type { editor as MonacoEditor } from 'monaco-editor';
 import debounce from 'lodash/debounce';
 import styles from '../../workunitHistory.module.css';
 import { disposeSqlAutocomplete, registerSqlAutocomplete } from '@/components/common/sqlAutocomplete';
+import { compareQueryValues } from '@/components/common/sqlResultsSorting';
+import type { ColumnTypeMetadata, SortDirection } from '@/components/common/sqlResultsSorting';
 
 const { Text } = Typography;
 
@@ -62,14 +64,26 @@ const validateSql = (rawSql: string) => {
   return { ok: true, reason: undefined };
 };
 
+type ScopedQueryResult = {
+  columns: string[];
+  rows: Record<string, unknown>[];
+  columnTypes?: Record<string, ColumnTypeMetadata>;
+};
+
+type ResultsSortState = {
+  columnKey: string | null;
+  order: SortDirection;
+};
+
 const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
   const storageKey = `wuSql.${clusterId}.${wuid}`;
   const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
   const currentSqlRef = useRef(localStorage.getItem(storageKey) || DEFAULT_SQL);
   const [sqlForValidation, setSqlForValidation] = useState(currentSqlRef.current);
   const [executing, setExecuting] = useState(false);
-  const [result, setResult] = useState<{ columns: string[]; rows: Record<string, unknown>[] } | null>(null);
+  const [result, setResult] = useState<ScopedQueryResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [resultsSort, setResultsSort] = useState<ResultsSortState>({ columnKey: null, order: null });
   const completionProviderRef = useRef<{ dispose: () => void } | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -147,6 +161,7 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
         { signal: controller.signal }
       );
       setResult(response.data);
+      setResultsSort({ columnKey: null, order: null });
     } catch (err: unknown) {
       if (axios.isCancel(err)) {
         message.info('Query cancelled');
@@ -169,8 +184,38 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
 
   const columns = useMemo(() => {
     if (!result?.columns?.length) return [];
-    return result.columns.map(col => ({ title: col, dataIndex: col, key: col, ellipsis: true }));
-  }, [result]);
+    return result.columns.map(col => ({
+      title: col,
+      dataIndex: col,
+      key: col,
+      ellipsis: true,
+      sorter: true,
+      sortOrder: resultsSort.columnKey === col ? resultsSort.order : null,
+      sortDirections: ['ascend', 'descend'] as ('ascend' | 'descend')[],
+    }));
+  }, [result, resultsSort]);
+
+  const sortedRows = useMemo(() => {
+    if (!result?.rows) return [];
+
+    const rowsWithIndex = result.rows.map((row, idx) => ({ row, idx }));
+
+    if (!resultsSort.columnKey || !resultsSort.order) {
+      return rowsWithIndex.map(({ row }) => row);
+    }
+
+    const columnKey = resultsSort.columnKey;
+    const family = result.columnTypes?.[columnKey]?.family ?? 'unknown';
+
+    return [...rowsWithIndex]
+      .sort((a, b) => {
+        const cmp = compareQueryValues(a.row[columnKey], b.row[columnKey], family, resultsSort.order);
+
+        if (cmp !== 0) return cmp;
+        return a.idx - b.idx;
+      })
+      .map(({ row }) => row);
+  }, [result, resultsSort]);
 
   const registerCompletionProvider = useCallback((monaco: Monaco) => {
     registerSqlAutocomplete({
@@ -320,8 +365,21 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
                 rowKey={(row, i) =>
                   String((row as Record<string, unknown>).id ?? (row as Record<string, unknown>).scopeId ?? i)
                 }
-                dataSource={result.rows}
+                dataSource={sortedRows}
                 columns={columns}
+                onChange={(_pagination, _filters, sorter) => {
+                  const normalizedSorter = Array.isArray(sorter) ? sorter[0] : sorter;
+                  const columnKey =
+                    normalizedSorter && typeof normalizedSorter.columnKey === 'string'
+                      ? normalizedSorter.columnKey
+                      : null;
+                  const order =
+                    normalizedSorter?.order === 'ascend' || normalizedSorter?.order === 'descend'
+                      ? normalizedSorter.order
+                      : null;
+
+                  setResultsSort({ columnKey, order });
+                }}
                 pagination={{ pageSize: 50 }}
                 scroll={{ x: true, y: TABLE_SCROLL_Y }}
               />

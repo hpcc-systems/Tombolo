@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { compareQueryValues } from '@/components/admin/workunits/analytics/sorting';
+import { compareQueryValues } from '@/components/common/sqlResultsSorting';
 
 describe('compareQueryValues', () => {
   it('sorts numeric values as numbers', () => {
