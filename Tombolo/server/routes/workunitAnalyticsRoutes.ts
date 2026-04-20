@@ -4,17 +4,18 @@ import {
   getSchema,
   analyzeQuery,
   getDatabaseStats,
+  askAnalyticsAssistant,
 } from '../controllers/workunitAnalyticsController.js';
 import {
   validateAnalyticsQuery,
   validateAnalyzeQuery,
   validateGetSchema,
   validateGetDatabaseStats,
+  validateAssistantRequest,
 } from '../middlewares/workunitAnalyticsMiddleware.js';
 import { validate } from '../middlewares/validateRequestBody.js';
 import { validateUserRole } from '../middlewares/rbacMiddleware.js';
 import role from '../config/roleTypes.js';
-import logger from '../config/logger.js';
 
 const router = express.Router();
 
@@ -27,16 +28,7 @@ router.use(validateUserRole([role.OWNER, role.ADMIN]));
  * @access  Private
  * @body    { sql: string, options?: { limit?: number, clusterId?: string } }
  */
-router.post(
-  '/query',
-  (req, res, next) => {
-    logger.debug('=== POST /workunitAnalytics/query ===');
-    logger.debug('Request body:', JSON.stringify(req.body, null, 2));
-    next();
-  },
-  validate(validateAnalyticsQuery),
-  executeAnalyticsQuery
-);
+router.post('/query', validate(validateAnalyticsQuery), executeAnalyticsQuery);
 
 /**
  * @route   GET /api/workunitAnalytics/schema
@@ -61,5 +53,17 @@ router.post('/analyze', validate(validateAnalyzeQuery), analyzeQuery);
  * @query   { includeDistributions?: boolean, startDate?: string, endDate?: string }
  */
 router.get('/stats', validate(validateGetDatabaseStats), getDatabaseStats);
+
+/**
+ * @route   POST /api/workunitAnalytics/assistant
+ * @desc    Generate natural-language analytics response and optional SQL
+ * @access  Private
+ * @body    { message: string, knowledgeBase?: string, schemaData?: object, assistantContext?: string }
+ */
+router.post(
+  '/assistant',
+  validate(validateAssistantRequest),
+  askAnalyticsAssistant
+);
 
 export default router;

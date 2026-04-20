@@ -10,7 +10,6 @@ import {
   arrayBody,
 } from './commonMiddleware.js';
 import { forbiddenSqlKeywords } from '@tombolo/shared';
-import logger from '../config/logger.js';
 
 // Valid sort fields for analytics queries (if we add sorting to results)
 const VALID_ANALYTICS_SORT_FIELDS = [
@@ -44,13 +43,10 @@ const validateAnalyticsQuery = [
         .replace(/\s+/g, ' ') // Normalize multiple spaces to single space
         .trim();
 
-      logger.debug('SQL after sanitization:', JSON.stringify(cleaned));
       return cleaned;
     })
     .custom(value => {
       // At this point value has comments stripped and whitespace normalized
-      logger.debug('Checking if SELECT, value:', JSON.stringify(value));
-
       // Check if starts with SELECT (case-insensitive)
       if (!value.toLowerCase().startsWith('select')) {
         throw new Error('Only SELECT statements are allowed');
@@ -289,6 +285,80 @@ const validateExportQuery = [
     ),
 ];
 
+// Validation for POST /api/workunitAnalytics/assistant
+const validateAssistantRequest = [
+  body('message')
+    .isString()
+    .withMessage('message must be a string')
+    .bail()
+    .trim()
+    .notEmpty()
+    .withMessage('message is required')
+    .bail()
+    .isLength({ min: 1, max: 4000 })
+    .withMessage('message must be 1-4000 characters'),
+
+  body('assistantContext')
+    .optional()
+    .isString()
+    .withMessage('assistantContext must be a string')
+    .bail()
+    .isLength({ max: 16000 })
+    .withMessage('assistantContext must be less than 16000 characters'),
+
+  body('knowledgeBase')
+    .optional()
+    .isString()
+    .withMessage('knowledgeBase must be a string')
+    .bail()
+    .isLength({ max: 200000 })
+    .withMessage('knowledgeBase must be less than 200000 characters'),
+
+  body('schemaData')
+    .optional({ nullable: true })
+    .isObject()
+    .withMessage('schemaData must be an object'),
+
+  body('provider')
+    .optional()
+    .isString()
+    .withMessage('provider must be a string')
+    .bail()
+    .isIn(['openai', 'ollama', 'lmstudio', 'gpt4all'])
+    .withMessage('provider must be one of: openai, ollama, lmstudio, gpt4all'),
+
+  body('model')
+    .optional()
+    .isString()
+    .withMessage('model must be a string')
+    .bail()
+    .isLength({ max: 200 })
+    .withMessage('model must be less than 200 characters'),
+
+  body('conversationHistory')
+    .optional()
+    .custom(value => {
+      if (value === undefined || value === null) {
+        return true;
+      }
+      if (!Array.isArray(value)) {
+        throw new Error('conversationHistory must be an array');
+      }
+      // Don't validate length here - client is already capping it
+      return true;
+    }),
+
+  body('conversationHistory.*.role')
+    .optional()
+    .isIn(['user', 'assistant'])
+    .withMessage('conversationHistory role must be user or assistant'),
+
+  body('conversationHistory.*.content')
+    .optional()
+    .isString()
+    .withMessage('conversationHistory content must be a string'),
+];
+
 // Helper function to validate SQL query structure (can be reused)
 const sqlValidationRules = {
   isSelect: value => {
@@ -384,6 +454,7 @@ export {
   validateUpdateQuery,
   validateGetSavedQueries,
   validateExportQuery,
+  validateAssistantRequest,
   VALID_ANALYTICS_SORT_FIELDS,
   sqlValidationRules,
 };
