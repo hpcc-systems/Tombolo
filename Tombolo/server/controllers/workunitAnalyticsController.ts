@@ -194,6 +194,252 @@ interface SchemaColumnRow {
   keyType: 'PRI' | 'FK' | 'MUL' | null;
 }
 
+type ColumnSortFamily =
+  | 'number'
+  | 'date'
+  | 'datetime'
+  | 'time'
+  | 'boolean'
+  | 'string'
+  | 'json'
+  | 'unknown';
+
+interface ColumnTypeMetadata {
+  family: ColumnSortFamily;
+  rawType: string | null;
+}
+
+function extractReferencedTables(sql: string): string[] {
+  const tablePattern = /\b(?:from|join)\s+`?([a-zA-Z_][a-zA-Z0-9_]*)`?/gi;
+  const tables = new Set<string>();
+  let match: RegExpExecArray | null = null;
+
+  while ((match = tablePattern.exec(sql)) !== null) {
+    tables.add(match[1].toLowerCase());
+  }
+
+  return Array.from(tables);
+}
+
+function normalizeColumnFamily(rawType: string | null): ColumnSortFamily {
+  if (!rawType) return 'unknown';
+  const type = rawType.toLowerCase();
+
+  if (
+    [
+      'int',
+      'integer',
+      'tinyint',
+      'smallint',
+      'mediumint',
+      'bigint',
+      'decimal',
+      'numeric',
+      'float',
+      'double',
+      'real',
+      'bit',
+      'year',
+    ].includes(type)
+  ) {
+    return 'number';
+  }
+
+  if (type === 'date') return 'date';
+  if (['datetime', 'timestamp'].includes(type)) return 'datetime';
+  if (type === 'time') return 'time';
+  if (['bool', 'boolean'].includes(type)) return 'boolean';
+  if (type === 'json') return 'json';
+
+  if (
+    [
+      'char',
+      'varchar',
+      'text',
+      'tinytext',
+      'mediumtext',
+      'longtext',
+      'enum',
+      'set',
+      'binary',
+      'varbinary',
+      'blob',
+      'tinyblob',
+      'mediumblob',
+      'longblob',
+    ].includes(type)
+  ) {
+    return 'string';
+  }
+
+  return 'unknown';
+}
+
+function inferFamilyFromValues(
+  rows: Record<string, unknown>[],
+  columnName: string
+): ColumnSortFamily {
+  const observedValues = rows
+    .map(row => row[columnName])
+    .filter(value => value !== null && value !== undefined)
+    .slice(0, 100);
+
+  if (observedValues.length === 0) {
+    return 'unknown';
+  }
+
+  if (
+    observedValues.every(
+      value =>
+        typeof value === 'object' &&
+        value !== null &&
+        !(value instanceof Date) &&
+        !Array.isArray(value)
+    )
+  ) {
+    return 'json';
+  }
+
+  if (observedValues.every(value => typeof value === 'boolean')) {
+    return 'boolean';
+  }
+
+  const normalizedStrings = observedValues
+    .map(value => String(value).trim().toLowerCase())
+    .filter(value => value !== '');
+
+  if (
+    normalizedStrings.length > 0 &&
+    normalizedStrings.every(value =>
+      ['0', '1', 'true', 'false', 'yes', 'no'].includes(value)
+    )
+  ) {
+    return 'boolean';
+  }
+
+  if (
+    observedValues.every(value => {
+      if (typeof value === 'number') return Number.isFinite(value);
+      if (typeof value === 'bigint') return true;
+      if (typeof value === 'string' && value.trim() !== '') {
+        const numeric = Number(value);
+        return Number.isFinite(numeric);
+      }
+      return false;
+    })
+  ) {
+    return 'number';
+  }
+
+  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+  const dateTimePattern =
+    /^\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/;
+  const timePattern = /^\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/;
+
+  if (
+    observedValues.every(value => {
+      if (value instanceof Date) return true;
+      if (typeof value !== 'string') return false;
+      const trimmed = value.trim();
+      return (
+        dateTimePattern.test(trimmed) || !Number.isNaN(Date.parse(trimmed))
+      );
+    })
+  ) {
+    if (
+      observedValues.every(
+        value => typeof value === 'string' && datePattern.test(value.trim())
+      )
+    ) {
+      return 'date';
+    }
+
+    if (
+      observedValues.every(
+        value => typeof value === 'string' && timePattern.test(value.trim())
+      )
+    ) {
+      return 'time';
+    }
+
+    if (
+      observedValues.some(
+        value => typeof value === 'string' && dateTimePattern.test(value.trim())
+      )
+    ) {
+      return 'datetime';
+    }
+
+    return 'date';
+  }
+
+  return 'string';
+}
+
+async function fetchTableColumnTypes(
+  tableNames: string[]
+): Promise<Record<string, Set<string>>> {
+  const typeLookup: Record<string, Set<string>> = {};
+
+  for (const tableName of tableNames) {
+    const columns = (await sequelize.query(
+      `
+        SELECT c.COLUMN_NAME as name, c.DATA_TYPE as type
+        FROM INFORMATION_SCHEMA.COLUMNS c
+        WHERE c.TABLE_SCHEMA = DATABASE()
+          AND c.TABLE_NAME = ?
+      `,
+      {
+        replacements: [tableName],
+        type: QueryTypes.SELECT,
+      }
+    )) as Array<{ name: string; type: string }>;
+
+    for (const column of columns) {
+      const normalized = column.name.toLowerCase();
+      if (!typeLookup[normalized]) {
+        typeLookup[normalized] = new Set();
+      }
+      typeLookup[normalized].add(column.type);
+    }
+  }
+
+  return typeLookup;
+}
+
+async function buildColumnTypeMetadata(
+  sql: string,
+  columns: string[],
+  rows: Record<string, unknown>[]
+): Promise<Record<string, ColumnTypeMetadata>> {
+  const outputToSourceColumnMap = getOutputToSourceColumnMap(sql);
+  const referencedTables = extractReferencedTables(sql);
+  const tableColumnTypeLookup = await fetchTableColumnTypes(referencedTables);
+  const columnTypes: Record<string, ColumnTypeMetadata> = {};
+
+  for (const column of columns) {
+    const outputColumn = column.toLowerCase();
+    const sourceColumn = outputToSourceColumnMap[outputColumn] || outputColumn;
+    const candidateTypes = tableColumnTypeLookup[sourceColumn]
+      ? Array.from(tableColumnTypeLookup[sourceColumn])
+      : [];
+
+    const rawType = candidateTypes.length === 1 ? candidateTypes[0] : null;
+    const normalizedFamily = normalizeColumnFamily(rawType);
+    const family =
+      normalizedFamily === 'unknown'
+        ? inferFamilyFromValues(rows, column)
+        : normalizedFamily;
+
+    columnTypes[column] = {
+      family,
+      rawType,
+    };
+  }
+
+  return columnTypes;
+}
+
 /**
  * Execute a general analytics SQL query
  * Unlike the workunit-scoped query, this allows querying across all data
@@ -447,6 +693,18 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
     // Extract column names
     const columns =
       Array.isArray(rows) && rows.length > 0 ? Object.keys(rows[0]) : [];
+    const columnTypes = await buildColumnTypeMetadata(finalSql, columns, rows);
+
+    const unresolvedColumns = Object.entries(columnTypes)
+      .filter(([, metadata]) => metadata.rawType === null)
+      .map(([columnName]) => columnName);
+
+    logger.debug('Analytics SQL query column type metadata', {
+      ...logContext,
+      columnCount: columns.length,
+      unresolvedTypeColumns: unresolvedColumns,
+      unresolvedTypeCount: unresolvedColumns.length,
+    });
 
     logger.info('Analytics SQL query completed', {
       ...logContext,
@@ -461,6 +719,7 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
       executionTime,
       rowCount: rows.length,
       limited: rows.length === MAX_LIMIT,
+      columnTypes,
     });
   } catch (err) {
     if (onClose) res.off('close', onClose);

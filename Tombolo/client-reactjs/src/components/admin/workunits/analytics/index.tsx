@@ -86,6 +86,8 @@ import {
   formatTime,
 } from './utils';
 import type { WhereClauseRow } from './utils';
+import { compareQueryValues } from '@/components/common/sqlResultsSorting';
+import type { ColumnTypeMetadata } from '@/components/common/sqlResultsSorting';
 
 const { Sider, Content } = Layout;
 const { Panel } = Collapse;
@@ -96,6 +98,7 @@ interface QueryResult {
   rows: Record<string, unknown>[];
   executionTime: number;
   rowCount: number;
+  columnTypes?: Record<string, ColumnTypeMetadata>;
 }
 
 interface ExecutionStats {
@@ -137,6 +140,11 @@ interface SavedFilter {
   createdAt: string;
 }
 
+type ResultsSortState = {
+  columnKey: string | null;
+  order: 'ascend' | 'descend' | null;
+};
+
 const AnalyticsWorkspace = () => {
   const history = useHistory();
   const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
@@ -174,6 +182,38 @@ const AnalyticsWorkspace = () => {
   const isQueryExecutedRef = useRef(false);
   const [hasWhereClauseInEditor, setHasWhereClauseInEditor] = useState(() => hasWhere(DEFAULT_SQL));
   const [querySqlToSave, setQuerySqlToSave] = useState('');
+  const [resultsSort, setResultsSort] = useState<ResultsSortState>({
+    columnKey: null,
+    order: null,
+  });
+
+  const sortedResultsRows = useMemo(() => {
+    if (!queryResults) return [];
+
+    const rowsWithIndex = queryResults.rows.map((row, idx) => ({ row, idx }));
+
+    if (!resultsSort.columnKey || !resultsSort.order) {
+      return rowsWithIndex.map(({ row, idx }) => ({
+        ...row,
+        key: idx,
+      }));
+    }
+
+    const columnKey = resultsSort.columnKey;
+    const family = queryResults.columnTypes?.[columnKey]?.family ?? 'unknown';
+
+    const sorted = [...rowsWithIndex].sort((a, b) => {
+      const cmp = compareQueryValues(a.row[columnKey], b.row[columnKey], family, resultsSort.order);
+
+      if (cmp !== 0) return cmp;
+      return a.idx - b.idx;
+    });
+
+    return sorted.map(({ row, idx }) => ({
+      ...row,
+      key: idx,
+    }));
+  }, [queryResults, resultsSort]);
 
   const getCurrentSql = useCallback(() => currentSqlRef.current, []);
 
@@ -375,7 +415,9 @@ const AnalyticsWorkspace = () => {
         rows: result.data.rows,
         executionTime,
         rowCount: result.data.rows.length,
+        columnTypes: result.data.columnTypes,
       });
+      setResultsSort({ columnKey: null, order: null });
 
       setExecutionStats({
         executionTime,
@@ -431,6 +473,7 @@ const AnalyticsWorkspace = () => {
     setQueryResults(null);
     setExecutionStats(null);
     setAppliedFilterId(null);
+    setResultsSort({ columnKey: null, order: null });
     setQueryExecutedState(false);
   };
 
@@ -1237,14 +1280,9 @@ const AnalyticsWorkspace = () => {
       dataIndex: col,
       key: col,
       ellipsis: true,
-      sorter: (a: Record<string, unknown>, b: Record<string, unknown>) => {
-        const aVal = a[col];
-        const bVal = b[col];
-        if (typeof aVal === 'number' && typeof bVal === 'number') {
-          return aVal - bVal;
-        }
-        return String(aVal).localeCompare(String(bVal));
-      },
+      sorter: true,
+      sortOrder: resultsSort.columnKey === col ? resultsSort.order : null,
+      sortDirections: ['ascend', 'descend'] as ('ascend' | 'descend')[],
       render: (text: unknown, record: Record<string, unknown>) => {
         // If column is wuId, make it clickable
         if (col === 'wuId' && record.clusterId) {
@@ -1283,10 +1321,20 @@ const AnalyticsWorkspace = () => {
 
         <Table
           columns={columns}
-          dataSource={queryResults.rows.map((row, idx) => ({
-            ...row,
-            key: idx,
-          }))}
+          dataSource={sortedResultsRows}
+          onChange={(_pagination, _filters, sorter) => {
+            const normalizedSorter = Array.isArray(sorter) ? sorter[0] : sorter;
+
+            const columnKey =
+              normalizedSorter && typeof normalizedSorter.columnKey === 'string' ? normalizedSorter.columnKey : null;
+
+            const order =
+              normalizedSorter?.order === 'ascend' || normalizedSorter?.order === 'descend'
+                ? normalizedSorter.order
+                : null;
+
+            setResultsSort({ columnKey, order });
+          }}
           pagination={{
             pageSize: 50,
             showSizeChanger: true,
