@@ -28,4 +28,9 @@ export const aiModels: AiModelOption[] = [
     label: 'LM Studio',
     model: 'qwen2.5-coder-7b',
   },
+  {
+    provider: 'lmstudio',
+    label: 'LM Studio',
+    model: 'codegemma-1.1-7b-it',
+  },
 ];

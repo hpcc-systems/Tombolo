@@ -39,6 +39,12 @@ export const AI_PROVIDERS: AiProviderConfig[] = [
     openAiCompat: true,
   },
   {
+    provider: 'lmstudio',
+    endpoint: process.env.LM_STUDIO_BASE_URL || 'http://localhost:1234/v1',
+    apiKey: null,
+    openAiCompat: true,
+  },
+  {
     provider: 'gpt4all',
     endpoint: process.env.GPT4ALL_BASE_URL || 'http://localhost:4891/v1',
     apiKey: null,
