@@ -1,9 +1,11 @@
 import { Request, Response } from 'express';
 import { QueryTypes } from 'sequelize';
-import { sequelize } from '@tombolo/db';
+import { getReadOnlySequelize } from '@tombolo/db';
 import { sendSuccess, sendError } from '../utils/response.js';
 import logger from '../config/logger.js';
 import { activityKindLabels } from '@tombolo/shared';
+
+const readOnlySequelize = getReadOnlySequelize();
 
 const ACTIVITY_KIND_SOURCE_COLUMNS = new Set(['kind']);
 
@@ -382,7 +384,7 @@ async function fetchTableColumnTypes(
   const typeLookup: Record<string, Set<string>> = {};
 
   for (const tableName of tableNames) {
-    const columns = (await sequelize.query(
+    const columns = (await readOnlySequelize.query(
       `
         SELECT c.COLUMN_NAME as name, c.DATA_TYPE as type
         FROM INFORMATION_SCHEMA.COLUMNS c
@@ -588,12 +590,12 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
     // Use a transaction to pin both the CONNECTION_ID() query and the user query to the
     // same MySQL thread. This is the idiomatic Sequelize way to guarantee same-connection
     // execution — the transaction is never committed since we only run SELECTs.
-    const t = await sequelize.transaction();
+    const t = await readOnlySequelize.transaction();
 
     let connectionId: number | null = null;
     try {
       // Retrieve the MySQL connection ID for this thread so we can cancel it if needed.
-      const connIdRows = (await sequelize.query(
+      const connIdRows = (await readOnlySequelize.query(
         'SELECT CONNECTION_ID() AS id',
         {
           type: QueryTypes.SELECT,
@@ -626,7 +628,7 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
 
       // Only issue KILL QUERY when we have the connection ID.
       if (connectionId !== null) {
-        sequelize
+        readOnlySequelize
           .query(`KILL QUERY ${connectionId}`)
           .then(() => {
             logger.debug(
@@ -647,7 +649,7 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
 
     let rows: Record<string, unknown>[];
     try {
-      rows = (await sequelize.query(finalSql, {
+      rows = (await readOnlySequelize.query(finalSql, {
         type: QueryTypes.SELECT,
         logging: sql => logger.debug('Analytics query:', sql),
         transaction: t,
@@ -764,7 +766,7 @@ async function getSchema(req: Request, res: Response) {
         );
       }
 
-      const columns = await sequelize.query(
+      const columns = await readOnlySequelize.query(
         `
         SELECT
           c.COLUMN_NAME as name,
@@ -818,7 +820,7 @@ async function getSchema(req: Request, res: Response) {
     const sensitiveColumns = ['username', 'hash', 'password', 'password_hash'];
 
     for (const table of allowedTables) {
-      const columns = await sequelize.query(
+      const columns = await readOnlySequelize.query(
         `
         SELECT
           c.COLUMN_NAME as name,
@@ -882,7 +884,7 @@ async function analyzeQuery(req: Request, res: Response) {
     // Run EXPLAIN on the query
     // Note: rawSql is pre-validated by analyticsMiddleware to ensure it's a safe SELECT query
     // This is intentional - the feature allows users to write custom analytics queries
-    const [explanation] = await sequelize.query(`EXPLAIN ${rawSql}`, {
+    const [explanation] = await readOnlySequelize.query(`EXPLAIN ${rawSql}`, {
       type: QueryTypes.SELECT,
     });
 
@@ -902,7 +904,7 @@ async function analyzeQuery(req: Request, res: Response) {
 async function getDatabaseStats(req: Request, res: Response) {
   try {
     // Get table statistics for both tables
-    const [tableStats] = await sequelize.query(`
+    const [tableStats] = await readOnlySequelize.query(`
       SELECT
         table_name,
         table_rows,
@@ -915,7 +917,7 @@ async function getDatabaseStats(req: Request, res: Response) {
     `);
 
     // Get record count by cluster from work_unit_details
-    const clusterCounts = await sequelize.query(
+    const clusterCounts = await readOnlySequelize.query(
       `
       SELECT
         clusterId,
@@ -928,7 +930,7 @@ async function getDatabaseStats(req: Request, res: Response) {
     );
 
     // Get state distribution from work_unit_details
-    const stateCounts = await sequelize.query(
+    const stateCounts = await readOnlySequelize.query(
       `
       SELECT
         state,
@@ -941,7 +943,7 @@ async function getDatabaseStats(req: Request, res: Response) {
     );
 
     // Get date range from work_unit_details
-    const [dateRange] = await sequelize.query(`
+    const [dateRange] = await readOnlySequelize.query(`
       SELECT
         MIN(workUnitTimestamp) as earliest,
         MAX(workUnitTimestamp) as latest
@@ -949,7 +951,7 @@ async function getDatabaseStats(req: Request, res: Response) {
     `);
 
     // Get workunits table stats
-    const [workunitStats] = await sequelize.query(`
+    const [workunitStats] = await readOnlySequelize.query(`
       SELECT
         COUNT(*) as total_workunits,
         COUNT(DISTINCT cluster_id) as unique_clusters,
