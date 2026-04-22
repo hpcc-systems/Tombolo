@@ -107,22 +107,6 @@ const validateAnalyticsQuery = [
     ),
 ];
 
-// Validation for POST /api/analytics/analyze
-const validateAnalyzeQuery = [
-  body('sql')
-    .isString()
-    .withMessage('sql must be a string')
-    .bail()
-    .notEmpty()
-    .withMessage('sql is required')
-    .bail()
-    .trim()
-    .custom(value => {
-      parseAndValidateAnalyticsSql(value);
-      return true;
-    }),
-];
-
 // Validation for GET /api/analytics/schema
 const validateGetSchema = [
   stringQuery('tableName', true, {
@@ -138,9 +122,4 @@ const validateGetDatabaseStats = [
   dateTimeQuery('endDate', true),
 ];
 
-export {
-  validateAnalyticsQuery,
-  validateAnalyzeQuery,
-  validateGetSchema,
-  validateGetDatabaseStats,
-};
+export { validateAnalyticsQuery, validateGetSchema, validateGetDatabaseStats };

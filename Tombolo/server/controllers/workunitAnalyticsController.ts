@@ -716,35 +716,6 @@ async function getSchema(req: Request, res: Response) {
 }
 
 /**
- * Analyze query without executing it
- * Returns estimated execution plan
- */
-async function analyzeQuery(req: Request, res: Response) {
-  try {
-    const rawSql = (req.body.sql || '').trim();
-
-    if (!rawSql) {
-      return sendError(res, 'SQL query is required', 400);
-    }
-
-    // Run EXPLAIN on the query
-    // Note: rawSql is pre-validated by analyticsMiddleware to ensure it's a safe SELECT query
-    // This is intentional - the feature allows users to write custom analytics queries
-    const [explanation] = await readOnlySequelize.query(`EXPLAIN ${rawSql}`, {
-      type: QueryTypes.SELECT,
-    });
-
-    return sendSuccess(res, {
-      plan: explanation,
-      analyzed: true,
-    });
-  } catch (err) {
-    logger.error('Query analysis error:', err);
-    return sendError(res, err.message || 'Failed to analyze query', 400);
-  }
-}
-
-/**
  * Get database statistics
  */
 async function getDatabaseStats(req: Request, res: Response) {
@@ -819,4 +790,4 @@ async function getDatabaseStats(req: Request, res: Response) {
   }
 }
 
-export { executeAnalyticsQuery, getSchema, analyzeQuery, getDatabaseStats };
+export { executeAnalyticsQuery, getSchema, getDatabaseStats };

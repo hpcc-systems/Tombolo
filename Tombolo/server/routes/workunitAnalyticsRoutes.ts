@@ -2,12 +2,10 @@ import express from 'express';
 import {
   executeAnalyticsQuery,
   getSchema,
-  analyzeQuery,
   getDatabaseStats,
 } from '../controllers/workunitAnalyticsController.js';
 import {
   validateAnalyticsQuery,
-  validateAnalyzeQuery,
   validateGetSchema,
   validateGetDatabaseStats,
 } from '../middlewares/workunitAnalyticsMiddleware.js';
@@ -48,18 +46,6 @@ router.post(
  * @query   { tableName?: string }
  */
 router.get('/schema', validate(validateGetSchema), getSchema);
-
-/**
- * @route   POST /api/workunitAnalytics/analyze
- * @desc    Analyze query execution plan without running it
- * @access  Private
- * @body    { sql: string }
- */
-router.post(
-  '/analyze',
-  validateWithFirstErrorMessage(validateAnalyzeQuery),
-  analyzeQuery
-);
 
 /**
  * @route   GET /api/workunitAnalytics/stats
