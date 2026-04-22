@@ -1,12 +1,17 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { monitorClusterReachability } from '../../jobs/cluster/monitorClusterReachability.js';
 import { mockedModels } from '../mockedModels.js';
-const { Cluster, NotificationQueue } = mockedModels;
+const { Cluster } = mockedModels;
 import { parentPort } from 'worker_threads';
 import { AccountService } from '@hpcc-js/comms';
 import { decryptString } from '@tombolo/shared';
 import { passwordExpiryAlertDaysForCluster } from '../../config/monitorings.js';
 import { passwordExpiryInProximityNotificationPayload } from '../../jobs/cluster/clusterReachabilityMonitoringUtils.js';
+
+// Mock the notification producer service
+vi.mock('../../services/notificationProducer.js', () => ({
+  enqueueNotification: vi.fn(),
+}));
 
 const mockedDecryptString = decryptString as unknown as ReturnType<
   typeof vi.fn
@@ -84,7 +89,6 @@ describe('monitorClusterReachability', () => {
     });
     passwordExpiryAlertDaysForCluster.includes = vi.fn().mockReturnValue(true);
     mockedPasswordExpiryPayload.mockReturnValue({});
-    NotificationQueue.create.mockResolvedValue({});
     Cluster.update.mockResolvedValue({});
     vi.clearAllMocks();
     await monitorClusterReachability();
@@ -92,7 +96,11 @@ describe('monitorClusterReachability', () => {
       'encrypted',
       expect.any(String)
     );
-    expect(NotificationQueue.create).toHaveBeenCalled();
+
+    const { enqueueNotification } =
+      await import('../../services/notificationProducer.js');
+    const mockEnqueue = enqueueNotification as ReturnType<typeof vi.fn>;
+    expect(mockEnqueue).toHaveBeenCalled();
     expect(Cluster.update).toHaveBeenCalled();
     expect(workerParentPort.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -159,14 +167,17 @@ describe('monitorClusterReachability', () => {
     });
     passwordExpiryAlertDaysForCluster.includes = vi.fn().mockReturnValue(true);
     mockedPasswordExpiryPayload.mockReturnValue({});
-    NotificationQueue.create.mockRejectedValue(new Error('Queue error'));
     Cluster.update.mockResolvedValue({});
     vi.clearAllMocks();
     await monitorClusterReachability();
+
+    // Should complete successfully and queue notification
     expect(workerParentPort.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({
-        level: 'error',
-        text: expect.stringContaining('failed to queue notification'),
+        level: 'info',
+        text: expect.stringContaining(
+          'Cluster reachability:  Cluster3 is reachable'
+        ),
       })
     );
   });
