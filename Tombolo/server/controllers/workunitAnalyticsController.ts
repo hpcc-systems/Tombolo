@@ -13,6 +13,11 @@ import {
   parseAndValidateAnalyticsSql,
   sqlifySelect,
 } from '../utils/workunitAnalyticsSqlAst.js';
+import {
+  ALLOWED_WORKUNIT_ANALYTICS_TABLES,
+  ALLOWED_WORKUNIT_ANALYTICS_TABLE_SET,
+  SENSITIVE_WORKUNIT_ANALYTICS_CLUSTER_COLUMN_SET,
+} from '../config/workunitAnalyticsPolicy.js';
 
 const readOnlySequelize = getReadOnlySequelize();
 
@@ -596,14 +601,14 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
 async function getSchema(req: Request, res: Response) {
   try {
     const tableName = req.query.tableName as string | undefined;
-    const allowedTables = ['work_unit_details', 'work_units', 'clusters'];
 
     // If tableName is provided, return just that table's schema
     if (tableName) {
-      if (!allowedTables.includes(tableName.toLowerCase())) {
+      const normalizedTableName = tableName.toLowerCase();
+      if (!ALLOWED_WORKUNIT_ANALYTICS_TABLE_SET.has(normalizedTableName)) {
         return sendError(
           res,
-          `Invalid table name. Allowed: ${allowedTables.join(', ')}`,
+          `Invalid table name. Allowed: ${ALLOWED_WORKUNIT_ANALYTICS_TABLES.join(', ')}`,
           400
         );
       }
@@ -635,22 +640,19 @@ async function getSchema(req: Request, res: Response) {
         ORDER BY c.ORDINAL_POSITION
       `,
         {
-          replacements: [tableName],
+          replacements: [normalizedTableName],
           type: QueryTypes.SELECT,
         }
       );
 
       // Filter out sensitive columns from clusters table
-      const sensitiveColumns = [
-        'username',
-        'hash',
-        'password',
-        'password_hash',
-      ];
       const filteredColumns =
-        tableName === 'clusters'
+        normalizedTableName === 'clusters'
           ? (columns as SchemaColumnRow[]).filter(
-              col => !sensitiveColumns.includes(col.name.toLowerCase())
+              col =>
+                !SENSITIVE_WORKUNIT_ANALYTICS_CLUSTER_COLUMN_SET.has(
+                  col.name.toLowerCase()
+                )
             )
           : columns;
 
@@ -659,9 +661,8 @@ async function getSchema(req: Request, res: Response) {
 
     // If no tableName, return all allowed tables with their schemas
     const allSchemas: Record<string, SchemaColumnRow[]> = {};
-    const sensitiveColumns = ['username', 'hash', 'password', 'password_hash'];
 
-    for (const table of allowedTables) {
+    for (const table of ALLOWED_WORKUNIT_ANALYTICS_TABLES) {
       const columns = await readOnlySequelize.query(
         `
         SELECT
@@ -697,7 +698,10 @@ async function getSchema(req: Request, res: Response) {
       // Filter out sensitive columns from clusters table
       if (table === 'clusters') {
         allSchemas[table] = (columns as SchemaColumnRow[]).filter(
-          col => !sensitiveColumns.includes(col.name.toLowerCase())
+          col =>
+            !SENSITIVE_WORKUNIT_ANALYTICS_CLUSTER_COLUMN_SET.has(
+              col.name.toLowerCase()
+            )
         );
       } else {
         allSchemas[table] = columns as SchemaColumnRow[];

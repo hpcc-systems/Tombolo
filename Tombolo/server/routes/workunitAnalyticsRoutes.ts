@@ -11,7 +11,10 @@ import {
   validateGetSchema,
   validateGetDatabaseStats,
 } from '../middlewares/workunitAnalyticsMiddleware.js';
-import { validate } from '../middlewares/validateRequestBody.js';
+import {
+  validate,
+  validateWithFirstErrorMessage,
+} from '../middlewares/validateRequestBody.js';
 import { validateUserRole } from '../middlewares/rbacMiddleware.js';
 import role from '../config/roleTypes.js';
 import logger from '../config/logger.js';
@@ -34,7 +37,7 @@ router.post(
     logger.debug('Request body:', JSON.stringify(req.body, null, 2));
     next();
   },
-  validate(validateAnalyticsQuery),
+  validateWithFirstErrorMessage(validateAnalyticsQuery),
   executeAnalyticsQuery
 );
 
@@ -52,7 +55,11 @@ router.get('/schema', validate(validateGetSchema), getSchema);
  * @access  Private
  * @body    { sql: string }
  */
-router.post('/analyze', validate(validateAnalyzeQuery), analyzeQuery);
+router.post(
+  '/analyze',
+  validateWithFirstErrorMessage(validateAnalyzeQuery),
+  analyzeQuery
+);
 
 /**
  * @route   GET /api/workunitAnalytics/stats

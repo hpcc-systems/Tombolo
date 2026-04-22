@@ -1,6 +1,7 @@
-import { Parser } from 'node-sql-parser';
+import nodeSqlParser from 'node-sql-parser';
 import type { AST, Binary, ColumnRefItem, From, Select } from 'node-sql-parser';
 
+const { Parser } = nodeSqlParser;
 const parser = new Parser();
 const MYSQL_PARSER_OPTIONS = { database: 'mysql' as const };
 
