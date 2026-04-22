@@ -78,7 +78,7 @@ export class WorkUnitDetails extends Model<
   @Column(DataType.SMALLINT.UNSIGNED)
   declare kind?: number | null;
 
-  @Column(DataType.STRING(130))
+  @Column(DataType.STRING(255))
   declare fileName?: string | null;
 
   // Time metrics (DECIMAL(13,6) for microsecond precision)
@@ -189,6 +189,13 @@ export class WorkUnitDetails extends Model<
 
   @Column(DataType.DECIMAL(13, 6))
   declare TimeFirstRow?: number | null;
+
+  // K8 timestamps
+  @Column(DataType.DATE)
+  declare WhenK8sLaunched?: Date | null;
+
+  @Column(DataType.DATE)
+  declare WhenK8sStarted?: Date | null;
 
   // Numeric metrics
   @Column(DataType.BIGINT.UNSIGNED)
@@ -503,6 +510,18 @@ export class WorkUnitDetails extends Model<
 
   @Column(DataType.TINYINT.UNSIGNED)
   declare NodeMaxFirstRow?: number | null;
+
+  @Column(DataType.DECIMAL(14, 6))
+  declare CostExecute?: number | null;
+
+  @Column(DataType.DECIMAL(14, 6))
+  declare CostFileAccess?: number | null;
+
+  @Column(DataType.DECIMAL(14, 6))
+  declare CostCompile?: number | null;
+
+  @Column(DataType.DECIMAL(14, 6))
+  declare CostSavingPotential?: number | null;
 
   // Associations
   @BelongsTo(() => Cluster, 'clusterId')

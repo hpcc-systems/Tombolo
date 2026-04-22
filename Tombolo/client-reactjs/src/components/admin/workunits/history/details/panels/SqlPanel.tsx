@@ -8,9 +8,12 @@ import axios from 'axios';
 import { relevantMetrics, forbiddenSqlKeywords } from '@tombolo/shared';
 import Editor, { OnMount } from '@monaco-editor/react';
 import type { Monaco } from '@monaco-editor/react';
+import type { editor as MonacoEditor } from 'monaco-editor';
 import debounce from 'lodash/debounce';
 import styles from '../../workunitHistory.module.css';
 import { disposeSqlAutocomplete, registerSqlAutocomplete } from '@/components/common/sqlAutocomplete';
+import { compareQueryValues } from '@/components/common/sqlResultsSorting';
+import type { ColumnTypeMetadata, SortDirection } from '@/components/common/sqlResultsSorting';
 
 const { Text } = Typography;
 
@@ -31,12 +34,56 @@ WHERE 1=1
 ORDER BY TimeElapsed DESC
 LIMIT 100`;
 
+const validateSql = (rawSql: string) => {
+  const original = rawSql || '';
+  const trimmed = original.trim();
+  if (!trimmed) {
+    return { ok: false, reason: 'SQL is empty' };
+  }
+
+  const withoutComments = trimmed
+    .replace(/--.*$/gm, '')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .trim();
+
+  if (withoutComments.includes(';')) {
+    return { ok: false, reason: 'Multiple statements are not allowed (remove semicolons)' };
+  }
+
+  if (!/^select\b/i.test(withoutComments)) {
+    return { ok: false, reason: 'Only SELECT statements are allowed' };
+  }
+
+  for (const kw of forbiddenSqlKeywords) {
+    const re = new RegExp(`\\b${kw}\\b`, 'i');
+    if (re.test(withoutComments)) {
+      return { ok: false, reason: `Disallowed keyword detected: ${kw.toUpperCase()}` };
+    }
+  }
+
+  return { ok: true, reason: undefined };
+};
+
+type ScopedQueryResult = {
+  columns: string[];
+  rows: Record<string, unknown>[];
+  columnTypes?: Record<string, ColumnTypeMetadata>;
+};
+
+type ResultsSortState = {
+  columnKey: string | null;
+  order: SortDirection;
+};
+
 const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
   const storageKey = `wuSql.${clusterId}.${wuid}`;
-  const [sql, setSql] = useState(() => localStorage.getItem(storageKey) || DEFAULT_SQL);
+  const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
+  const currentSqlRef = useRef(localStorage.getItem(storageKey) || DEFAULT_SQL);
+  const [sqlForValidation, setSqlForValidation] = useState(currentSqlRef.current);
   const [executing, setExecuting] = useState(false);
-  const [result, setResult] = useState<{ columns: string[]; rows: Record<string, unknown>[] } | null>(null);
+  const [result, setResult] = useState<ScopedQueryResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [resultsSort, setResultsSort] = useState<ResultsSortState>({ columnKey: null, order: null });
   const completionProviderRef = useRef<{ dispose: () => void } | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -46,6 +93,21 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
 
   const saveRef = useRef<ReturnType<typeof debounce> | null>(null);
   const DEBOUNCE_MS = 300;
+
+  const getCurrentSql = useCallback(() => currentSqlRef.current, []);
+
+  const setEditorSql = useCallback(
+    (nextSql: string) => {
+      currentSqlRef.current = nextSql;
+      setSqlForValidation(nextSql);
+      saveRef.current?.(storageKey, nextSql);
+
+      if (editorRef.current && editorRef.current.getValue() !== nextSql) {
+        editorRef.current.setValue(nextSql);
+      }
+    },
+    [storageKey]
+  );
 
   useEffect(() => {
     saveRef.current = debounce((key: string, value: string) => {
@@ -63,42 +125,20 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
   }, []);
 
   useEffect(() => {
-    saveRef.current?.(storageKey, sql);
-  }, [sql, storageKey]);
+    const storedSql = localStorage.getItem(storageKey) || DEFAULT_SQL;
+    setEditorSql(storedSql);
+  }, [storageKey, setEditorSql]);
 
   const lintSql = useMemo(() => {
-    const original = sql || '';
-    const trimmed = original.trim();
-    if (!trimmed) {
-      return { ok: false, reason: 'SQL is empty' };
-    }
-
-    const withoutComments = trimmed
-      .replace(/--.*$/gm, '')
-      .replace(/\/\*[\s\S]*?\*\//g, '')
-      .trim();
-
-    if (withoutComments.includes(';')) {
-      return { ok: false, reason: 'Multiple statements are not allowed (remove semicolons)' };
-    }
-
-    if (!/^select\b/i.test(withoutComments)) {
-      return { ok: false, reason: 'Only SELECT statements are allowed' };
-    }
-
-    for (const kw of forbiddenSqlKeywords) {
-      const re = new RegExp(`\\b${kw}\\b`, 'i');
-      if (re.test(withoutComments)) {
-        return { ok: false, reason: `Disallowed keyword detected: ${kw.toUpperCase()}` };
-      }
-    }
-
-    return { ok: true, reason: undefined };
-  }, [sql]);
+    return validateSql(sqlForValidation);
+  }, [sqlForValidation]);
 
   const runQuery = async () => {
-    if (!lintSql.ok) {
-      message.warning(lintSql.reason || 'SQL did not pass validation');
+    const currentSql = getCurrentSql();
+    const validation = validateSql(currentSql);
+
+    if (!validation.ok) {
+      message.warning(validation.reason || 'SQL did not pass validation');
       return;
     }
 
@@ -112,7 +152,7 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
       const response = await apiClient.post(
         '/workunitAnalytics/query',
         {
-          sql,
+          sql: currentSql,
           options: {
             scopeToWuid: wuid,
             scopeToClusterId: clusterId,
@@ -121,6 +161,7 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
         { signal: controller.signal }
       );
       setResult(response.data);
+      setResultsSort({ columnKey: null, order: null });
     } catch (err: unknown) {
       if (axios.isCancel(err)) {
         message.info('Query cancelled');
@@ -143,8 +184,38 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
 
   const columns = useMemo(() => {
     if (!result?.columns?.length) return [];
-    return result.columns.map(col => ({ title: col, dataIndex: col, key: col, ellipsis: true }));
-  }, [result]);
+    return result.columns.map(col => ({
+      title: col,
+      dataIndex: col,
+      key: col,
+      ellipsis: true,
+      sorter: true,
+      sortOrder: resultsSort.columnKey === col ? resultsSort.order : null,
+      sortDirections: ['ascend', 'descend'] as ('ascend' | 'descend')[],
+    }));
+  }, [result, resultsSort]);
+
+  const sortedRows = useMemo(() => {
+    if (!result?.rows) return [];
+
+    const rowsWithIndex = result.rows.map((row, idx) => ({ row, idx }));
+
+    if (!resultsSort.columnKey || !resultsSort.order) {
+      return rowsWithIndex.map(({ row }) => row);
+    }
+
+    const columnKey = resultsSort.columnKey;
+    const family = result.columnTypes?.[columnKey]?.family ?? 'unknown';
+
+    return [...rowsWithIndex]
+      .sort((a, b) => {
+        const cmp = compareQueryValues(a.row[columnKey], b.row[columnKey], family, resultsSort.order);
+
+        if (cmp !== 0) return cmp;
+        return a.idx - b.idx;
+      })
+      .map(({ row }) => row);
+  }, [result, resultsSort]);
 
   const registerCompletionProvider = useCallback((monaco: Monaco) => {
     registerSqlAutocomplete({
@@ -156,8 +227,17 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
     });
   }, []);
 
-  const handleEditorMount: OnMount = (_editor, monaco) => {
+  const handleEditorMount: OnMount = (editor, monaco) => {
+    editorRef.current = editor;
+    currentSqlRef.current = editor.getValue();
     registerCompletionProvider(monaco);
+
+    editor.onDidChangeModelContent(() => {
+      const nextValue = editor.getValue();
+      currentSqlRef.current = nextValue;
+      setSqlForValidation(nextValue);
+      saveRef.current?.(storageKey, nextValue);
+    });
   };
 
   useEffect(() => {
@@ -226,8 +306,7 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
               height="280px"
               defaultLanguage="sql"
               beforeMount={registerCompletionProvider}
-              value={sql}
-              onChange={v => setSql(v ?? '')}
+              defaultValue={currentSqlRef.current}
               onMount={handleEditorMount}
               theme="vs-dark"
               options={{
@@ -271,7 +350,7 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
                 onClick={() => abortControllerRef.current?.abort()}>
                 Cancel
               </Button>
-              <Button icon={<ReloadOutlined />} onClick={() => setSql(DEFAULT_SQL)} disabled={executing}>
+              <Button icon={<ReloadOutlined />} onClick={() => setEditorSql(DEFAULT_SQL)} disabled={executing}>
                 Reset to default
               </Button>
             </Space>
@@ -286,8 +365,21 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
                 rowKey={(row, i) =>
                   String((row as Record<string, unknown>).id ?? (row as Record<string, unknown>).scopeId ?? i)
                 }
-                dataSource={result.rows}
+                dataSource={sortedRows}
                 columns={columns}
+                onChange={(_pagination, _filters, sorter) => {
+                  const normalizedSorter = Array.isArray(sorter) ? sorter[0] : sorter;
+                  const columnKey =
+                    normalizedSorter && typeof normalizedSorter.columnKey === 'string'
+                      ? normalizedSorter.columnKey
+                      : null;
+                  const order =
+                    normalizedSorter?.order === 'ascend' || normalizedSorter?.order === 'descend'
+                      ? normalizedSorter.order
+                      : null;
+
+                  setResultsSort({ columnKey, order });
+                }}
                 pagination={{ pageSize: 50 }}
                 scroll={{ x: true, y: TABLE_SCROLL_Y }}
               />

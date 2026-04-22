@@ -211,7 +211,7 @@ import {
               notification_id,
               filemonitoring_id: filemonitoring_id,
               fileName: '',
-              metaDifference: {},
+              metaDifference: [],
             });
 
             await axios.post(recipient, body);
@@ -330,7 +330,7 @@ import {
               notification_id,
               filemonitoring_id,
               fileName: current.name,
-              metaDifference: {},
+              metaDifference: [],
             });
 
             await axios.post(recipient, body);

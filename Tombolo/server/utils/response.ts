@@ -48,12 +48,6 @@ const getErrorMessage = (value: unknown): string => {
   return JSON.stringify(value);
 };
 
-interface StructuredErrorPayload {
-  message: string;
-  data?: unknown;
-  errors?: Array<string | Error | object>;
-}
-
 /**
  * Sends a standardized JSON response to the client.
  */

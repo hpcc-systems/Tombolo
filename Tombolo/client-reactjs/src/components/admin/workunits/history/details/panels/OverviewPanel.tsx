@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Breadcrumb,
   Card,
@@ -6,6 +6,7 @@ import {
   Descriptions,
   Empty,
   Row,
+  Segmented,
   Space,
   Statistic,
   Table,
@@ -14,11 +15,13 @@ import {
   Divider,
 } from 'antd';
 import {
+  ApartmentOutlined,
   NodeIndexOutlined,
   ProfileOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
   SyncOutlined,
+  UnorderedListOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import {
@@ -32,6 +35,7 @@ import {
   formatCurrency,
   renderAnyMetric as renderAnyMetricShared,
 } from '@tombolo/shared';
+import FlatScopesPanel from './FlatScopesPanel';
 import HierarchyExplorer, {
   HierarchyExplorerSelectPayload,
   buildScopeTree,
@@ -41,6 +45,10 @@ import HierarchyExplorer, {
 import type { WorkUnit } from '@tombolo/shared';
 
 const { Text } = Typography;
+
+const SCOPE_VIEW_STORAGE_KEY = 'wuh.overview.scope-view-mode';
+
+type ScopeViewMode = 'hierarchical' | 'flat';
 
 function renderAnyMetric(key: string, value: any): React.ReactNode {
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
@@ -56,6 +64,21 @@ interface Props {
 const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
   const [selectedNode, setSelectedNode] = useState<any>(null);
   const [breadcrumb, setBreadcrumb] = useState<{ title: string; key: any }[]>([]);
+  const [scopeViewMode, setScopeViewMode] = useState<ScopeViewMode>('hierarchical');
+  const isFlatView = scopeViewMode === 'flat';
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const saved = window.localStorage.getItem(SCOPE_VIEW_STORAGE_KEY);
+    if (saved === 'flat' || saved === 'hierarchical') {
+      setScopeViewMode(saved);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(SCOPE_VIEW_STORAGE_KEY, scopeViewMode);
+  }, [scopeViewMode]);
 
   const treeNodes = useMemo(() => buildScopeTree(details || []), [details]);
 
@@ -72,6 +95,8 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
     setSelectedNode(node);
     setBreadcrumb(bc);
   };
+
+  const flatScopes = useMemo(() => flattenTree(treeNodes), [treeNodes]);
 
   const summary = useMemo(() => {
     let rows = 0,
@@ -263,13 +288,54 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
 
       {/* Main Content */}
       <Row gutter={[16, 16]}>
-        {/* Left: Hierarchy Explorer */}
-        <Col xs={24} lg={10} xl={9}>
-          <HierarchyExplorer details={details} storageKeyPrefix="wuh.overview" onSelect={handleExplorerSelect} />
+        {/* Left: Scope Browser */}
+        <Col xs={24} lg={isFlatView ? 14 : 10} xl={isFlatView ? 14 : 9}>
+          <Space direction="vertical" size={12} style={{ width: '100%' }}>
+            <Card size="small" styles={{ body: { padding: '8px 12px' } }}>
+              <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                <Space>
+                  <NodeIndexOutlined />
+                  <span>Scopes</span>
+                  <Tag style={{ marginLeft: 8, fontWeight: 'normal' }}>{flatScopes.length} items</Tag>
+                </Space>
+                <Segmented
+                  size="small"
+                  value={scopeViewMode}
+                  onChange={value => setScopeViewMode(value as ScopeViewMode)}
+                  options={[
+                    {
+                      label: (
+                        <Space size={4}>
+                          <ApartmentOutlined />
+                          <span>Hierarchical</span>
+                        </Space>
+                      ),
+                      value: 'hierarchical',
+                    },
+                    {
+                      label: (
+                        <Space size={4}>
+                          <UnorderedListOutlined />
+                          <span>Flat</span>
+                        </Space>
+                      ),
+                      value: 'flat',
+                    },
+                  ]}
+                />
+              </Space>
+            </Card>
+
+            {scopeViewMode === 'hierarchical' ? (
+              <HierarchyExplorer details={details} storageKeyPrefix="wuh.overview" onSelect={handleExplorerSelect} />
+            ) : (
+              <FlatScopesPanel items={flatScopes} selectedKey={selectedNode?.key} onSelectKey={selectNodeByKey} />
+            )}
+          </Space>
         </Col>
 
         {/* Right: Scope Details */}
-        <Col xs={24} lg={14} xl={15}>
+        <Col xs={24} lg={isFlatView ? 10 : 14} xl={isFlatView ? 10 : 15}>
           <Card
             title={
               <Space>
@@ -279,7 +345,10 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
             }
             styles={{ body: { padding: 0 } }}>
             {!selectedNode ? (
-              <Empty description="Select a scope from the tree to view details" style={{ padding: '48px 24px' }} />
+              <Empty
+                description="Select a scope from the list or tree to view details"
+                style={{ padding: '48px 24px' }}
+              />
             ) : (
               <div style={{ maxHeight: 540, overflowY: 'auto', padding: 16 }}>
                 <Breadcrumb
