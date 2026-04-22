@@ -4,112 +4,19 @@ import { getReadOnlySequelize } from '@tombolo/db';
 import { sendSuccess, sendError } from '../utils/response.js';
 import logger from '../config/logger.js';
 import { activityKindLabels } from '@tombolo/shared';
+import type { Select } from 'node-sql-parser';
+import {
+  applyScopeToSelect,
+  collectReferencedTables,
+  enforceRowLimit,
+  getOutputToSourceColumnMapFromAst,
+  parseAndValidateAnalyticsSql,
+  sqlifySelect,
+} from '../utils/workunitAnalyticsSqlAst.js';
 
 const readOnlySequelize = getReadOnlySequelize();
 
 const ACTIVITY_KIND_SOURCE_COLUMNS = new Set(['kind']);
-
-function splitSelectClause(selectClause: string): string[] {
-  const expressions: string[] = [];
-  let current = '';
-  let depth = 0;
-  let inSingleQuote = false;
-  let inDoubleQuote = false;
-  let inBacktick = false;
-
-  for (let i = 0; i < selectClause.length; i += 1) {
-    const ch = selectClause[i];
-    const prev = i > 0 ? selectClause[i - 1] : '';
-
-    if (ch === "'" && !inDoubleQuote && !inBacktick && prev !== '\\') {
-      inSingleQuote = !inSingleQuote;
-    } else if (ch === '"' && !inSingleQuote && !inBacktick && prev !== '\\') {
-      inDoubleQuote = !inDoubleQuote;
-    } else if (ch === '`' && !inSingleQuote && !inDoubleQuote) {
-      inBacktick = !inBacktick;
-    }
-
-    if (!inSingleQuote && !inDoubleQuote && !inBacktick) {
-      if (ch === '(') depth += 1;
-      if (ch === ')' && depth > 0) depth -= 1;
-    }
-
-    if (
-      ch === ',' &&
-      depth === 0 &&
-      !inSingleQuote &&
-      !inDoubleQuote &&
-      !inBacktick
-    ) {
-      if (current.trim()) expressions.push(current.trim());
-      current = '';
-      continue;
-    }
-
-    current += ch;
-  }
-
-  if (current.trim()) expressions.push(current.trim());
-  return expressions;
-}
-
-function parseColumnProjection(expression: string): {
-  outputColumn: string | null;
-  sourceColumn: string | null;
-} {
-  const asAliasMatch = expression.match(
-    /\s+AS\s+`?([a-zA-Z_][a-zA-Z0-9_]*)`?\s*$/i
-  );
-  const tailAliasMatch = expression.match(
-    /\s+`?([a-zA-Z_][a-zA-Z0-9_]*)`?\s*$/
-  );
-
-  let alias: string | null = null;
-  let baseExpr = expression;
-
-  if (asAliasMatch) {
-    alias = asAliasMatch[1];
-    baseExpr = expression.slice(0, asAliasMatch.index).trim();
-  } else if (tailAliasMatch) {
-    const potentialExpr = expression.slice(0, tailAliasMatch.index).trim();
-    if (potentialExpr && /[)\].`"'0-9a-zA-Z_]$/.test(potentialExpr)) {
-      alias = tailAliasMatch[1];
-      baseExpr = potentialExpr;
-    }
-  }
-
-  const sourceMatch = baseExpr.match(
-    /^(?:`?[a-zA-Z_][a-zA-Z0-9_]*`?\.)?`?([a-zA-Z_][a-zA-Z0-9_]*)`?$/
-  );
-
-  if (!sourceMatch) {
-    return { outputColumn: alias, sourceColumn: null };
-  }
-
-  const sourceColumn = sourceMatch[1];
-  return { outputColumn: alias || sourceColumn, sourceColumn };
-}
-
-function getOutputToSourceColumnMap(sql: string): Record<string, string> {
-  const cleanSql = sql.replace(/;\s*$/, '').trim();
-  const selectMatch = cleanSql.match(/^\s*SELECT\s+([\s\S]+?)\s+FROM\s+/i);
-  if (!selectMatch) return {};
-
-  const selectClause = selectMatch[1].replace(/^DISTINCT\s+/i, '').trim();
-  if (!selectClause || selectClause === '*') return {};
-
-  const map: Record<string, string> = {};
-  const projections = splitSelectClause(selectClause);
-
-  for (const projection of projections) {
-    const { outputColumn, sourceColumn } = parseColumnProjection(projection);
-    if (!outputColumn || !sourceColumn) continue;
-
-    map[outputColumn.toLowerCase()] = sourceColumn.toLowerCase();
-  }
-
-  return map;
-}
 
 function mapActivityKindIdsInRows(
   rows: Record<string, unknown>[],
@@ -209,18 +116,6 @@ type ColumnSortFamily =
 interface ColumnTypeMetadata {
   family: ColumnSortFamily;
   rawType: string | null;
-}
-
-function extractReferencedTables(sql: string): string[] {
-  const tablePattern = /\b(?:from|join)\s+`?([a-zA-Z_][a-zA-Z0-9_]*)`?/gi;
-  const tables = new Set<string>();
-  let match: RegExpExecArray | null = null;
-
-  while ((match = tablePattern.exec(sql)) !== null) {
-    tables.add(match[1].toLowerCase());
-  }
-
-  return Array.from(tables);
 }
 
 function normalizeColumnFamily(rawType: string | null): ColumnSortFamily {
@@ -410,12 +305,12 @@ async function fetchTableColumnTypes(
 }
 
 async function buildColumnTypeMetadata(
-  sql: string,
+  queryAst: Select,
   columns: string[],
   rows: Record<string, unknown>[]
 ): Promise<Record<string, ColumnTypeMetadata>> {
-  const outputToSourceColumnMap = getOutputToSourceColumnMap(sql);
-  const referencedTables = extractReferencedTables(sql);
+  const outputToSourceColumnMap = getOutputToSourceColumnMapFromAst(queryAst);
+  const referencedTables = collectReferencedTables(queryAst);
   const tableColumnTypeLookup = await fetchTableColumnTypes(referencedTables);
   const columnTypes: Record<string, ColumnTypeMetadata> = {};
 
@@ -469,16 +364,24 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
     scopeToClusterId: string | null;
   } = {
     source: querySource,
-    userId: (req as Request & { user?: { id?: string } }).user?.id,
+    userId: req.user?.id,
     scopeToWuid: null,
     scopeToClusterId: null,
   };
 
   try {
-    // SQL and options are already validated by middleware
-    const inputSql = req.body.sql.trim();
-    const hadTrailingSemicolon = /;\s*$/.test(inputSql);
-    const rawSql = inputSql.replace(/;\s*$/, '');
+    const inputSql =
+      typeof req.body.sql === 'string' ? req.body.sql.trim() : '';
+    const parsedSqlContext =
+      req.analyticsSqlContext || parseAndValidateAnalyticsSql(inputSql);
+    req.analyticsSqlContext = parsedSqlContext;
+
+    const hadTrailingSemicolon = parsedSqlContext.hadTrailingSemicolon;
+    const rawSql = parsedSqlContext.normalizedSql;
+    const finalSelectAst = JSON.parse(
+      JSON.stringify(parsedSqlContext.ast)
+    ) as Select;
+
     options = req.body.options || {};
     const isScopedQuery = Boolean(
       options.scopeToWuid || options.scopeToClusterId
@@ -486,7 +389,7 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
     querySource = isScopedQuery ? 'scoped-workunit-sql' : 'analytics-page-sql';
     logContext = {
       source: querySource,
-      userId: (req as Request & { user?: { id?: string } }).user?.id,
+      userId: req.user?.id,
       scopeToWuid: options.scopeToWuid || null,
       scopeToClusterId: options.scopeToClusterId || null,
     };
@@ -497,90 +400,24 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
       sql: rawSql,
     });
 
-    // Apply automatic scoping if provided
-    let scopedSql = rawSql;
-    if (options.scopeToWuid || options.scopeToClusterId) {
-      // Parse the SQL to add WHERE conditions for scoping
-      const lowerSql = rawSql.toLowerCase();
+    const scopeApplied = applyScopeToSelect(finalSelectAst, {
+      scopeToWuid: options.scopeToWuid,
+      scopeToClusterId: options.scopeToClusterId,
+    });
 
-      // Build the scoping conditions
-      const scopeConditions = [];
-      if (options.scopeToWuid) {
-        scopeConditions.push(
-          `wuId = '${options.scopeToWuid.replace(/'/g, "''")}'`
-        );
-      }
-      if (options.scopeToClusterId) {
-        scopeConditions.push(
-          `clusterId = '${options.scopeToClusterId.replace(/'/g, "''")}'`
-        );
-      }
-
-      const scopeClause = scopeConditions.join(' AND ');
-
-      // Check if query already has a WHERE clause
-      const whereIndex = lowerSql.indexOf(' where ');
-      if (whereIndex !== -1) {
-        // Find where the WHERE clause ends (before ORDER BY, GROUP BY, HAVING, or LIMIT)
-        const afterWhereStart = whereIndex + 7; // start after ' where '
-        const afterWhereSql = rawSql.substring(afterWhereStart);
-        const afterWhereLower = lowerSql.substring(afterWhereStart);
-
-        // Find the first occurrence of ORDER BY, GROUP BY, HAVING, or LIMIT
-        // Use word boundaries to prevent ReDoS with repeated whitespace
-        const endClausePattern = /\b(?:order\s+by|group\s+by|having|limit)\b/i;
-        const endMatch = endClausePattern.exec(afterWhereLower);
-
-        if (endMatch) {
-          // Extract just the WHERE conditions (before ORDER BY, etc.)
-          const whereConditions = afterWhereSql.substring(0, endMatch.index);
-          const restOfQuery = afterWhereSql.substring(endMatch.index);
-          const beforeWhere = rawSql.substring(0, whereIndex + 7);
-          scopedSql = `${beforeWhere}(${scopeClause}) AND (${whereConditions})${restOfQuery}`;
-        } else {
-          // No ORDER BY, GROUP BY, HAVING, or LIMIT - WHERE conditions go to end
-          const beforeWhere = rawSql.substring(0, whereIndex + 7);
-          scopedSql = `${beforeWhere}(${scopeClause}) AND (${afterWhereSql})`;
-        }
-      } else {
-        // Add WHERE clause before ORDER BY, GROUP BY, or LIMIT
-        // Use word boundaries to prevent ReDoS with repeated whitespace
-        const insertBeforePattern = /\b(?:order\s+by|group\s+by|limit)\b/i;
-        const match = insertBeforePattern.exec(rawSql);
-
-        if (match) {
-          const insertPos = match.index;
-          scopedSql = `${rawSql.substring(0, insertPos)} WHERE ${scopeClause} ${rawSql.substring(insertPos)}`;
-        } else {
-          // No WHERE, ORDER BY, GROUP BY, or LIMIT - add at the end
-          scopedSql = `${rawSql} WHERE ${scopeClause}`;
-        }
-      }
-
-      logger.debug('Applied scoping to query:', {
+    if (scopeApplied) {
+      logger.debug('Applied AST-based scoping to query', {
         original: rawSql,
-        scoped: scopedSql,
+        scoped: sqlifySelect(finalSelectAst),
         options,
       });
     }
 
     // Enforce row limit (already validated to be <= 5000)
     const MAX_LIMIT = options.limit || 1000;
+    enforceRowLimit(finalSelectAst, MAX_LIMIT);
 
-    // Check if query already has a LIMIT clause
-    let finalSql = scopedSql;
-    const limitMatch = finalSql.toLowerCase().match(/\blimit\s+(\d+)/);
-
-    if (limitMatch) {
-      const requestedLimit = parseInt(limitMatch[1], 10);
-      if (!Number.isFinite(requestedLimit) || requestedLimit > MAX_LIMIT) {
-        // Replace with enforced limit
-        finalSql = finalSql.replace(/\blimit\s+\d+/i, `LIMIT ${MAX_LIMIT}`);
-      }
-    } else {
-      // Add limit if not present
-      finalSql = `${finalSql} LIMIT ${MAX_LIMIT}`;
-    }
+    let finalSql = sqlifySelect(finalSelectAst);
 
     // Preserve a single trailing semicolon if the original query had one.
     if (hadTrailingSemicolon) {
@@ -677,7 +514,8 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
     const totalResponseTimeMs = Date.now() - requestStartedAt;
 
     // Replace activity kind ids with backend-owned labels before sending to clients.
-    const outputToSourceColumnMap = getOutputToSourceColumnMap(finalSql);
+    const outputToSourceColumnMap =
+      getOutputToSourceColumnMapFromAst(finalSelectAst);
     const activityKindMappingStats = mapActivityKindIdsInRows(
       rows,
       outputToSourceColumnMap
@@ -695,7 +533,11 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
     // Extract column names
     const columns =
       Array.isArray(rows) && rows.length > 0 ? Object.keys(rows[0]) : [];
-    const columnTypes = await buildColumnTypeMetadata(finalSql, columns, rows);
+    const columnTypes = await buildColumnTypeMetadata(
+      finalSelectAst,
+      columns,
+      rows
+    );
 
     const unresolvedColumns = Object.entries(columnTypes)
       .filter(([, metadata]) => metadata.rawType === null)

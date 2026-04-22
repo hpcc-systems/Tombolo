@@ -1,5 +1,13 @@
 import { Request } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
+import type { Select } from 'node-sql-parser';
+
+interface AnalyticsSqlContext {
+  originalSql: string;
+  normalizedSql: string;
+  hadTrailingSemicolon: boolean;
+  ast: Select;
+}
 
 export interface UserRoleClaims {
   role_details?: {
@@ -22,6 +30,7 @@ export interface AuthenticatedRequest extends Request {
   authInfo?: {
     email?: string;
   };
+  analyticsSqlContext?: AnalyticsSqlContext;
 }
 
 declare module 'express-serve-static-core' {
@@ -31,5 +40,6 @@ declare module 'express-serve-static-core' {
     authInfo?: {
       email?: string;
     };
+    analyticsSqlContext?: AnalyticsSqlContext;
   }
 }

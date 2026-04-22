@@ -34,9 +34,19 @@ module.exports = {
       `REVOKE ALL PRIVILEGES, GRANT OPTION FROM ${quotedUser}`
     );
 
-    await queryInterface.sequelize.query(
-      `GRANT SELECT ON \`${escapedDatabaseName}\`.\`work\\_unit%\` TO ${quotedUser}`
+    const [workUnitTables] = await queryInterface.sequelize.query(
+      `SELECT TABLE_NAME AS tableName
+       FROM INFORMATION_SCHEMA.TABLES
+       WHERE TABLE_SCHEMA = ${queryInterface.sequelize.escape(databaseName)}
+         AND TABLE_NAME LIKE 'work\\_unit%'`
     );
+
+    for (const table of workUnitTables) {
+      const escapedTableName = table.tableName.replace(/`/g, '``');
+      await queryInterface.sequelize.query(
+        `GRANT SELECT ON \`${escapedDatabaseName}\`.\`${escapedTableName}\` TO ${quotedUser}`
+      );
+    }
 
     await queryInterface.sequelize.query(
       `GRANT SELECT ON \`${escapedDatabaseName}\`.\`clusters\` TO ${quotedUser}`

@@ -9,8 +9,12 @@ import {
   objectBody,
   arrayBody,
 } from './commonMiddleware.js';
-import { forbiddenSqlKeywords } from '@tombolo/shared';
 import logger from '../config/logger.js';
+import {
+  collectReferencedTables,
+  findSensitiveClusterColumnViolation,
+  parseAndValidateAnalyticsSql,
+} from '../utils/workunitAnalyticsSqlAst.js';
 
 // Valid sort fields for analytics queries (if we add sorting to results)
 const VALID_ANALYTICS_SORT_FIELDS = [
@@ -25,6 +29,19 @@ const VALID_ANALYTICS_SORT_FIELDS = [
   'executeCostms',
 ];
 
+const ALLOWED_ANALYTICS_TABLES = [
+  'work_unit_details',
+  'work_units',
+  'clusters',
+];
+const ALLOWED_ANALYTICS_TABLE_SET = new Set(ALLOWED_ANALYTICS_TABLES);
+const SENSITIVE_CLUSTER_COLUMNS = [
+  'username',
+  'hash',
+  'password',
+  'password_hash',
+];
+
 // Validation for POST /api/analytics/query
 const validateAnalyticsQuery = [
   body('sql')
@@ -35,129 +52,16 @@ const validateAnalyticsQuery = [
     .withMessage('sql is required')
     .bail()
     .trim()
-    .customSanitizer(value => {
-      // Strip comments and normalize whitespace
-      const cleaned = value
-        .replace(/--[^\n]*/g, '') // Remove single-line comments
-        .replace(/\/\*[\s\S]*?\*\//g, '') // Remove multi-line comments
-        .replace(/\n+/g, ' ') // Replace newlines with spaces
-        .replace(/\s+/g, ' ') // Normalize multiple spaces to single space
-        .trim();
-
-      logger.debug('SQL after sanitization:', JSON.stringify(cleaned));
-      return cleaned;
-    })
-    .custom(value => {
-      // At this point value has comments stripped and whitespace normalized
-      logger.debug('Checking if SELECT, value:', JSON.stringify(value));
-
-      // Check if starts with SELECT (case-insensitive)
-      if (!value.toLowerCase().startsWith('select')) {
-        throw new Error('Only SELECT statements are allowed');
-      }
-      return true;
-    })
-    .bail()
-    .custom(value => {
-      // Allow at most one statement terminator, and only as the final character
-      const firstSemicolonIndex = value.indexOf(';');
-      if (firstSemicolonIndex === -1) {
-        return true;
-      }
-
-      const lastSemicolonIndex = value.lastIndexOf(';');
-      const isSingleTrailingSemicolon =
-        firstSemicolonIndex === lastSemicolonIndex &&
-        firstSemicolonIndex === value.length - 1;
-
-      if (!isSingleTrailingSemicolon) {
-        throw new Error('Multiple statements are not allowed');
-      }
-
-      return true;
-    })
-    .bail()
-    .custom(value => {
-      // Strip comments and check for forbidden keywords
-      const withoutComments = value
-        .replace(/--[^\n]*/g, '') // Remove single-line comments
-        .replace(/\/\*[\s\S]*?\*\//g, '') // Remove multi-line comments
-        .trim();
-
-      const lowerQuery = withoutComments.toLowerCase();
-
-      for (const keyword of forbiddenSqlKeywords) {
-        const regex = new RegExp(`\\b${keyword}\\b`, 'i');
-        if (regex.test(lowerQuery)) {
-          throw new Error(
-            `Keyword '${keyword}' is not allowed. Only non-destructive SELECT queries permitted.`
-          );
-        }
-      }
-      return true;
-    })
-    .bail()
-    .custom(value => {
-      // Check for UNIONs (still not allowed)
-      const lowerQuery = value.toLowerCase();
-      if (/\bunion\b/i.test(lowerQuery)) {
-        throw new Error('UNIONs are not allowed in this interface');
-      }
-      return true;
-    })
-    .bail()
-    .custom(value => {
-      // Check for sensitive columns from clusters table
-      const sensitiveColumns = [
-        'username',
-        'hash',
-        'password',
-        'password_hash',
-      ];
-      const lowerQuery = value.toLowerCase();
-
-      // Check if query references clusters table
-      if (/\b(?:from|join)\s+clusters\b/i.test(lowerQuery)) {
-        // Check for sensitive columns being selected
-        for (const col of sensitiveColumns) {
-          const patterns = [
-            new RegExp(`\\bclusters?\\.${col}\\b`, 'i'), // clusters.username
-            new RegExp(`\\bc\\.${col}\\b`, 'i'), // c.username (common alias)
-            new RegExp(`select\\s+.*\\b${col}\\b.*from\\s+clusters`, 'i'), // direct column name
-          ];
-
-          for (const pattern of patterns) {
-            if (pattern.test(lowerQuery)) {
-              throw new Error(
-                `Column '${col}' from clusters table is not allowed for security reasons`
-              );
-            }
-          }
-        }
-      }
-      return true;
-    })
-    .bail()
-    .custom(value => {
-      // Validate that only allowed tables are referenced
-      const allowedTables = ['work_unit_details', 'work_units', 'clusters'];
-
-      // Extract table names from FROM and JOIN clauses
-      const tablePattern = /\b(?:from|join)\s+(\w+)/gi;
-      const tables = [];
-      let match;
-
-      while ((match = tablePattern.exec(value)) !== null) {
-        tables.push(match[1].toLowerCase());
-      }
-
+    .custom((value, { req }) => {
+      const parsed = parseAndValidateAnalyticsSql(value);
+      const tables = collectReferencedTables(parsed.ast);
       const invalidTables = tables.filter(
-        table => !allowedTables.includes(table)
+        table => !ALLOWED_ANALYTICS_TABLE_SET.has(table)
       );
 
       if (invalidTables.length > 0) {
         throw new Error(
-          `Invalid table(s): ${invalidTables.join(', ')}. Only the following tables are allowed: ${allowedTables.join(', ')}`
+          `Invalid table(s): ${invalidTables.join(', ')}. Only the following tables are allowed: ${ALLOWED_ANALYTICS_TABLES.join(', ')}`
         );
       }
 
@@ -166,6 +70,30 @@ const validateAnalyticsQuery = [
           'Query must include a FROM clause with an allowed table'
         );
       }
+
+      const sensitiveColumnViolation = findSensitiveClusterColumnViolation(
+        parsed.ast,
+        SENSITIVE_CLUSTER_COLUMNS
+      );
+
+      if (sensitiveColumnViolation) {
+        if (sensitiveColumnViolation === '*') {
+          throw new Error(
+            'Selecting wildcard columns from clusters table is not allowed for security reasons'
+          );
+        }
+
+        throw new Error(
+          `Column '${sensitiveColumnViolation}' from clusters table is not allowed for security reasons`
+        );
+      }
+
+      req.analyticsSqlContext = parsed;
+      logger.debug('Analytics SQL validated using AST', {
+        normalizedSql: parsed.normalizedSql,
+        hadTrailingSemicolon: parsed.hadTrailingSemicolon,
+        tableCount: tables.length,
+      });
 
       return true;
     }),
@@ -212,11 +140,7 @@ const validateAnalyzeQuery = [
     .bail()
     .trim()
     .custom(value => {
-      // Basic validation - must be SELECT statement
-      const trimmed = value.trim();
-      if (!trimmed.toLowerCase().startsWith('select')) {
-        throw new Error('Only SELECT statements can be analyzed');
-      }
+      parseAndValidateAnalyticsSql(value);
       return true;
     }),
 ];
@@ -292,78 +216,35 @@ const validateExportQuery = [
 // Helper function to validate SQL query structure (can be reused)
 const sqlValidationRules = {
   isSelect: value => {
-    const withoutComments = value
-      .replace(/--[^\n]*/g, '') // Remove single-line comments
-      .replace(/\/\*[\s\S]*?\*\//g, '') // Remove multi-line comments
-      .trim();
-
-    if (!withoutComments.toLowerCase().startsWith('select')) {
-      throw new Error('Only SELECT statements are allowed');
-    }
+    parseAndValidateAnalyticsSql(value);
     return true;
   },
 
   noMultipleStatements: value => {
-    const firstSemicolonIndex = value.indexOf(';');
-    if (firstSemicolonIndex === -1) {
-      return true;
-    }
-
-    const lastSemicolonIndex = value.lastIndexOf(';');
-    const isSingleTrailingSemicolon =
-      firstSemicolonIndex === lastSemicolonIndex &&
-      firstSemicolonIndex === value.length - 1;
-
-    if (!isSingleTrailingSemicolon) {
-      throw new Error('Multiple statements are not allowed');
-    }
-
+    parseAndValidateAnalyticsSql(value);
     return true;
   },
 
   noForbiddenKeywords: value => {
-    const withoutComments = value
-      .replace(/--[^\n]*/g, '') // Remove single-line comments
-      .replace(/\/\*[\s\S]*?\*\//g, '') // Remove multi-line comments
-      .trim();
-
-    const lowerQuery = withoutComments.toLowerCase();
-
-    for (const keyword of forbiddenSqlKeywords) {
-      const regex = new RegExp(`\\b${keyword}\\b`, 'i');
-      if (regex.test(lowerQuery)) {
-        throw new Error(
-          `Keyword '${keyword}' is not allowed. Only non-destructive SELECT queries permitted.`
-        );
-      }
-    }
+    parseAndValidateAnalyticsSql(value);
     return true;
   },
 
-  noUnions: value => {
-    if (/\bunion\b/i.test(value)) {
-      throw new Error('UNIONs are not allowed in this interface');
-    }
+  noUnions: _value => {
+    // UNION is allowed for read-only SELECT statements.
     return true;
   },
 
   onlyAllowedTables: value => {
-    const allowedTables = ['work_unit_details', 'work_units', 'clusters'];
-    const tablePattern = /\b(?:from|join)\s+(\w+)/gi;
-    const tables = [];
-    let match;
-
-    while ((match = tablePattern.exec(value)) !== null) {
-      tables.push(match[1].toLowerCase());
-    }
-
+    const parsed = parseAndValidateAnalyticsSql(value);
+    const tables = collectReferencedTables(parsed.ast);
     const invalidTables = tables.filter(
-      table => !allowedTables.includes(table)
+      table => !ALLOWED_ANALYTICS_TABLE_SET.has(table)
     );
 
     if (invalidTables.length > 0) {
       throw new Error(
-        `Invalid table(s): ${invalidTables.join(', ')}. Only the following tables are allowed: ${allowedTables.join(', ')}`
+        `Invalid table(s): ${invalidTables.join(', ')}. Only the following tables are allowed: ${ALLOWED_ANALYTICS_TABLES.join(', ')}`
       );
     }
 
