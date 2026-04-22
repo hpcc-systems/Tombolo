@@ -41,8 +41,11 @@ const processNotificationJob = async (job: Job<NotificationJobPayload>) => {
     );
   }
 
+  const templateName =
+    typeof payload.templateName === 'string' ? payload.templateName : '';
+
   const htmlBody = emailNotificationHtmlCode({
-    templateName: payload.templateName,
+    templateName,
     data: payload.metaData ?? {},
   });
 
@@ -50,7 +53,7 @@ const processNotificationJob = async (job: Job<NotificationJobPayload>) => {
     typeof payload.metaData?.body === 'string'
       ? payload.metaData.body
       : (emailNotificationTextCode({
-          templateName: payload.templateName,
+          templateName,
           data: payload.metaData ?? {},
         }) ?? `Notification: ${payload.subject}`);
 
