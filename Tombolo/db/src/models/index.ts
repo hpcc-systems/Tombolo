@@ -19,6 +19,7 @@ import { Cluster } from './Cluster.js';
 import { ClusterMonitoring } from './ClusterMonitoring.js';
 import { CostMonitoring } from './CostMonitoring.js';
 import { CostMonitoringData } from './CostMonitoringData.js';
+import { FailedNotification } from './FailedNotification.js';
 import { FileMonitoring } from './FileMonitoring.js';
 import { InstanceSettings } from './InstanceSettings.js';
 import { Integration } from './Integration.js';
@@ -136,6 +137,7 @@ const sequelizeOptions: SequelizeOptions & { models: any[] } = {
     ClusterMonitoring,
     CostMonitoring,
     CostMonitoringData,
+    FailedNotification,
     FileMonitoring,
     InstanceSettings,
     Integration,
@@ -203,6 +205,7 @@ export {
   ClusterMonitoring,
   CostMonitoring,
   CostMonitoringData,
+  FailedNotification,
   FileMonitoring,
   InstanceSettings,
   Integration,
@@ -250,6 +253,7 @@ export default {
   ClusterMonitoring,
   CostMonitoring,
   CostMonitoringData,
+  FailedNotification,
   FileMonitoring,
   InstanceSettings,
   Integration,
