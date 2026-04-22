@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+      .main_body {
+        width: 100%
+      }
+
+      .section {
+        margin: 0 auto !important;
+        width: 800px;
+        border-collapse: collapse;
+        font-family: Arial;
+        font-size: 14px;
+      }
+
+      .section-table-td {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 5px;
+      }
+
+      .section-table-td-label{
+        width: 120px !important;
+      }
+
+      .section-footer {
+        background: none;
+        text-align: center;
+        border-top: 1px solid #dddddd;
+        font-size: 12px;
+      }
+
+      .section-footer-td {
+        padding-top: 50px;
+        padding-bottom: 50px;
+        color: #808080;
+        border-top: 1px solid #808080;
+        line-height: 12px;
+      }
+
+      .section-header {
+        background: none !important;
+      }
+
+      .section-header-td {
+        padding-top: 30px;
+        padding-bottom: 30px;
+      }
+
+      .greeting {
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 10px;
+      }
+
+      .alert-message {
+        font-size: 14px;
+        line-height: 1.6;
+        margin-top: 15px;
+        margin-bottom: 15px;
+        padding: 12px;
+        background-color: #fff3cd;
+        border-left: 4px solid #ffc107;
+      }
+
+      .table-container {
+        margin-top: 1rem;
+      }
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid #ddd;
+      }
+      .table th {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+        font-size: 14px;
+        font-weight: 500;
+        color: #333;
+        background-color: #f5f5f5;
+      }
+      .table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        font-size: 14px;
+        color: #444;
+      }
+      .table tr:nth-child(even) {
+        background-color: #fafafa;
+      }
+      .table tr:nth-child(odd) {
+        background-color: #ffffff;
+      }
+      .table .totals-row {
+        font-weight: bold;
+        background-color: #e8ecef;
+      }
+    </style>
+</head>
+
+<table class="main_body">
+    <tbody>
+    <tr>
+        <td>
+            <table class="section section-header">
+                <tbody>
+                <tr>
+                    <td class="section-header-td">
+                        <div class="greeting">
+                            <strong>Hello <%= userName || 'User' %>,</strong>
+                        </div>
+                        <div>
+                            You have exceeded the cost monitoring alert threshold.
+                        </div>
+                        <% 
+                            const threshold = typeof issue !== 'undefined' && issue.Issue ? parseFloat(issue.Issue.match(/\d+\.?\d*/)?.[0] || 0) : 0;
+                            const currSym = typeof issue !== 'undefined' ? issue.currencySymbol : '$';
+                        %>
+                        <% if (typeof totalCost !== 'undefined' && typeof exceededBy !== 'undefined') { %>
+                            <div class="alert-message">
+                                <strong>Cost threshold of <%= currSym %><%= threshold.toFixed(2) %> was exceeded by <%= currSym %><%= exceededBy.toFixed(2) %>.</strong><br>
+                                Your total cost is <%= currSym %><%= totalCost.toFixed(2) %> but was expected to be below <%= currSym %><%= threshold.toFixed(2) %>.
+                            </div>
+                        <% } %>
+                        <div>
+                            Please see the details below:
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <table class="section section-table">
+                <tbody>
+
+                <% if (typeof notificationId !== 'undefined') { %>
+                    <tr class="section-table-td">
+                        <td class="section-table-td section-table-td-label">Notification ID</td>
+                        <td class="section-table-td"><%= notificationId %></td>
+                    </tr>
+                <% } %>
+
+                <% if(typeof issue !== 'undefined'){ %>
+                    <tr class="section-table-td">
+                        <td class="section-table-td section-table-td-label">Cost Details</td>
+                        <td class="section-table-td">
+                            <% if (Object.keys(issue).includes('Users')) { %>
+                                <% 
+                                    // For individual notifications, we'll show a simplified single-user view
+                                    let totalExecuteCost = 0, totalCompileCost = 0, totalFileAccessCost = 0, totalCostCalc = 0;
+                                    issue.Users.forEach(user => {
+                                        totalExecuteCost += user.executeCost || 0;
+                                        totalCompileCost += user.compileCost || 0;
+                                        totalFileAccessCost += user.fileAccessCost || 0;
+                                        totalCostCalc += user.totalCost || 0;
+                                    });
+                                %>
+                                <div class="table-container">
+                                    <table class="table">
+                                        <thead>
+                                        <tr>
+                                            <th>Cluster Name</th>
+                                            <th>Execute Cost</th>
+                                            <th>Compile Cost</th>
+                                            <th>File Access Cost</th>
+                                            <th>Total Cost</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <% issue.Users.forEach(function(cluster) { %>
+                                            <tr>
+                                                <td><%= cluster.clusterName || 'N/A' %></td>
+                                                <td><%= issue.currencySymbol %>&nbsp;<%= cluster.executeCost.toFixed(4) %></td>
+                                                <td><%= issue.currencySymbol %>&nbsp;<%= cluster.compileCost.toFixed(4) %></td>
+                                                <td><%= issue.currencySymbol %>&nbsp;<%= cluster.fileAccessCost.toFixed(4) %></td>
+                                                <td><%= issue.currencySymbol %>&nbsp;<%= cluster.totalCost.toFixed(4) %></td>
+                                            </tr>
+                                        <% }); %>
+                                        <tr class="totals-row">
+                                            <td>Total</td>
+                                            <td><%= issue.currencySymbol %>&nbsp;<%= totalExecuteCost.toFixed(4) %></td>
+                                            <td><%= issue.currencySymbol %>&nbsp;<%= totalCompileCost.toFixed(4) %></td>
+                                            <td><%= issue.currencySymbol %>&nbsp;<%= totalFileAccessCost.toFixed(4) %></td>
+                                            <td><%= issue.currencySymbol %>&nbsp;<%= totalCostCalc.toFixed(4) %></td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <% } %>
+                        </td>
+                    </tr>
+                <% }%>
+                </tbody>
+            </table>
+            <table class="section section-footer">
+                <tbody>
+                <tr>
+                    <td class="section-footer-td">
+                        You are receiving this notification because cost monitoring for your user ID '<%= typeof ownerId !== 'undefined' ? ownerId : 'N/A' %>' has been created in Tombolo<%= typeof instanceName !== 'undefined' ? ' (' + instanceName + ')' : '' %>.<br><br>
+                        If you have questions about this alert, please contact your manager or Tombolo administrator.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+</html>

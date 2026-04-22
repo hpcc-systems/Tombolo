@@ -18,6 +18,7 @@ import {
   formatSize,
 } from './lzFileMonitoringUtils.js';
 import { APPROVAL_STATUS } from '../../config/constants.js';
+import { enqueueNotification } from '../../services/notificationProducer.js';
 
 const monitoring_name = 'Landing Zone Monitoring';
 
@@ -313,7 +314,7 @@ const monitoring_name = 'Landing Zone Monitoring';
         };
 
         // Add to notification queue
-        await NotificationQueue.create({
+        await enqueueNotification({
           type: 'email',
           notificationOrigin: monitoring_name,
           originationId: monitoringTypeId,

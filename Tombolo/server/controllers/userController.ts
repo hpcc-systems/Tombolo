@@ -16,11 +16,11 @@ import {
   User,
   UserRole,
   UserApplication,
-  NotificationQueue,
   AccountVerificationCode,
   PasswordResetLink,
   RefreshToken,
 } from '@tombolo/db';
+import { enqueueNotification } from '../services/notificationProducer.js';
 import {
   setPasswordExpiry,
   trimURL,
@@ -115,29 +115,26 @@ const updateBasicUserInfo = async (req: Request, res: Response) => {
     // Save user with updated details within the transaction
     const updatedUser = await existingUser.save({ transaction: t });
 
-    // Queue notification within the same transaction
+    // Queue notification
     const readable_notification = `ACC_CNG_${moment().format(
       'YYYYMMDD_HHmmss_SSS'
     )}`;
-    await NotificationQueue.create(
-      {
-        type: 'email',
-        templateName: 'accountChange',
+    await enqueueNotification({
+      type: 'email',
+      deliveryType: 'immediate',
+      templateName: 'accountChange',
+      notificationOrigin: 'User Management',
+      createdBy: req.user.id,
+      metaData: {
+        notificationId: readable_notification,
+        recipientName: `${updatedUser.firstName} ${updatedUser.lastName}`,
         notificationOrigin: 'User Management',
-        deliveryType: 'immediate',
-        metaData: {
-          notificationId: readable_notification,
-          recipientName: `${updatedUser.firstName} ${updatedUser.lastName}`,
-          notificationOrigin: 'User Management',
-          subject: 'Account Change',
-          mainRecipients: [updatedUser.email],
-          notificationDescription: 'Account Change',
-          changedInfo,
-        },
-        createdBy: req.user.id,
+        subject: 'Account Change',
+        mainRecipients: [updatedUser.email],
+        notificationDescription: 'Account Change',
+        changedInfo,
       },
-      { transaction: t }
-    );
+    });
 
     // Commit the transaction
     await t.commit();
@@ -245,26 +242,22 @@ const changePassword = async (req: Request, res: Response) => {
       'YYYYMMDD_HHmmss_SSS'
     )}`;
 
-    // TODO - send notification only after successful commit
-    await NotificationQueue.create(
-      {
-        type: 'email',
-        templateName: 'accountChange',
+    await enqueueNotification({
+      type: 'email',
+      deliveryType: 'immediate',
+      templateName: 'accountChange',
+      notificationOrigin: 'User Management',
+      createdBy: id as string,
+      metaData: {
+        notificationId: readable_notification,
+        recipientName: `${existingUser.firstName} ${existingUser.lastName}`,
         notificationOrigin: 'User Management',
-        deliveryType: 'immediate',
-        metaData: {
-          notificationId: readable_notification,
-          recipientName: `${existingUser.firstName} ${existingUser.lastName}`,
-          notificationOrigin: 'User Management',
-          subject: 'Account Change',
-          mainRecipients: [existingUser.email],
-          notificationDescription: 'Account Change',
-          changedInfo: ['password'],
-        },
-        createdBy: id as string,
+        subject: 'Account Change',
+        mainRecipients: [existingUser.email],
+        notificationDescription: 'Account Change',
+        changedInfo: ['password'],
       },
-      { transaction: t }
-    );
+    });
 
     // Invalidate all existing sessions for security
     await RefreshToken.destroy({ where: { userId: id }, transaction: t });
@@ -627,11 +620,12 @@ const createUser = async (req: Request, res: Response) => {
     });
 
     // Add to notification queue
-    await NotificationQueue.create({
+    await enqueueNotification({
       type: 'email',
+      deliveryType: 'immediate',
       templateName: 'completeRegistration',
       notificationOrigin: 'User Management',
-      deliveryType: 'immediate',
+      createdBy: req.user.id,
       metaData: {
         notificationId: searchableNotificationId,
         recipientName: `${newUserData.firstName}`,
@@ -645,7 +639,6 @@ const createUser = async (req: Request, res: Response) => {
         notificationDescription: 'Complete your Registration',
         validForHours: 24,
       },
-      createdBy: req.user.id,
     });
 
     // Remove hash
@@ -686,27 +679,23 @@ const resetPasswordForUser = async (req: Request, res: Response) => {
     )}`;
 
     // Queue notification
-    await NotificationQueue.create(
-      {
-        type: 'email',
-        templateName: 'resetPasswordLink',
+    await enqueueNotification({
+      type: 'email',
+      deliveryType: 'immediate',
+      templateName: 'resetPasswordLink',
+      notificationOrigin: 'Reset Password',
+      createdBy: 'System',
+      metaData: {
+        notificationId: searchableNotificationId,
+        recipientName: `${user.firstName}`,
         notificationOrigin: 'Reset Password',
-        deliveryType: 'immediate',
-        createdBy: 'System',
-        updatedBy: 'System',
-        metaData: {
-          notificationId: searchableNotificationId,
-          recipientName: `${user.firstName}`,
-          notificationOrigin: 'Reset Password',
-          subject: 'Password Reset Link',
-          mainRecipients: [user.email],
-          notificationDescription: 'Password Reset Link',
-          validForHours: 24,
-          passwordRestLink,
-        },
+        subject: 'Password Reset Link',
+        mainRecipients: [user.email],
+        notificationDescription: 'Password Reset Link',
+        validForHours: 24,
+        passwordRestLink,
       },
-      { transaction }
-    );
+    });
 
     // Save the password reset token to the user object in the database
     await PasswordResetLink.create(
@@ -763,11 +752,12 @@ const unlockAccount = async (req: Request, res: Response) => {
     // Queue notification to inform user account has been unlocked
     try {
       const notificationId = `USR_UNLCK_${moment().format('YYYYMMDD_HHmmss_SSS')}`;
-      await NotificationQueue.create({
+      await enqueueNotification({
         type: 'email',
+        deliveryType: 'immediate',
         templateName: 'accountUnlocked',
         notificationOrigin: 'Account Management',
-        deliveryType: 'immediate',
+        createdBy: req.user?.id || 'System',
         metaData: {
           notificationId,
           recipientName: `${user.firstName} ${user.lastName}`,
@@ -777,7 +767,6 @@ const unlockAccount = async (req: Request, res: Response) => {
           notificationDescription: 'Account Unlocked',
           loginLink: `${trimURL(process.env.WEB_URL)}/login`,
         },
-        createdBy: req.user?.id || 'System',
       });
     } catch (notificationErr) {
       logger.error(

@@ -22,6 +22,7 @@ import type { CreationAttributes } from 'sequelize';
 import _ from 'lodash';
 import currencyCodeToSymbol from '../../utils/currencyCodeToSymbol.js';
 import { msGraphClient, extractFirstName } from '../../utils/msGraphHelper.js';
+import { enqueueNotification } from '../../services/notificationProducer.js';
 
 const notificationPrefix = 'CM';
 const domainMap = new Map();
@@ -252,7 +253,7 @@ async function sendNocNotification(
       delete nocNotificationPayload.metaData.cc;
       nocNotificationPayload.metaData.idempotencyKey =
         nocNotificationPayload.metaData.idempotencyKey + '|NOC';
-      await NotificationQueue.create(nocNotificationPayload);
+      await enqueueNotification(nocNotificationPayload);
     }
   } catch (nocError) {
     logOrPostMessage({
@@ -396,7 +397,7 @@ async function notifyIndividualUsersAndManagers(
         });
 
         // Queue the notification
-        await NotificationQueue.create(notificationPayload);
+        await enqueueNotification(notificationPayload);
 
         const recipientInfo = [];
         if (primaryContacts.length > 0)
@@ -495,7 +496,7 @@ async function analyzeClusterCost(
       currencyCode,
     });
 
-    await NotificationQueue.create(notificationPayload);
+    await enqueueNotification(notificationPayload);
     logOrPostMessage({
       level: 'info',
       text: 'Notification(s) sent for analyzeCost (per cluster)',
@@ -560,7 +561,7 @@ async function analyzeClusterCost(
     currencyCode,
   });
 
-  await NotificationQueue.create(notificationPayload);
+  await enqueueNotification(notificationPayload);
   logOrPostMessage({
     level: 'info',
     text: 'Notification(s) sent for analyzeCost (per cluster)',
@@ -633,7 +634,7 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
       currencyCode,
     });
 
-    await NotificationQueue.create(notificationPayload);
+    await enqueueNotification(notificationPayload);
     logOrPostMessage({
       level: 'info',
       text: 'Notification(s) sent for analyzeCost',
@@ -707,7 +708,7 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
     currencyCode,
   });
 
-  await NotificationQueue.create(notificationPayload);
+  await enqueueNotification(notificationPayload);
   logOrPostMessage({
     level: 'info',
     text: 'Notification(s) sent for analyzeCost',
