@@ -1,10 +1,13 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Card, Table, Space, Tag, Button, Tooltip } from 'antd';
 import { EyeOutlined } from '@ant-design/icons';
 import { useHistory } from 'react-router-dom';
 import { formatCurrency } from '@tombolo/shared';
 import { groupWorkunitsByName } from '@/components/admin/workunits/history/common/fuzzyMatch';
 import type { ExpensiveWorkunit } from '@/services/workunitDashboard.service';
+import clustersService from '@/services/clusters.service';
+import { handleError } from '@/components/common/handleResponse';
+import WorkunitOpenOptionsModal from '@/components/admin/workunits/history/common/WorkunitOpenOptionsModal';
 import styles from './TopCostlyJobs.module.css';
 
 interface TopCostlyJobsProps {
@@ -60,6 +63,39 @@ const CostBreakdownBar = ({
 export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
   const history = useHistory();
   const [visibleCount, setVisibleCount] = useState(5);
+  const [clusters, setClusters] = useState<any[]>([]);
+  const suppressNextRowClick = useRef(false);
+
+  useEffect(() => {
+    clustersService
+      .getAll()
+      .then((data: any[]) => setClusters(data || []))
+      .catch(() => {});
+  }, []);
+
+  const getClusterById = (clusterId?: string) => clusters.find((c: any) => c.id === clusterId);
+
+  const buildEclWatchUrl = (record: ExpensiveWorkunit): string | null => {
+    const cluster = getClusterById(record?.clusterId);
+    const thorHost = typeof cluster?.thor_host === 'string' ? cluster.thor_host.trim() : '';
+    const thorPort = typeof cluster?.thor_port === 'string' ? cluster.thor_port.trim() : '';
+    const wuId = typeof record?.wuId === 'string' ? record.wuId.trim() : '';
+    if (!thorHost || !thorPort || !wuId) return null;
+    return `${thorHost}:${thorPort}/esp/files/index.html#/workunits/${encodeURIComponent(wuId)}`;
+  };
+
+  const handleOpenInEclWatch = (record: ExpensiveWorkunit) => {
+    const url = buildEclWatchUrl(record);
+    if (!url) {
+      handleError('Cluster thor host/port not available for this workunit');
+      return;
+    }
+    suppressNextRowClick.current = true;
+    setTimeout(() => {
+      suppressNextRowClick.current = false;
+    }, 300);
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
 
   // Group workunits using fuzzy matching and aggregate costs
   const jobGroups = useMemo(() => {
@@ -166,7 +202,17 @@ export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
       key: 'wuId',
       width: 140,
       ellipsis: true,
-      render: (text: string) => <span className={styles.wuIdText}>{text}</span>,
+      render: (text: string, record: ExpensiveWorkunit) => (
+        <WorkunitOpenOptionsModal
+          wuId={record.wuId}
+          hasEclWatchLink={Boolean(buildEclWatchUrl(record))}
+          onOpenTombolo={() => handleView(record)}
+          onOpenEclWatch={() => handleOpenInEclWatch(record)}>
+          <Button type="link" size="small" className={styles.wuIdText}>
+            {text}
+          </Button>
+        </WorkunitOpenOptionsModal>
+      ),
     },
     {
       title: 'Owner',
