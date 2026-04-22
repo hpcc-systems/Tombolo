@@ -68,8 +68,8 @@ export const emailNotificationTextCode = <TData extends EmailTemplateData>({
   }
 
   return html
-    .replace(/<style[\s\S]*?<\/style\s*>/gi, ' ')
-    .replace(/<script[\s\S]*?<\/script\s*>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style(?:\s[^>]*)?>/gi, ' ')
+    .replace(/<script[\s\S]*?<\/script(?:\s[^>]*)?>/gi, ' ')
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/p\s*>/gi, '\n\n')
     .replace(/<\/div\s*>/gi, '\n')
