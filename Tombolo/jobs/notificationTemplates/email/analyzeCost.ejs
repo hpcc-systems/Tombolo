@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+      .main_body {
+        width: 100%
+      }
+
+      .section {
+        margin: 0 auto !important;
+        width: 800px;
+        border-collapse: collapse;
+        font-family: Arial;
+        font-size: 14px;
+      }
+
+      .section-table-td {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 5px;
+      }
+
+      .section-table-td-label{
+        width: 120px !important;
+      }
+
+      .section-footer {
+        background: none;
+        text-align: center;
+        border-top: 1px solid #dddddd;
+        font-size: 12px;
+      }
+
+      .section-footer-td {
+        padding-top: 50px;
+        padding-bottom: 50px;
+        color: #808080;
+      }
+
+      .section-header {
+        background: none !important;
+      }
+
+      .section-header-td {
+        padding-top: 30px;
+        padding-bottom: 30px;
+      }
+
+      .list {
+        padding: 10px;
+      }
+
+      .indented {
+        margin-left: 12px;
+      }
+
+      .indented-2 {
+        margin-left: 18px;
+      }
+      .table-container {
+        margin-top: 1rem;
+        overflow-x: auto;
+      }
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid #ddd;
+      }
+      .table th {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+        font-size: 14px;
+        font-weight: 500;
+        color: #333;
+        background-color: #f5f5f5;
+      }
+      .table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        font-size: 14px;
+        color: #444;
+      }
+      .table tr:nth-child(even) {
+        background-color: #fafafa;
+      }
+      .table tr:nth-child(odd) {
+        background-color: #ffffff;
+      }
+      .table .totals-row {
+        font-weight: bold;
+        background-color: #e8ecef;
+      }
+      .cluster-table {
+        width: 50%;
+        margin-top: 16px;
+        border-collapse: collapse;
+        border: 1px solid #ddd;
+      }
+      .cluster-table th {
+        border: 1px solid #ddd;
+        padding: 6px;
+        text-align: left;
+        font-size: 13px;
+        font-weight: 500;
+        color: #333;
+        background-color: #f5f5f5;
+      }
+      .cluster-table td {
+        border: 1px solid #ddd;
+        padding: 6px;
+        font-size: 13px;
+        color: #444;
+      }
+      .cluster-table tr:nth-child(even) {
+        background-color: #fafafa;
+      }
+      .cluster-table tr:nth-child(odd) {
+        background-color: #ffffff;
+      }
+    </style>
+</head>
+
+<table class="main_body">
+    <tbody>
+    <tr>
+        <td>
+            <table class="section section-header">
+                <tbody>
+                <tr>
+                    <td class="section-header-td">
+                        <%= typeof notificationDescription !== 'undefined' ? notificationDescription : "" %>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <table class="section section-table">
+                <tbody>
+
+                <% if (typeof notificationId !== 'undefined') { %>
+                    <tr class="section-table-td">
+                        <td class="section-table-td section-table-td-label">Notification ID</td>
+                        <td class="section-table-td"><%= notificationId %></td>
+                    </tr>
+                <% } %>
+
+                <% if(typeof region !== 'undefined'){ %>
+                    <tr class="section-table-td">
+                        <td class="section-table-td"> Region</td>
+                        <td class="section-table-td"><%= region %> </td>
+                    </tr>
+                <% }%>
+
+                <% if(typeof domainName !== 'undefined'){ %>
+                    <tr class="section-table-td">
+                        <td class="section-table-td"> Domain</td>
+                        <td class="section-table-td"><%= domainName %> </td>
+                    </tr>
+                <% }%>
+
+                <% if(typeof productName !== 'undefined'){ %>
+                    <tr class="section-table-td">
+                        <td class="section-table-td"> Product</td>
+                        <td class="section-table-td"><%= productName %> </td>
+                    </tr>
+                <% }%>
+
+                <% if(typeof severity !== 'undefined'){ %>
+                    <tr class="section-table-td">
+                        <td class="section-table-td"> Severity</td>
+                        <td class="section-table-td"><%= severity %> </td>
+                    </tr>
+                <% }%>
+
+                <% if(typeof issue !== 'undefined'){ %>
+                    <tr class="section-table-td">
+                        <td class="section-table-td"> Issue</td>
+                        <td class="section-table-td">
+                            <% if (Object.keys(issue).includes('Users')) { %>
+                                <% Object.keys(issue).forEach(function(key) { %>
+                                    <% if (key === 'currencySymbol') { return } %>
+                                    <% if (key === 'Users' && Array.isArray(issue[key])) { %>
+                                        <%
+                                            // Group users by username
+                                            const users = {};
+                                            issue[key].forEach(user => {
+                                                if (!users[user.username]) {
+                                                    users[user.username] = [];
+                                                }
+                                                users[user.username].push(user);
+                                            });
+                                            // Sort usernames alphabetically
+                                            const sortedUserNames = Object.keys(users).sort();
+                                            // Calculate grand totals across all users
+                                            let grandTotalExecuteCost = 0, grandTotalCompileCost = 0, grandTotalFileAccessCost = 0, grandTotalCost = 0;
+                                            issue[key].forEach(user => {
+                                                grandTotalExecuteCost += user.executeCost || 0;
+                                                grandTotalCompileCost += user.compileCost || 0;
+                                                grandTotalFileAccessCost += user.fileAccessCost || 0;
+                                                grandTotalCost += user.totalCost || 0;
+                                            });
+                                        %>
+                                        <div class="table-container">
+                                            <table class="table">
+                                                <thead>
+                                                <tr>
+                                                    <th>Username</th>
+                                                    <th>Cluster Name</th>
+                                                    <th>Execute Cost</th>
+                                                    <th>Compile Cost</th>
+                                                    <th>File Access Cost</th>
+                                                    <th>Total Cost</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                <% sortedUserNames.forEach(function(userName, userIndex) { %>
+                                                    <% let userClusters = users[userName]; %>
+                                                    <% userClusters.sort((a, b) => (a.clusterName || '').localeCompare(b.clusterName || '')); %>
+                                                    <% let numClusters = userClusters.length; %>
+                                                    <% let totalExecuteCost = 0, totalCompileCost = 0, totalFileAccessCost = 0, totalCost = 0; %>
+                                                    <% userClusters.forEach(function(cluster) { %>
+                                                        <% totalExecuteCost += cluster.executeCost || 0; %>
+                                                        <% totalCompileCost += cluster.compileCost || 0; %>
+                                                        <% totalFileAccessCost += cluster.fileAccessCost || 0; %>
+                                                        <% totalCost += cluster.totalCost || 0; %>
+                                                    <% }); %>
+                                                    <% userClusters.forEach(function(cluster, index) { %>
+                                                        <tr>
+                                                            <% if (index === 0) { %>
+                                                                <td rowspan="<%= numClusters %>"><%= userName || 'N/A' %></td>
+                                                            <% } %>
+                                                            <td><%= cluster.clusterName || 'N/A' %></td>
+                                                            <td><%= issue.currencySymbol %>&nbsp;<%= cluster.executeCost.toFixed(4) %></td>
+                                                            <td><%= issue.currencySymbol %>&nbsp;<%= cluster.compileCost.toFixed(4) %></td>
+                                                            <td><%= issue.currencySymbol %>&nbsp;<%= cluster.fileAccessCost.toFixed(4) %></td>
+                                                            <td><%= issue.currencySymbol %>&nbsp;<%= cluster.totalCost.toFixed(4) %></td>
+                                                        </tr>
+                                                    <% }); %>
+                                                    <tr class="totals-row">
+                                                        <td></td>
+                                                        <td>Totals for <%= userName %></td>
+                                                        <td><%= issue.currencySymbol %>&nbsp;<%= totalExecuteCost.toFixed(4) %></td>
+                                                        <td><%= issue.currencySymbol %>&nbsp;<%= totalCompileCost.toFixed(4) %></td>
+                                                        <td><%= issue.currencySymbol %>&nbsp;<%= totalFileAccessCost.toFixed(4) %></td>
+                                                        <td><%= issue.currencySymbol %>&nbsp;<%= totalCost.toFixed(4) %></td>
+                                                    </tr>
+                                                    <% if (userIndex < sortedUserNames.length - 1) { %>
+                                                        <tr><td colspan="6" style="height: 10px;"></td></tr>
+                                                    <% } %>
+                                                <% }); %>
+                                                <tr class="grand-totals-row">
+                                                    <td colspan="2">Grand Totals</td>
+                                                    <td><%= issue.currencySymbol %>&nbsp;<%= grandTotalExecuteCost.toFixed(4) %></td>
+                                                    <td><%= issue.currencySymbol %>&nbsp;<%= grandTotalCompileCost.toFixed(4) %></td>
+                                                    <td><%= issue.currencySymbol %>&nbsp;<%= grandTotalFileAccessCost.toFixed(4) %></td>
+                                                    <td><%= issue.currencySymbol %>&nbsp;<%= grandTotalCost.toFixed(4) %></td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    <% } else if (key === 'clusters' && Array.isArray(issue[key])) { %>
+                                        <% if (issue.clusters && Array.isArray(issue.clusters)) { %>
+                                            <div class="table-container">
+                                                <table class="cluster-table">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>Cluster Name</th>
+                                                        <th>Discovered At</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    <% issue.clusters.forEach(function(cluster) { %>
+                                                        <tr>
+                                                            <td><%= cluster.ClusterName || 'N/A' %></td>
+                                                            <td><%= cluster['Discovered At'] || 'N/A' %></td>
+                                                        </tr>
+                                                    <% }) %>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        <% } %>
+                                    <% } else { %>
+                                        <div><span> <%= key %> : </span> <%= issue[key] %></div>
+                                    <% } %>
+                                <%}) %>
+                            <% } else { %>
+                                <% Object.keys(issue).forEach(function(key) { %>
+                                    <% if (key === 'currencySymbol') { return } %>
+                                    <% if (key === 'clusters' && Array.isArray(issue[key])) { %>
+                                        <div class="table-container">
+                                            <table class="table">
+                                                <thead>
+                                                <tr>
+                                                    <th>Cluster Name</th>
+                                                    <th>Total Cost</th>
+                                                    <th>Compile Cost</th>
+                                                    <th>Execute Cost</th>
+                                                    <th>File Access Cost</th>
+                                                    <th>Discovered At</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                <% let totalCostSum = 0, compileCostSum = 0,
+                                                        executeCostSum = 0, fileAccessCostSum = 0; %> <%
+                                                issue[key].forEach(function(cluster) { %> <%
+                                                    totalCostSum += cluster.totalCost || 0; %> <%
+                                                    compileCostSum += cluster.compileCost || 0; %> <%
+                                                    executeCostSum += cluster.executeCost || 0; %> <%
+                                                    fileAccessCostSum += cluster.fileAccessCost || 0; %>
+                                                <tr>
+                                                    <td><%= cluster.clusterName || 'N/A' %></td>
+                                                    <td><%= issue.currencySymbol %>&nbsp;<%= cluster.totalCost.toFixed(4) %></td>
+                                                    <td><%= issue.currencySymbol %>&nbsp;<%= cluster.compileCost.toFixed(4) %></td>
+                                                    <td><%= issue.currencySymbol %>&nbsp;<%= cluster.executeCost.toFixed(4) %></td>
+                                                    <td><%= issue.currencySymbol %>&nbsp;<%= cluster.fileAccessCost.toFixed(4) %></td>
+                                                    <td><%= cluster['Discovered At'] || 'N/A' %></td>
+                                                </tr>
+                                                <% }) %>
+                                                <tr class="totals-row">
+                                                    <td>Summed Totals</td>
+                                                    <td><%= issue.currencySymbol %>&nbsp;<%= totalCostSum.toFixed(4) %></td>
+                                                    <td><%= issue.currencySymbol %>&nbsp;<%= compileCostSum.toFixed(4) %></td>
+                                                    <td><%= issue.currencySymbol %>&nbsp;<%= executeCostSum.toFixed(4) %></td>
+                                                    <td><%= issue.currencySymbol %>&nbsp;<%= fileAccessCostSum.toFixed(4) %></td>
+                                                    <td></td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    <% } else { %>
+                                        <div><span> <%= key %> : </span> <%= issue[key] %></div>
+                                    <% } %>
+                                <%}) %>
+                            <% } %>
+                        </td>
+                    </tr>
+
+                    <% if(typeof remedy !== 'undefined'){ %>
+                        <tr class="section-table-td">
+                            <td class="section-table-td"> Remedy</td>
+                            <td class="section-table-td">
+                                <% Object.keys(remedy).forEach(function(key) { %>
+                                    <div><span> <%= key %> : </span> <%= remedy[key] %></div>
+                                <%}) %>
+                            </td>
+                        </tr>
+                    <% }%>
+                <% }%>
+                </tbody>
+            </table>
+            <table class="section section-footer">
+                <tbody>
+                <tr>
+                    <td class="section-footer-td">
+                        This notification is sent by Tombolo because your email address is included in the cost monitoring notification recipient list. If you wish to stop receiving these alerts, please contact your Tombolo administrator.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+</html>

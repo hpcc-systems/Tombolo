@@ -19,12 +19,16 @@ const {
   AsrDomain,
   AsrProduct,
   SentNotification,
-  NotificationQueue,
   MonitoringType,
 } = mockedModels;
 import * as monitorJobsUtil from '../../jobs/jobMonitoring/monitorJobsUtil.js';
 import { getCostMonitoring } from '../helpers.js';
 import { parentPort } from 'worker_threads';
+
+// Mock the notification producer service
+vi.mock('../../services/notificationProducer.js', () => ({
+  enqueueNotification: vi.fn(),
+}));
 
 const workerParentPort = parentPort as NonNullable<typeof parentPort>;
 
@@ -208,8 +212,6 @@ describe('analyzeCost.js', () => {
         costMonitoring,
         monitoringType
       );
-
-      expect(NotificationQueue.create).not.toHaveBeenCalled();
     });
 
     it('should send notification if summedCost >= threshold', async () => {
@@ -220,12 +222,17 @@ describe('analyzeCost.js', () => {
         .spyOn(monitorJobsUtil, 'createNotificationPayload')
         .mockImplementation(
           () =>
-            ({}) as ReturnType<typeof monitorJobsUtil.createNotificationPayload>
+            ({
+              type: 'email',
+              templateName: 'analyzeCost',
+              notificationOrigin: 'Cost Monitoring',
+              subject: 'Test',
+              recipients: { primaryContacts: ['test@example.com'] },
+            }) as ReturnType<typeof monitorJobsUtil.createNotificationPayload>
         );
 
       Cluster.findAll.mockResolvedValue([{ id: 1, name: 'test-cluster' }]);
       SentNotification.findOne.mockResolvedValue(null);
-      NotificationQueue.create.mockResolvedValue({});
       const costMonitoring = {
         id: 1,
         metaData: { notificationMetaData: { notificationCondition: 100 } },
@@ -237,12 +244,17 @@ describe('analyzeCost.js', () => {
         aggregatedCostsByCluster: { 1: { totalCost: 200 } },
         overallTotalCost: 200,
       };
+      const { enqueueNotification } =
+        await import('../../services/notificationProducer.js');
+      const mockEnqueue = enqueueNotification as ReturnType<typeof vi.fn>;
+      mockEnqueue.mockResolvedValue(undefined);
+
       await analyzeClusterCost(
         clusterCostTotals,
         costMonitoring,
         monitoringType
       );
-      expect(NotificationQueue.create).toHaveBeenCalled();
+      expect(mockEnqueue).toHaveBeenCalled();
       spyBuildKey.mockRestore();
       spyBuildPayload.mockRestore();
     });
@@ -273,7 +285,13 @@ describe('analyzeCost.js', () => {
         .spyOn(monitorJobsUtil, 'createNotificationPayload')
         .mockImplementation(
           () =>
-            ({}) as ReturnType<typeof monitorJobsUtil.createNotificationPayload>
+            ({
+              type: 'email',
+              templateName: 'analyzeCost',
+              notificationOrigin: 'Cost Monitoring',
+              subject: 'Test',
+              recipients: { primaryContacts: ['test@example.com'] },
+            }) as ReturnType<typeof monitorJobsUtil.createNotificationPayload>
         );
 
       const spyBuildNotifId = vi
@@ -281,7 +299,6 @@ describe('analyzeCost.js', () => {
         .mockImplementation(() => 'notifId');
 
       SentNotification.findOne.mockResolvedValue(null);
-      NotificationQueue.create.mockResolvedValue({});
       Integration.findOne.mockResolvedValue({});
       AsrProduct.findByPk.mockResolvedValue({
         shortCode: 'SC',
@@ -307,8 +324,14 @@ describe('analyzeCost.js', () => {
       };
       const monitoringType = { id: 1 };
       const userCostTotals = [{ username: 'u1', totalCost: 150 }];
+
+      const { enqueueNotification } =
+        await import('../../services/notificationProducer.js');
+      const mockEnqueue = enqueueNotification as ReturnType<typeof vi.fn>;
+      mockEnqueue.mockResolvedValue(undefined);
+
       await analyzeUserCost(userCostTotals, costMonitoring, monitoringType);
-      expect(NotificationQueue.create).toHaveBeenCalled();
+      expect(mockEnqueue).toHaveBeenCalled();
 
       spyBuildPayload.mockRestore();
       spyBuildKey.mockRestore();

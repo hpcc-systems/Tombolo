@@ -7,6 +7,7 @@ import type { ClusterWithPassword } from '../../types/cluster.js';
 import { decryptString } from '@tombolo/shared';
 import { Cluster, NotificationQueue } from '@tombolo/db';
 import { getClusterOptions } from '../../utils/getClusterOptions.js';
+import { enqueueNotification } from '../../services/notificationProducer.js';
 
 async function monitorClusterReachability() {
   // UTC time
@@ -83,7 +84,7 @@ async function monitorClusterReachability() {
                 notificationId: `PWD_EXPIRY_${now.getTime()}`,
               });
 
-              await NotificationQueue.create(payload);
+              await enqueueNotification(payload);
 
               //Update accountMetaData
               newAccountMetaData.passwordExpiryAlertSentForDay =

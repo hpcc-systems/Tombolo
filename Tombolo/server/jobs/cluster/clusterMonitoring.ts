@@ -9,7 +9,6 @@ import {
   ClusterMonitoring,
   Cluster,
   MonitoringType,
-  NotificationQueue,
   AsrProduct,
   AsrDomain,
   MonitoringLog,
@@ -17,6 +16,7 @@ import {
 import { generateNotificationId } from '../jobMonitoring/monitorJobsUtil.js';
 import { decryptString } from '@tombolo/shared';
 import { APPROVAL_STATUS } from '../../config/constants.js';
+import { enqueueNotification } from '../../services/notificationProducer.js';
 
 // Helper functions
 async function enrichAsrMetaData(asrSpecificMetaData) {
@@ -417,8 +417,10 @@ async function monitorCluster() {
         });
       }
 
-      // Queue notification that are to be sent
-      await NotificationQueue.bulkCreate(notificationToBeQueued);
+      // Queue notifications that are to be sent
+      await Promise.all(
+        notificationToBeQueued.map(payload => enqueueNotification(payload))
+      );
 
       // Iterate over the notificationToBeQueued and do upsert
       for (const n of notificationToBeQueued) {

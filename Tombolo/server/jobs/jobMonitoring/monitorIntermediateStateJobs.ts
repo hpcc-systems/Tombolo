@@ -28,6 +28,7 @@ import {
 import shallowCopyWithOutNested from '../../utils/shallowCopyWithoutNested.js';
 import { getClusterOptions } from '../../utils/getClusterOptions.js';
 import type { ClusterWithPassword } from '../../types/cluster.js';
+import { enqueueNotification } from '../../services/notificationProducer.js';
 
 type ClusterWithPasswordAndLocalTime = ClusterWithPassword & {
   localTime: Date;
@@ -438,7 +439,7 @@ type ClusterWithPasswordAndLocalTime = ClusterWithPassword & {
 
     // Insert notification in queue
     for (const notification of notificationsToBeQueued) {
-      await NotificationQueue.create(notification);
+      await enqueueNotification(notification);
     }
 
     // if wuToStopMonitoring is empty, or state of intermediate wu has not changed return

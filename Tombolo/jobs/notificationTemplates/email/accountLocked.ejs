@@ -1,0 +1,25 @@
+<%- include('partials/layoutStart') %>
+
+<h1 style="margin:0 0 16px;font-size:24px;line-height:32px;color:<%= theme.text %>;">Account Locked</h1>
+
+<p style="margin:0 0 16px;font-size:14px;line-height:22px;color:<%= theme.text %>;">
+  Hello <%= userName %>,
+</p>
+
+<p style="margin:0 0 16px;font-size:14px;line-height:22px;color:<%= theme.text %>;">
+  Your account has been <strong style="color:<%= theme.danger %>;"></strong><span style="color:<%= theme.danger %>;font-weight:bold;">locked</span>
+  due to too many unsuccessful login attempts.
+  Access has been temporarily restricted for security reasons.
+</p>
+
+<p style="margin:0 0 12px;font-size:14px;line-height:22px;color:<%= theme.text %>;">
+  Contact your administrator for assistance. Support contacts:
+</p>
+
+<% if (typeof supportEmailRecipients !== 'undefined' && supportEmailRecipients?.length) { %>
+  <% supportEmailRecipients.forEach(function(e) { %>
+    <p style="margin:0 0 8px 16px;font-size:14px;line-height:22px;color:<%= theme.primary %>;"><%= e %></p>
+  <% }); %>
+<% } %>
+
+<%- include('partials/layoutEnd') %>

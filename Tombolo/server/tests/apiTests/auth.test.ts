@@ -14,6 +14,11 @@ import moment from 'moment';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 
+// Mock the notification producer service
+vi.mock('../../services/notificationProducer.js', () => ({
+  enqueueNotification: vi.fn(),
+}));
+
 const JWT_SECRET = process.env.JWT_SECRET ?? 'test-secret';
 
 const getUser = () => getUsers()[0];
@@ -162,7 +167,6 @@ describe('Auth Routes', () => {
     mockedModels.User.findOne.mockResolvedValue(user);
     mockedModels.InstanceSettings.findOne.mockResolvedValue(instanceSettings);
     mockedModels.SentNotification.findOne.mockResolvedValue(null);
-    mockedModels.NotificationQueue.create.mockResolvedValue(true);
 
     const res = await request(app)
       .post('/api/auth/requestAccess')
@@ -173,7 +177,11 @@ describe('Auth Routes', () => {
     expect(mockedModels.User.findOne).toHaveBeenCalled();
     expect(mockedModels.InstanceSettings.findOne).toHaveBeenCalled();
     expect(mockedModels.SentNotification.findOne).toHaveBeenCalled();
-    expect(mockedModels.NotificationQueue.create).toHaveBeenCalled();
+
+    const { enqueueNotification } =
+      await import('../../services/notificationProducer.js');
+    const mockEnqueue = enqueueNotification as ReturnType<typeof vi.fn>;
+    expect(mockEnqueue).toHaveBeenCalled();
   });
 
   it('request-access should request access if existingNotification >24 hours', async () => {
@@ -194,7 +202,6 @@ describe('Auth Routes', () => {
     mockedModels.User.findOne.mockResolvedValue(user);
     mockedModels.InstanceSettings.findOne.mockResolvedValue(instanceSettings);
     mockedModels.SentNotification.findOne.mockResolvedValue(sentNotification);
-    mockedModels.NotificationQueue.create.mockResolvedValue(true);
 
     const res = await request(app)
       .post('/api/auth/requestAccess')
@@ -205,7 +212,11 @@ describe('Auth Routes', () => {
     expect(mockedModels.User.findOne).toHaveBeenCalled();
     expect(mockedModels.InstanceSettings.findOne).toHaveBeenCalled();
     expect(mockedModels.SentNotification.findOne).toHaveBeenCalled();
-    expect(mockedModels.NotificationQueue.create).toHaveBeenCalled();
+
+    const { enqueueNotification } =
+      await import('../../services/notificationProducer.js');
+    const mockEnqueue = enqueueNotification as ReturnType<typeof vi.fn>;
+    expect(mockEnqueue).toHaveBeenCalled();
   });
 
   it('request-access should 404 if user does not exist', async () => {

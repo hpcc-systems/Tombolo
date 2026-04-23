@@ -20,12 +20,12 @@ import {
   Application,
   RoleType,
   RefreshToken,
-  NotificationQueue,
   PasswordResetLink,
   AccountVerificationCode,
   SentNotification,
   sequelize,
 } from '@tombolo/db';
+import { enqueueNotification } from '../services/notificationProducer.js';
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -125,11 +125,12 @@ const createApplicationOwner = async (req: Request, res: Response) => {
     });
 
     // Add to notification queue
-    await NotificationQueue.create({
+    await enqueueNotification({
       type: 'email',
+      deliveryType: 'immediate',
       templateName: 'verifyEmail',
       notificationOrigin: 'User Registration',
-      deliveryType: 'immediate',
+      createdBy: user.id,
       metaData: {
         notificationId: searchableNotificationId,
         recipientName: `${user.firstName}`,
@@ -142,7 +143,6 @@ const createApplicationOwner = async (req: Request, res: Response) => {
         notificationDescription: 'Verify email',
         validForHours: 24,
       },
-      createdBy: user.id,
     });
 
     // Send response
@@ -194,11 +194,12 @@ const createBasicUser = async (req: Request, res: Response) => {
       if (recipients.length > 0) {
         const adminNotificationId = uuidv4();
 
-        await NotificationQueue.create({
+        await enqueueNotification({
           type: 'email',
+          deliveryType: 'immediate',
           templateName: 'newUserRegistration',
           notificationOrigin: 'User Registration',
-          deliveryType: 'immediate',
+          createdBy: user.id,
           metaData: {
             notificationId: adminNotificationId,
             notificationOrigin: 'User Registration',
@@ -212,7 +213,6 @@ const createBasicUser = async (req: Request, res: Response) => {
             notificationDescription: 'New User Registration',
             validForHours: 24,
           },
-          createdBy: user.id,
         });
       }
     } catch (adminNotificationError) {
@@ -234,11 +234,12 @@ const createBasicUser = async (req: Request, res: Response) => {
     });
 
     // Add to notification queue
-    await NotificationQueue.create({
+    await enqueueNotification({
       type: 'email',
+      deliveryType: 'immediate',
       templateName: 'verifyEmail',
       notificationOrigin: 'User Registration',
-      deliveryType: 'immediate',
+      createdBy: user.id,
       metaData: {
         notificationId: searchableNotificationId,
         recipientName: `${user.firstName}`,
@@ -251,7 +252,6 @@ const createBasicUser = async (req: Request, res: Response) => {
         notificationDescription: 'Verify email',
         validForHours: 24,
       },
-      createdBy: user.id,
     });
 
     // Send response
@@ -562,25 +562,22 @@ const resetPasswordWithToken = async (req: Request, res: Response) => {
       'YYYYMMDD_HHmmss_SSS'
     )}`;
 
-    await NotificationQueue.create(
-      {
-        type: 'email',
-        templateName: 'accountChange',
+    await enqueueNotification({
+      type: 'email',
+      deliveryType: 'immediate',
+      templateName: 'accountChange',
+      notificationOrigin: 'Password Reset',
+      createdBy: user.id,
+      metaData: {
+        notificationId: readable_notification,
+        recipientName: `${user.firstName} ${user.lastName}`,
         notificationOrigin: 'Password Reset',
-        deliveryType: 'immediate',
-        metaData: {
-          notificationId: readable_notification,
-          recipientName: `${user.firstName} ${user.lastName}`,
-          notificationOrigin: 'Password Reset',
-          subject: 'Your password has been changed',
-          mainRecipients: [user.email],
-          notificationDescription: 'Password Reset',
-          changedInfo: ['password'],
-        },
-        createdBy: user.id,
+        subject: 'Your password has been changed',
+        mainRecipients: [user.email],
+        notificationDescription: 'Password Reset',
+        changedInfo: ['password'],
       },
-      { transaction }
-    );
+    });
 
     // Commit the transaction before setting cookies and tokens
     await transaction.commit();
@@ -1012,13 +1009,12 @@ const handlePasswordResetRequest = async (req: Request, res: Response) => {
     const searchableNotificationId = uuidv4();
 
     // Queue notification
-    await NotificationQueue.create({
+    await enqueueNotification({
       type: 'email',
+      deliveryType: 'immediate',
       templateName: 'resetPasswordLink',
       notificationOrigin: 'Reset Password',
-      deliveryType: 'immediate',
       createdBy: 'System',
-      updatedBy: 'System',
       metaData: {
         notificationId: searchableNotificationId,
         recipientName: `${user.firstName}`,
@@ -1143,11 +1139,12 @@ const loginOrRegisterAzureUser = async (req: Request, res: Response) => {
         if (recipients.length > 0) {
           const adminNotificationId = uuidv4();
 
-          await NotificationQueue.create({
+          await enqueueNotification({
             type: 'email',
+            deliveryType: 'immediate',
             templateName: 'newUserRegistration',
             notificationOrigin: 'Azure User Registration',
-            deliveryType: 'immediate',
+            createdBy: newUser.id,
             metaData: {
               notificationId: adminNotificationId,
               notificationOrigin: 'Azure User Registration',
@@ -1161,7 +1158,6 @@ const loginOrRegisterAzureUser = async (req: Request, res: Response) => {
               notificationDescription: 'New Azure User Registration',
               validForHours: 24,
             },
-            createdBy: newUser.id,
           });
         }
       } catch (adminNotificationError) {
@@ -1297,11 +1293,12 @@ const requestAccess = async (req: Request, res: Response) => {
     const searchableNotificationId = uuidv4();
 
     // Add to notification queue
-    await NotificationQueue.create({
+    await enqueueNotification({
       type: 'email',
+      deliveryType: 'immediate',
       templateName: 'accessRequest',
       notificationOrigin: 'No Access Page',
-      deliveryType: 'immediate',
+      createdBy: user.id,
       metaData: {
         notificationId: searchableNotificationId,
         notificationOrigin: 'No Access Page',
@@ -1315,7 +1312,6 @@ const requestAccess = async (req: Request, res: Response) => {
         notificationDescription: 'User Access Request',
         validForHours: 24,
       },
-      createdBy: user.id,
     });
 
     return sendSuccess(res, null, 'Access requested successfully');
@@ -1366,11 +1362,12 @@ const resendVerificationCode = async (req: Request, res: Response) => {
     });
 
     // Add to notification queue
-    await NotificationQueue.create({
+    await enqueueNotification({
       type: 'email',
+      deliveryType: 'immediate',
       templateName: 'verifyEmail',
       notificationOrigin: 'User Registration',
-      deliveryType: 'immediate',
+      createdBy: user.id,
       metaData: {
         notificationId: searchableNotificationId,
         recipientName: `${user.firstName}`,
@@ -1381,7 +1378,6 @@ const resendVerificationCode = async (req: Request, res: Response) => {
         notificationDescription: 'Verify email',
         validForHours: 24,
       },
-      createdBy: user.id,
     });
 
     // Update last verification code sent timestamp

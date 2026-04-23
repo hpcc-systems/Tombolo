@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Cluster Usage Notification</title>
+    <script src="https://unpkg.com/ejs@2.5.7/ejs.min.js"></script>
+    <style>
+      body {
+        font-family: Arial;
+        font-size: 14px;
+      }
+      .main_body {
+        width: 100%;
+        text-align: left;
+      }
+      .heading{
+        padding: 10px
+      }
+      .section {
+        margin: 0 auto !important;
+        max-width: 1280px;
+        min-width: 800px;
+        border-collapse: collapse;
+      }
+      td {
+        min-width: 150px !important;
+        text-align: left !important;
+      }
+      .section-table-td {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 5px;
+      }
+      .section-footer {
+        background: none;
+        text-align: center;
+        border-top: 1px solid #dddddd;
+        font-size: 12px;
+        margin-top: 24px !important;
+      }
+      .section-footer-td {
+        padding-top: 12px;
+        padding-bottom: 50px;
+        color: #808080;
+      }
+      .section-header {
+        background: none !important;
+        text-align: center;
+        font-size: 18px;
+      }
+      .list {
+        padding: 10px;
+      }
+      .critical-message{
+        color: #FF0000;
+      }
+    </style>
+  </head>
+  <body>
+<% if (typeof instanceName !== 'undefined' && typeof monitoringName !== 'undefined') { %>
+<div class="heading">
+   The following cluster usage issue was detected by <b> <%= instanceName %> </b> - <b> <%= monitoringName %> </b> monitoring system
+  </div>  
+<% } %>
+    
+<table class="main_body">
+  <tbody>
+    <tr>
+      <td>
+        <table class="section section-table">
+          <tbody>
+            <% if (typeof notificationId !== 'undefined') { %>
+            <tr class="section-table-td">
+              <td class="section-table-td section-table-td-label">Notification ID</td>
+              <td class="section-table-td"><%= notificationId %></td>
+            </tr>
+            <% } %>
+
+            <% if(typeof asrSpecificMetaData?.domainName !== 'undefined'){ %>
+            <tr class="section-table-td">
+              <td class="section-table-td section-table-td-label">Domain</td>
+              <td class="section-table-td"><%= asrSpecificMetaData?.domainName %></td>
+            </tr>
+            <% } %>
+
+            <% if(typeof asrSpecificMetaData?.productName !== 'undefined'){ %>
+            <tr class="section-table-td">
+              <td class="section-table-td section-table-td-label">Product</td>
+              <td class="section-table-td"><%= asrSpecificMetaData.productName %></td>
+            </tr>
+            <% } %>
+
+            <% if(typeof asrSpecificMetaData?.severity !== 'undefined'){ %>
+            <tr class="section-table-td">
+              <td class="section-table-td section-table-td-label">Severity</td>
+              <td class="section-table-td"><%= asrSpecificMetaData.severity %></td>
+            </tr>
+            <% } %>
+
+            <% if(typeof issue !== 'undefined'){ %>
+            <tr class="section-table-td">
+              <td class="section-table-td section-table-td-label">Issue</td>
+              <td class="section-table-td">
+                <% Object.keys(issue).forEach(function(key) { %>
+                  <% if (key === 'Issue Description') { %>
+                    <div><%= issue[key] %></div>
+                  <% } else if (key === 'Resource' || key === 'Usage' || key === 'Threshold') { %>
+                    <div><strong><%= key %>:</strong> <span class="<%= key === 'Usage' ? 'critical-message' : '' %>"><%= issue[key] %></span></div>
+                  <% } %>
+                <% }) %>
+
+                <% if (issue.problematicEngines && issue.problematicEngines.length > 0) { %>
+                <br/><strong>Problematic Engines:</strong><br/>
+                    <% issue.problematicEngines.forEach(function(engine) { %>
+                      &nbsp;&nbsp;- Engine: <%= engine.Name %>, Usage: <span class="critical-message"><%= engine.Usage %></span><br/>
+                    <% }) %>
+                <% } %>
+              </td>
+            </tr>
+            <% } %>
+
+            <% if(typeof firstLogged !== 'undefined'){ %>
+            <tr class="section-table-td">
+              <td class="section-table-td section-table-td-label">First Logged</td>
+              <td class="section-table-td"><%= firstLogged %></td>
+            </tr>
+            <% } %>
+
+            <% if(typeof lastLogged !== 'undefined'){ %>
+            <tr class="section-table-td">
+              <td class="section-table-td section-table-td-label">Last Logged</td>
+              <td class="section-table-td"><%= lastLogged %></td>
+            </tr>
+            <% } %>
+          </tbody>
+        </table>
+
+        <table class="section section-footer">
+          <tbody>
+            <tr>
+              <td class="section-footer-td">
+                This notification is sent by Tombolo because your email address is included in the cluster usage monitoring notification recipient list. If you wish to stop receiving these alerts, please contact your Tombolo administrator.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+  </body>
+</html>

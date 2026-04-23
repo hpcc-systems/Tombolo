@@ -30,6 +30,7 @@ import shallowCopyWithOutNested from '../../utils/shallowCopyWithoutNested.js';
 import { getClusterOptions } from '../../utils/getClusterOptions.js';
 import { APPROVAL_STATUS } from '../../config/constants.js';
 import type { ClusterWithPassword } from '../../types/cluster.js';
+import { enqueueNotification } from '../../services/notificationProducer.js';
 
 type ClusterWithPasswordAndStartTime = ClusterWithPassword & {
   startTime: Date;
@@ -496,7 +497,7 @@ const monitoring_name = 'Job Monitoring';
       });
 
       //Create notification queue
-      await NotificationQueue.create(notificationPayload);
+      await enqueueNotification(notificationPayload);
 
       // If severity is above threshold, send out NOC notification
       if (severity >= severityThreshHold && severeEmailRecipients) {
@@ -511,7 +512,7 @@ const monitoring_name = 'Job Monitoring';
             timezoneOffset: clusterInfoObj[clusterId].timezone_offset || 0,
           });
         delete notificationPayloadForNoc.metaData.cc;
-        await NotificationQueue.create(notificationPayloadForNoc);
+        await enqueueNotification(notificationPayloadForNoc);
       }
     }
 

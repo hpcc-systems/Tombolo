@@ -24,6 +24,7 @@ import {
 import { getClusterOptions } from '../../utils/getClusterOptions.js';
 import { APPROVAL_STATUS } from '../../config/constants.js';
 import type { ClusterWithPassword } from '../../types/cluster.js';
+import { enqueueNotification } from '../../services/notificationProducer.js';
 
 const monitoringTypeName = 'Job Monitoring';
 
@@ -376,7 +377,7 @@ const monitoringTypeName = 'Job Monitoring';
           };
 
           // Queue email notification
-          await NotificationQueue.create(queuePayload);
+          await enqueueNotification(queuePayload);
           logOrPostMessage({
             level: 'verbose',
             text: `Job Punctuality Monitoring: Notification queued for ${monitoringName},  job not started on time`,
@@ -399,7 +400,7 @@ const monitoringTypeName = 'Job Monitoring';
               ...notificationPayloadForNoc,
               deliveryType: 'immediate' as const,
             };
-            await NotificationQueue.create(queuePayloadForNoc);
+            await enqueueNotification(queuePayloadForNoc);
             logOrPostMessage({
               level: 'verbose',
               text: `Job Punctuality Monitoring: NOC Notification queued for ${monitoringName},  job not started on time`,
