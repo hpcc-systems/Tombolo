@@ -3,7 +3,7 @@ import { SearchOutlined, EyeOutlined } from '@ant-design/icons';
 import { formatCurrency } from '@tombolo/shared';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { ColumnsType } from 'antd/es/table';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import workunitsService from '@/services/workunits.service';
 import clustersService from '@/services/clusters.service';
 import WorkunitOpenOptionsModal from '@/components/admin/workunits/history/common/WorkunitOpenOptionsModal';
@@ -45,7 +45,7 @@ const stateColors: Record<string, string> = {
 };
 
 export default function WorkunitTable({ startDate, endDate, clusterId }: WorkunitTableProps) {
-  const history = useHistory();
+  const navigate = useNavigate();
   const suppressNextRowClick = useRef(false);
   const [data, setData] = useState<WorkunitRecord[]>([]);
   const [total, setTotal] = useState(0);
@@ -103,7 +103,7 @@ export default function WorkunitTable({ startDate, endDate, clusterId }: Workuni
   };
 
   const handleOpenInTombolo = (record: WorkunitRecord) => {
-    history.push(`/workunits/history/${record.clusterId}/${record.wuid}`);
+    navigate(`/workunits/history/${record.clusterId}/${record.wuid}`);
   };
 
   const handleOpenInEclWatch = (record: WorkunitRecord) => {
