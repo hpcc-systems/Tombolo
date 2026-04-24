@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Sequelize } from 'sequelize-typescript';
+import { Sequelize, type ModelCtor } from 'sequelize-typescript';
 import type { InferAttributes, Options as SequelizeOptions } from 'sequelize';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -115,8 +115,40 @@ const loadConfig = () => {
 
 const config = loadConfig();
 
+let readOnlySequelizeInstance: Sequelize | null = null;
+
+export function getReadOnlySequelize(): Sequelize {
+  if (readOnlySequelizeInstance) {
+    return readOnlySequelizeInstance;
+  }
+
+  const readOnlyUsername = process.env.READONLY_DB_USERNAME;
+  const readOnlyPassword = process.env.READONLY_DB_PASS;
+  const dbHost = process.env.DB_HOSTNAME;
+
+  if (!readOnlyUsername || !readOnlyPassword) {
+    throw new Error(
+      'Read-only database credentials are not configured. Set READONLY_DB_USERNAME and READONLY_DB_PASS (or WORK_UNIT_READONLY_DB_USERNAME and WORK_UNIT_READONLY_DB_PASSWORD).'
+    );
+  }
+
+  const readOnlyOptions: SequelizeOptions = {
+    ...(config.dialectOptions && { dialectOptions: config.dialectOptions }),
+    ...(config.ssl && { ssl: config.ssl }),
+    database: config.database,
+    username: readOnlyUsername,
+    password: readOnlyPassword,
+    host: dbHost || config.host,
+    dialect: config.dialect,
+    logging: config.logging,
+  };
+
+  readOnlySequelizeInstance = new Sequelize(readOnlyOptions);
+  return readOnlySequelizeInstance;
+}
+
 // Initialize Sequelize with TypeScript support
-const sequelizeOptions: SequelizeOptions & { models: any[] } = {
+const sequelizeOptions: SequelizeOptions & { models: ModelCtor[] } = {
   ...(config.dialectOptions && { dialectOptions: config.dialectOptions }),
   ...(config.ssl && { ssl: config.ssl }),
   database: config.database,
@@ -241,6 +273,7 @@ export {
 // Default export with sequelize instance and all models
 export default {
   sequelize,
+  getReadOnlySequelize,
   Sequelize,
   AccountVerificationCode,
   AnalyticsFilter,

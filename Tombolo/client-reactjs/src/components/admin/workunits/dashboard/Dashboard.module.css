@@ -204,3 +204,11 @@
 .legendSwatchCompile {
   background: #d97706;
 }
+
+:global(.dashboard-wu-row-failed) {
+  background-color: #ffe5e5 !important;
+}
+
+:global(.dashboard-wu-row-failed:hover) {
+  background-color: #ffd1d1 !important;
+}

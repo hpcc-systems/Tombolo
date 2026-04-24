@@ -1,113 +1,27 @@
 import { Request, Response } from 'express';
 import { QueryTypes } from 'sequelize';
-import { sequelize } from '@tombolo/db';
+import { getReadOnlySequelize } from '@tombolo/db';
 import { sendSuccess, sendError } from '../utils/response.js';
 import logger from '../config/logger.js';
 import { activityKindLabels } from '@tombolo/shared';
+import type { Select } from 'node-sql-parser';
+import {
+  applyScopeToSelect,
+  collectReferencedTables,
+  enforceRowLimit,
+  getOutputToSourceColumnMapFromAst,
+  parseAndValidateAnalyticsSql,
+  sqlifySelect,
+} from '../utils/workunitAnalyticsSqlAst.js';
+import {
+  ALLOWED_WORKUNIT_ANALYTICS_TABLES,
+  ALLOWED_WORKUNIT_ANALYTICS_TABLE_SET,
+  SENSITIVE_WORKUNIT_ANALYTICS_CLUSTER_COLUMN_SET,
+} from '../config/workunitAnalyticsPolicy.js';
+
+const readOnlySequelize = getReadOnlySequelize();
 
 const ACTIVITY_KIND_SOURCE_COLUMNS = new Set(['kind']);
-
-function splitSelectClause(selectClause: string): string[] {
-  const expressions: string[] = [];
-  let current = '';
-  let depth = 0;
-  let inSingleQuote = false;
-  let inDoubleQuote = false;
-  let inBacktick = false;
-
-  for (let i = 0; i < selectClause.length; i += 1) {
-    const ch = selectClause[i];
-    const prev = i > 0 ? selectClause[i - 1] : '';
-
-    if (ch === "'" && !inDoubleQuote && !inBacktick && prev !== '\\') {
-      inSingleQuote = !inSingleQuote;
-    } else if (ch === '"' && !inSingleQuote && !inBacktick && prev !== '\\') {
-      inDoubleQuote = !inDoubleQuote;
-    } else if (ch === '`' && !inSingleQuote && !inDoubleQuote) {
-      inBacktick = !inBacktick;
-    }
-
-    if (!inSingleQuote && !inDoubleQuote && !inBacktick) {
-      if (ch === '(') depth += 1;
-      if (ch === ')' && depth > 0) depth -= 1;
-    }
-
-    if (
-      ch === ',' &&
-      depth === 0 &&
-      !inSingleQuote &&
-      !inDoubleQuote &&
-      !inBacktick
-    ) {
-      if (current.trim()) expressions.push(current.trim());
-      current = '';
-      continue;
-    }
-
-    current += ch;
-  }
-
-  if (current.trim()) expressions.push(current.trim());
-  return expressions;
-}
-
-function parseColumnProjection(expression: string): {
-  outputColumn: string | null;
-  sourceColumn: string | null;
-} {
-  const asAliasMatch = expression.match(
-    /\s+AS\s+`?([a-zA-Z_][a-zA-Z0-9_]*)`?\s*$/i
-  );
-  const tailAliasMatch = expression.match(
-    /\s+`?([a-zA-Z_][a-zA-Z0-9_]*)`?\s*$/
-  );
-
-  let alias: string | null = null;
-  let baseExpr = expression;
-
-  if (asAliasMatch) {
-    alias = asAliasMatch[1];
-    baseExpr = expression.slice(0, asAliasMatch.index).trim();
-  } else if (tailAliasMatch) {
-    const potentialExpr = expression.slice(0, tailAliasMatch.index).trim();
-    if (potentialExpr && /[)\].`"'0-9a-zA-Z_]$/.test(potentialExpr)) {
-      alias = tailAliasMatch[1];
-      baseExpr = potentialExpr;
-    }
-  }
-
-  const sourceMatch = baseExpr.match(
-    /^(?:`?[a-zA-Z_][a-zA-Z0-9_]*`?\.)?`?([a-zA-Z_][a-zA-Z0-9_]*)`?$/
-  );
-
-  if (!sourceMatch) {
-    return { outputColumn: alias, sourceColumn: null };
-  }
-
-  const sourceColumn = sourceMatch[1];
-  return { outputColumn: alias || sourceColumn, sourceColumn };
-}
-
-function getOutputToSourceColumnMap(sql: string): Record<string, string> {
-  const cleanSql = sql.replace(/;\s*$/, '').trim();
-  const selectMatch = cleanSql.match(/^\s*SELECT\s+([\s\S]+?)\s+FROM\s+/i);
-  if (!selectMatch) return {};
-
-  const selectClause = selectMatch[1].replace(/^DISTINCT\s+/i, '').trim();
-  if (!selectClause || selectClause === '*') return {};
-
-  const map: Record<string, string> = {};
-  const projections = splitSelectClause(selectClause);
-
-  for (const projection of projections) {
-    const { outputColumn, sourceColumn } = parseColumnProjection(projection);
-    if (!outputColumn || !sourceColumn) continue;
-
-    map[outputColumn.toLowerCase()] = sourceColumn.toLowerCase();
-  }
-
-  return map;
-}
 
 function mapActivityKindIdsInRows(
   rows: Record<string, unknown>[],
@@ -207,18 +121,6 @@ type ColumnSortFamily =
 interface ColumnTypeMetadata {
   family: ColumnSortFamily;
   rawType: string | null;
-}
-
-function extractReferencedTables(sql: string): string[] {
-  const tablePattern = /\b(?:from|join)\s+`?([a-zA-Z_][a-zA-Z0-9_]*)`?/gi;
-  const tables = new Set<string>();
-  let match: RegExpExecArray | null = null;
-
-  while ((match = tablePattern.exec(sql)) !== null) {
-    tables.add(match[1].toLowerCase());
-  }
-
-  return Array.from(tables);
 }
 
 function normalizeColumnFamily(rawType: string | null): ColumnSortFamily {
@@ -382,7 +284,7 @@ async function fetchTableColumnTypes(
   const typeLookup: Record<string, Set<string>> = {};
 
   for (const tableName of tableNames) {
-    const columns = (await sequelize.query(
+    const columns = (await readOnlySequelize.query(
       `
         SELECT c.COLUMN_NAME as name, c.DATA_TYPE as type
         FROM INFORMATION_SCHEMA.COLUMNS c
@@ -408,12 +310,12 @@ async function fetchTableColumnTypes(
 }
 
 async function buildColumnTypeMetadata(
-  sql: string,
+  queryAst: Select,
   columns: string[],
   rows: Record<string, unknown>[]
 ): Promise<Record<string, ColumnTypeMetadata>> {
-  const outputToSourceColumnMap = getOutputToSourceColumnMap(sql);
-  const referencedTables = extractReferencedTables(sql);
+  const outputToSourceColumnMap = getOutputToSourceColumnMapFromAst(queryAst);
+  const referencedTables = collectReferencedTables(queryAst);
   const tableColumnTypeLookup = await fetchTableColumnTypes(referencedTables);
   const columnTypes: Record<string, ColumnTypeMetadata> = {};
 
@@ -467,16 +369,24 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
     scopeToClusterId: string | null;
   } = {
     source: querySource,
-    userId: (req as Request & { user?: { id?: string } }).user?.id,
+    userId: req.user?.id,
     scopeToWuid: null,
     scopeToClusterId: null,
   };
 
   try {
-    // SQL and options are already validated by middleware
-    const inputSql = req.body.sql.trim();
-    const hadTrailingSemicolon = /;\s*$/.test(inputSql);
-    const rawSql = inputSql.replace(/;\s*$/, '');
+    const inputSql =
+      typeof req.body.sql === 'string' ? req.body.sql.trim() : '';
+    const parsedSqlContext =
+      req.analyticsSqlContext || parseAndValidateAnalyticsSql(inputSql);
+    req.analyticsSqlContext = parsedSqlContext;
+
+    const hadTrailingSemicolon = parsedSqlContext.hadTrailingSemicolon;
+    const rawSql = parsedSqlContext.normalizedSql;
+    const finalSelectAst = JSON.parse(
+      JSON.stringify(parsedSqlContext.ast)
+    ) as Select;
+
     options = req.body.options || {};
     const isScopedQuery = Boolean(
       options.scopeToWuid || options.scopeToClusterId
@@ -484,7 +394,7 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
     querySource = isScopedQuery ? 'scoped-workunit-sql' : 'analytics-page-sql';
     logContext = {
       source: querySource,
-      userId: (req as Request & { user?: { id?: string } }).user?.id,
+      userId: req.user?.id,
       scopeToWuid: options.scopeToWuid || null,
       scopeToClusterId: options.scopeToClusterId || null,
     };
@@ -495,90 +405,24 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
       sql: rawSql,
     });
 
-    // Apply automatic scoping if provided
-    let scopedSql = rawSql;
-    if (options.scopeToWuid || options.scopeToClusterId) {
-      // Parse the SQL to add WHERE conditions for scoping
-      const lowerSql = rawSql.toLowerCase();
+    const scopeApplied = applyScopeToSelect(finalSelectAst, {
+      scopeToWuid: options.scopeToWuid,
+      scopeToClusterId: options.scopeToClusterId,
+    });
 
-      // Build the scoping conditions
-      const scopeConditions = [];
-      if (options.scopeToWuid) {
-        scopeConditions.push(
-          `wuId = '${options.scopeToWuid.replace(/'/g, "''")}'`
-        );
-      }
-      if (options.scopeToClusterId) {
-        scopeConditions.push(
-          `clusterId = '${options.scopeToClusterId.replace(/'/g, "''")}'`
-        );
-      }
-
-      const scopeClause = scopeConditions.join(' AND ');
-
-      // Check if query already has a WHERE clause
-      const whereIndex = lowerSql.indexOf(' where ');
-      if (whereIndex !== -1) {
-        // Find where the WHERE clause ends (before ORDER BY, GROUP BY, HAVING, or LIMIT)
-        const afterWhereStart = whereIndex + 7; // start after ' where '
-        const afterWhereSql = rawSql.substring(afterWhereStart);
-        const afterWhereLower = lowerSql.substring(afterWhereStart);
-
-        // Find the first occurrence of ORDER BY, GROUP BY, HAVING, or LIMIT
-        // Use word boundaries to prevent ReDoS with repeated whitespace
-        const endClausePattern = /\b(?:order\s+by|group\s+by|having|limit)\b/i;
-        const endMatch = endClausePattern.exec(afterWhereLower);
-
-        if (endMatch) {
-          // Extract just the WHERE conditions (before ORDER BY, etc.)
-          const whereConditions = afterWhereSql.substring(0, endMatch.index);
-          const restOfQuery = afterWhereSql.substring(endMatch.index);
-          const beforeWhere = rawSql.substring(0, whereIndex + 7);
-          scopedSql = `${beforeWhere}(${scopeClause}) AND (${whereConditions})${restOfQuery}`;
-        } else {
-          // No ORDER BY, GROUP BY, HAVING, or LIMIT - WHERE conditions go to end
-          const beforeWhere = rawSql.substring(0, whereIndex + 7);
-          scopedSql = `${beforeWhere}(${scopeClause}) AND (${afterWhereSql})`;
-        }
-      } else {
-        // Add WHERE clause before ORDER BY, GROUP BY, or LIMIT
-        // Use word boundaries to prevent ReDoS with repeated whitespace
-        const insertBeforePattern = /\b(?:order\s+by|group\s+by|limit)\b/i;
-        const match = insertBeforePattern.exec(rawSql);
-
-        if (match) {
-          const insertPos = match.index;
-          scopedSql = `${rawSql.substring(0, insertPos)} WHERE ${scopeClause} ${rawSql.substring(insertPos)}`;
-        } else {
-          // No WHERE, ORDER BY, GROUP BY, or LIMIT - add at the end
-          scopedSql = `${rawSql} WHERE ${scopeClause}`;
-        }
-      }
-
-      logger.debug('Applied scoping to query:', {
+    if (scopeApplied) {
+      logger.debug('Applied AST-based scoping to query', {
         original: rawSql,
-        scoped: scopedSql,
+        scoped: sqlifySelect(finalSelectAst),
         options,
       });
     }
 
     // Enforce row limit (already validated to be <= 5000)
     const MAX_LIMIT = options.limit || 1000;
+    enforceRowLimit(finalSelectAst, MAX_LIMIT);
 
-    // Check if query already has a LIMIT clause
-    let finalSql = scopedSql;
-    const limitMatch = finalSql.toLowerCase().match(/\blimit\s+(\d+)/);
-
-    if (limitMatch) {
-      const requestedLimit = parseInt(limitMatch[1], 10);
-      if (!Number.isFinite(requestedLimit) || requestedLimit > MAX_LIMIT) {
-        // Replace with enforced limit
-        finalSql = finalSql.replace(/\blimit\s+\d+/i, `LIMIT ${MAX_LIMIT}`);
-      }
-    } else {
-      // Add limit if not present
-      finalSql = `${finalSql} LIMIT ${MAX_LIMIT}`;
-    }
+    let finalSql = sqlifySelect(finalSelectAst);
 
     // Preserve a single trailing semicolon if the original query had one.
     if (hadTrailingSemicolon) {
@@ -588,12 +432,12 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
     // Use a transaction to pin both the CONNECTION_ID() query and the user query to the
     // same MySQL thread. This is the idiomatic Sequelize way to guarantee same-connection
     // execution — the transaction is never committed since we only run SELECTs.
-    const t = await sequelize.transaction();
+    const t = await readOnlySequelize.transaction();
 
     let connectionId: number | null = null;
     try {
       // Retrieve the MySQL connection ID for this thread so we can cancel it if needed.
-      const connIdRows = (await sequelize.query(
+      const connIdRows = (await readOnlySequelize.query(
         'SELECT CONNECTION_ID() AS id',
         {
           type: QueryTypes.SELECT,
@@ -626,7 +470,7 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
 
       // Only issue KILL QUERY when we have the connection ID.
       if (connectionId !== null) {
-        sequelize
+        readOnlySequelize
           .query(`KILL QUERY ${connectionId}`)
           .then(() => {
             logger.debug(
@@ -647,7 +491,7 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
 
     let rows: Record<string, unknown>[];
     try {
-      rows = (await sequelize.query(finalSql, {
+      rows = (await readOnlySequelize.query(finalSql, {
         type: QueryTypes.SELECT,
         logging: sql => logger.debug('Analytics query:', sql),
         transaction: t,
@@ -675,7 +519,8 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
     const totalResponseTimeMs = Date.now() - requestStartedAt;
 
     // Replace activity kind ids with backend-owned labels before sending to clients.
-    const outputToSourceColumnMap = getOutputToSourceColumnMap(finalSql);
+    const outputToSourceColumnMap =
+      getOutputToSourceColumnMapFromAst(finalSelectAst);
     const activityKindMappingStats = mapActivityKindIdsInRows(
       rows,
       outputToSourceColumnMap
@@ -693,7 +538,11 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
     // Extract column names
     const columns =
       Array.isArray(rows) && rows.length > 0 ? Object.keys(rows[0]) : [];
-    const columnTypes = await buildColumnTypeMetadata(finalSql, columns, rows);
+    const columnTypes = await buildColumnTypeMetadata(
+      finalSelectAst,
+      columns,
+      rows
+    );
 
     const unresolvedColumns = Object.entries(columnTypes)
       .filter(([, metadata]) => metadata.rawType === null)
@@ -752,19 +601,19 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
 async function getSchema(req: Request, res: Response) {
   try {
     const tableName = req.query.tableName as string | undefined;
-    const allowedTables = ['work_unit_details', 'work_units', 'clusters'];
 
     // If tableName is provided, return just that table's schema
     if (tableName) {
-      if (!allowedTables.includes(tableName.toLowerCase())) {
+      const normalizedTableName = tableName.toLowerCase();
+      if (!ALLOWED_WORKUNIT_ANALYTICS_TABLE_SET.has(normalizedTableName)) {
         return sendError(
           res,
-          `Invalid table name. Allowed: ${allowedTables.join(', ')}`,
+          `Invalid table name. Allowed: ${ALLOWED_WORKUNIT_ANALYTICS_TABLES.join(', ')}`,
           400
         );
       }
 
-      const columns = await sequelize.query(
+      const columns = await readOnlySequelize.query(
         `
         SELECT
           c.COLUMN_NAME as name,
@@ -791,22 +640,19 @@ async function getSchema(req: Request, res: Response) {
         ORDER BY c.ORDINAL_POSITION
       `,
         {
-          replacements: [tableName],
+          replacements: [normalizedTableName],
           type: QueryTypes.SELECT,
         }
       );
 
       // Filter out sensitive columns from clusters table
-      const sensitiveColumns = [
-        'username',
-        'hash',
-        'password',
-        'password_hash',
-      ];
       const filteredColumns =
-        tableName === 'clusters'
+        normalizedTableName === 'clusters'
           ? (columns as SchemaColumnRow[]).filter(
-              col => !sensitiveColumns.includes(col.name.toLowerCase())
+              col =>
+                !SENSITIVE_WORKUNIT_ANALYTICS_CLUSTER_COLUMN_SET.has(
+                  col.name.toLowerCase()
+                )
             )
           : columns;
 
@@ -815,10 +661,9 @@ async function getSchema(req: Request, res: Response) {
 
     // If no tableName, return all allowed tables with their schemas
     const allSchemas: Record<string, SchemaColumnRow[]> = {};
-    const sensitiveColumns = ['username', 'hash', 'password', 'password_hash'];
 
-    for (const table of allowedTables) {
-      const columns = await sequelize.query(
+    for (const table of ALLOWED_WORKUNIT_ANALYTICS_TABLES) {
+      const columns = await readOnlySequelize.query(
         `
         SELECT
           c.COLUMN_NAME as name,
@@ -853,7 +698,10 @@ async function getSchema(req: Request, res: Response) {
       // Filter out sensitive columns from clusters table
       if (table === 'clusters') {
         allSchemas[table] = (columns as SchemaColumnRow[]).filter(
-          col => !sensitiveColumns.includes(col.name.toLowerCase())
+          col =>
+            !SENSITIVE_WORKUNIT_ANALYTICS_CLUSTER_COLUMN_SET.has(
+              col.name.toLowerCase()
+            )
         );
       } else {
         allSchemas[table] = columns as SchemaColumnRow[];
@@ -868,41 +716,12 @@ async function getSchema(req: Request, res: Response) {
 }
 
 /**
- * Analyze query without executing it
- * Returns estimated execution plan
- */
-async function analyzeQuery(req: Request, res: Response) {
-  try {
-    const rawSql = (req.body.sql || '').trim();
-
-    if (!rawSql) {
-      return sendError(res, 'SQL query is required', 400);
-    }
-
-    // Run EXPLAIN on the query
-    // Note: rawSql is pre-validated by analyticsMiddleware to ensure it's a safe SELECT query
-    // This is intentional - the feature allows users to write custom analytics queries
-    const [explanation] = await sequelize.query(`EXPLAIN ${rawSql}`, {
-      type: QueryTypes.SELECT,
-    });
-
-    return sendSuccess(res, {
-      plan: explanation,
-      analyzed: true,
-    });
-  } catch (err) {
-    logger.error('Query analysis error:', err);
-    return sendError(res, err.message || 'Failed to analyze query', 400);
-  }
-}
-
-/**
  * Get database statistics
  */
 async function getDatabaseStats(req: Request, res: Response) {
   try {
     // Get table statistics for both tables
-    const [tableStats] = await sequelize.query(`
+    const [tableStats] = await readOnlySequelize.query(`
       SELECT
         table_name,
         table_rows,
@@ -915,7 +734,7 @@ async function getDatabaseStats(req: Request, res: Response) {
     `);
 
     // Get record count by cluster from work_unit_details
-    const clusterCounts = await sequelize.query(
+    const clusterCounts = await readOnlySequelize.query(
       `
       SELECT
         clusterId,
@@ -928,7 +747,7 @@ async function getDatabaseStats(req: Request, res: Response) {
     );
 
     // Get state distribution from work_unit_details
-    const stateCounts = await sequelize.query(
+    const stateCounts = await readOnlySequelize.query(
       `
       SELECT
         state,
@@ -941,7 +760,7 @@ async function getDatabaseStats(req: Request, res: Response) {
     );
 
     // Get date range from work_unit_details
-    const [dateRange] = await sequelize.query(`
+    const [dateRange] = await readOnlySequelize.query(`
       SELECT
         MIN(workUnitTimestamp) as earliest,
         MAX(workUnitTimestamp) as latest
@@ -949,7 +768,7 @@ async function getDatabaseStats(req: Request, res: Response) {
     `);
 
     // Get workunits table stats
-    const [workunitStats] = await sequelize.query(`
+    const [workunitStats] = await readOnlySequelize.query(`
       SELECT
         COUNT(*) as total_workunits,
         COUNT(DISTINCT cluster_id) as unique_clusters,
@@ -971,4 +790,4 @@ async function getDatabaseStats(req: Request, res: Response) {
   }
 }
 
-export { executeAnalyticsQuery, getSchema, analyzeQuery, getDatabaseStats };
+export { executeAnalyticsQuery, getSchema, getDatabaseStats };

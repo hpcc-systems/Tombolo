@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useHistory } from 'react-router-dom';
 import {
   Table,
@@ -31,6 +31,8 @@ import { formatCurrency, formatHours } from '@tombolo/shared';
 import clustersService from '@/services/clusters.service';
 import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
 import { groupWorkunitsByName } from '@/components/admin/workunits/history/common/fuzzyMatch';
+import { handleError } from '@/components/common/handleResponse';
+import WorkunitOpenOptionsModal from '@/components/admin/workunits/history/common/WorkunitOpenOptionsModal';
 import styles from './workunitHistory.module.css';
 
 const { Title, Text } = Typography;
@@ -235,8 +237,48 @@ const WorkUnitHistory: React.FC = () => {
     }
   };
 
+  const suppressNextRowClick = useRef(false);
+
   const handleView = (record: any) => {
     history.push(`/workunits/history/${record.clusterId}/${record.wuId}`);
+  };
+
+  const getClusterById = (clusterId?: string) => {
+    if (!clusterId) return undefined;
+    return clusters.find((cluster: any) => cluster.id === clusterId);
+  };
+
+  const buildEclWatchUrl = (record: any): string | null => {
+    const cluster = getClusterById(record?.clusterId);
+    const thorHost = typeof cluster?.thor_host === 'string' ? cluster.thor_host.trim() : '';
+    const thorPort = typeof cluster?.thor_port === 'string' ? cluster.thor_port.trim() : '';
+    const wuId = typeof record?.wuId === 'string' ? record.wuId.trim() : '';
+
+    if (!thorHost || !thorPort || !wuId) {
+      return null;
+    }
+
+    return `${thorHost}:${thorPort}/esp/files/index.html#/workunits/${encodeURIComponent(wuId)}`;
+  };
+
+  const handleOpenInTombolo = (record: any) => {
+    handleView(record);
+  };
+
+  const handleOpenInEclWatch = (record: any) => {
+    const url = buildEclWatchUrl(record);
+
+    if (!url) {
+      handleError('Cluster thor host/port not available for this workunit');
+      return;
+    }
+
+    suppressNextRowClick.current = true;
+    setTimeout(() => {
+      suppressNextRowClick.current = false;
+    }, 300);
+
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const getSortOrder = (field: string) => {
@@ -259,15 +301,16 @@ const WorkUnitHistory: React.FC = () => {
       dataIndex: 'wuId',
       key: 'wuId',
       width: 135,
-      render: (val: string) => (
-        <span
-          style={{
-            fontFamily: 'var(--font-mono), monospace',
-            fontSize: 12,
-            color: '#2563eb',
-          }}>
-          {val}
-        </span>
+      render: (val: string, record: any) => (
+        <WorkunitOpenOptionsModal
+          wuId={record?.wuId}
+          hasEclWatchLink={Boolean(buildEclWatchUrl(record))}
+          onOpenTombolo={() => handleOpenInTombolo(record)}
+          onOpenEclWatch={() => handleOpenInEclWatch(record)}>
+          <Button type="link" size="small">
+            {val}
+          </Button>
+        </WorkunitOpenOptionsModal>
       ),
     },
     {
@@ -468,8 +511,16 @@ const WorkUnitHistory: React.FC = () => {
       dataIndex: 'wuId',
       key: 'wuId',
       width: 140,
-      render: (val: string) => (
-        <span style={{ fontFamily: 'var(--font-mono), monospace', fontSize: 12, color: '#2563eb' }}>{val}</span>
+      render: (val: string, record: any) => (
+        <WorkunitOpenOptionsModal
+          wuId={record?.wuId}
+          hasEclWatchLink={Boolean(buildEclWatchUrl(record))}
+          onOpenTombolo={() => handleOpenInTombolo(record)}
+          onOpenEclWatch={() => handleOpenInEclWatch(record)}>
+          <Button type="link" size="small">
+            {val}
+          </Button>
+        </WorkunitOpenOptionsModal>
       ),
     },
     {
@@ -825,6 +876,7 @@ const WorkUnitHistory: React.FC = () => {
             }}
             onRow={record => ({
               onClick: () => {
+                if (suppressNextRowClick.current) return;
                 if (record.clusterId && record.wuId && record.detailsFetchedAt) handleView(record);
               },
               style: { cursor: record.detailsFetchedAt ? 'pointer' : 'default' },
