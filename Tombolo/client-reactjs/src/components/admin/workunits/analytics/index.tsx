@@ -145,6 +145,64 @@ type ResultsSortState = {
   order: 'ascend' | 'descend' | null;
 };
 
+const toNonEmptyStringArray = (value: unknown): string[] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter(item => typeof item === 'string')
+    .map(item => item.trim())
+    .filter(item => item.length > 0);
+};
+
+const getBackendErrorForToast = (
+  error: unknown,
+  fallbackMessage: string
+): string | string[] => {
+  if (typeof error === 'string' && error.trim().length > 0) {
+    return error.trim();
+  }
+
+  if (!error || typeof error !== 'object') {
+    return fallbackMessage;
+  }
+
+  const candidate = error as {
+    messages?: unknown;
+    message?: unknown;
+    raw?: { errors?: unknown; message?: unknown };
+    response?: { data?: { errors?: unknown; message?: unknown } };
+  };
+
+  const messageSources = [
+    candidate.messages,
+    candidate.raw?.errors,
+    candidate.response?.data?.errors,
+  ];
+
+  for (const source of messageSources) {
+    const messages = toNonEmptyStringArray(source);
+    if (messages.length > 0) {
+      return messages;
+    }
+  }
+
+  const singleMessageSources = [
+    candidate.raw?.message,
+    candidate.response?.data?.message,
+    candidate.message,
+  ];
+
+  for (const source of singleMessageSources) {
+    if (typeof source === 'string' && source.trim().length > 0) {
+      return source.trim();
+    }
+  }
+
+  return fallbackMessage;
+};
+
 const AnalyticsWorkspace = () => {
   const history = useHistory();
   const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
@@ -281,8 +339,8 @@ const AnalyticsWorkspace = () => {
         setIsLoadingSchema(true);
         const response = await apiClient.get('/workunitAnalytics/schema');
         setSchemaData(response.data);
-      } catch (_error) {
-        handleError('Failed to load database schema');
+      } catch (error) {
+        handleError(getBackendErrorForToast(error, 'Failed to load database schema'));
       } finally {
         setIsLoadingSchema(false);
       }
@@ -317,9 +375,9 @@ const AnalyticsWorkspace = () => {
         // Ensure filters is an array and filter out any invalid items
         const validFilters = Array.isArray(filters) ? filters.filter(f => f && f.id && f.conditions) : [];
         setSavedFilters(validFilters);
-      } catch (_error) {
-        console.error('Failed to load filters:', _error);
-        handleError('Failed to load saved filters');
+      } catch (error) {
+        console.error('Failed to load filters:', error);
+        handleError(getBackendErrorForToast(error, 'Failed to load saved filters'));
         setSavedFilters([]); // Ensure it's always an array
       }
     };
@@ -446,8 +504,7 @@ const AnalyticsWorkspace = () => {
       if (axios.isCancel(error)) {
         handleSuccess('Query cancelled');
       } else {
-        const err = error as { response?: { data?: { message?: string } }; message?: string };
-        handleError(err.response?.data?.message || err.message || 'Failed to execute query');
+        handleError(getBackendErrorForToast(error, 'Failed to execute query'));
         console.error('Query execution error:', error);
       }
     } finally {
@@ -634,10 +691,9 @@ const AnalyticsWorkspace = () => {
       const updated = (savedFilters || []).filter(f => f.id !== id);
       setSavedFilters(updated);
       handleSuccess('Filter deleted successfully');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to delete filter:', error);
-      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to delete filter';
-      handleError(errorMessage);
+      handleError(getBackendErrorForToast(error, 'Failed to delete filter'));
     }
   };
 
@@ -678,10 +734,9 @@ const AnalyticsWorkspace = () => {
       setSaveFilterFromEditorModalVisible(false);
       setExtractedFilterConditions('');
       handleSuccess(`Filter "${newFilter.name}" saved successfully`);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to save filter:', error);
-      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to save filter';
-      handleError(errorMessage);
+      handleError(getBackendErrorForToast(error, 'Failed to save filter'));
     }
   };
 
@@ -719,10 +774,9 @@ const AnalyticsWorkspace = () => {
       setSavedFilters(updated);
       setQueryExecutedState(false);
       handleSuccess(`Updated "${appliedFilter.name}" successfully`);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to update filter:', error);
-      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to update filter';
-      handleError(errorMessage);
+      handleError(getBackendErrorForToast(error, 'Failed to update filter'));
     }
   };
 

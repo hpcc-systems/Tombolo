@@ -61,11 +61,6 @@ const analyticsService = {
     URL.revokeObjectURL(url);
   },
 
-  analyzeQuery: async (sql: string): Promise<any> => {
-    const response = await apiClient.post('/workunitAnalytics/analyze', { sql });
-    return response.data;
-  },
-
   getDatabaseStats: async (): Promise<any> => {
     const response = await apiClient.get('/workunitAnalytics/stats');
     return response.data;
