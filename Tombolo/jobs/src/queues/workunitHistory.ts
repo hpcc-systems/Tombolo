@@ -35,6 +35,14 @@ const scheduledJobs: ScheduledJob[] = [
     schedule: '0 3,18,33,48 * * * *', // Every 15 minutes, offset +3 min after wuDetails
     description: 'Fetch workunit info',
   },
+  {
+    name: 'wuCompiledRunScan',
+    jobId: 'wuCompiledRunScan-recurring',
+    data: { type: wuHistoryJobType.COMPILED_RUN_SCAN },
+    schedule: '0 10,25,40,55 * * * *', // Every 15 minutes, offset +10 min after wuQuery
+    description:
+      'Scan work_units for compiled state with actionEx=run and log matches',
+  },
   // Add more scheduled jobs here as needed
 ];
 
