@@ -588,7 +588,7 @@ function processScopeToRow(
     scopeType: (scopeType || null) as ScopeType, // Convert empty string to null (not a valid ENUM value)
     label:
       typeof label === 'string'
-        ? truncateString(sanitizeScopeLabel(label), 255, 'end')
+        ? truncateString(sanitizeScopeLabel(label), 255)
         : null,
     kind: kind ? parseInt(kind, 10) : null,
     fileName: filename ?? null,

@@ -8,6 +8,7 @@ import {
 } from '@tombolo/db';
 
 import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
+import { enqueueNotification } from '../services/notificationProducer.js';
 
 (async () => {
   try {
@@ -85,7 +86,7 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
               integration.dataValues.metaData.megaPhoneAlerts?.emailContacts
             ) {
               //create a notification queue
-              await NotificationQueue.create({
+              await enqueueNotification({
                 type: 'email',
                 notificationOrigin: 'orbitMegaphone',
                 templateName: 'orbitMegaphone',

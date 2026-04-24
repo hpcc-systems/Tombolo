@@ -9,10 +9,10 @@ import {
   UserRole,
   InstanceSettings,
   AccountVerificationCode,
-  NotificationQueue,
   sequelize,
 } from '@tombolo/db';
 import { trimURL, checkPasswordSecurityViolations } from '../utils/authUtil.js';
+import { enqueueNotification } from '../services/notificationProducer.js';
 
 // Main controller function
 const createInstanceSettingFirstRun = async (req: Request, res: Response) => {
@@ -311,28 +311,25 @@ const sendVerificationEmail = async (
   );
 
   // Queue notification email
-  await NotificationQueue.create(
-    {
-      type: 'email',
-      templateName: 'verifyEmail',
+  await enqueueNotification({
+    type: 'email',
+    deliveryType: 'immediate',
+    templateName: 'verifyEmail',
+    notificationOrigin: 'User Registration',
+    createdBy: user.id,
+    metaData: {
+      notificationId,
+      recipientName: `${user.firstName}`,
+      verificationLink: `${trimURL(
+        process.env.WEB_URL
+      )}/register?regId=${verificationCode}`,
       notificationOrigin: 'User Registration',
-      deliveryType: 'immediate',
-      metaData: {
-        notificationId,
-        recipientName: `${user.firstName}`,
-        verificationLink: `${trimURL(
-          process.env.WEB_URL
-        )}/register?regId=${verificationCode}`,
-        notificationOrigin: 'User Registration',
-        subject: 'Verify your email',
-        mainRecipients: [user.email],
-        notificationDescription: 'Verify email',
-        validForHours: 24,
-      },
-      createdBy: user.id,
+      subject: 'Verify your email',
+      mainRecipients: [user.email],
+      notificationDescription: 'Verify email',
+      validForHours: 24,
     },
-    { transaction }
-  );
+  });
 };
 
 export { createInstanceSettingFirstRun };

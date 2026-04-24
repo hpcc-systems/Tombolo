@@ -8,6 +8,7 @@ import workunitsService from '@/services/workunits.service';
 import clustersService from '@/services/clusters.service';
 import WorkunitOpenOptionsModal from '@/components/admin/workunits/history/common/WorkunitOpenOptionsModal';
 import { handleError } from '@/components/common/handleResponse';
+import { getDashboardFailedRowClass } from './workunitRowStyles';
 
 export interface CostBreakdown {
   compute: number;
@@ -471,6 +472,7 @@ export default function WorkunitTable({ startDate, endDate, clusterId }: Workuni
         dataSource={data}
         loading={loading}
         rowKey={record => `${record.clusterId}:${record.wuid}`}
+        rowClassName={record => getDashboardFailedRowClass(record.state)}
         size="small"
         scroll={{ x: 1200 }}
         pagination={{
