@@ -7,6 +7,7 @@ This chart is the source of truth for Tombolo Kubernetes application configurati
 - Base defaults: `values.yaml`
 - Environment overrides: `values-<env>.yaml` (for example `values-dev.yaml`)
 - Secrets: managed by Helm Secret templates, supplied via `values-secrets.<env>.yaml` (for example `values-secrets.dev.yaml`)
+- Namespace: sourced from Helm release namespace (`-n` / `--namespace`); set `namespace.create=true` to render a Namespace manifest for that release namespace.
 
 Runtime DB/Redis resources are also managed by Helm:
 
@@ -22,7 +23,9 @@ Runtime DB/Redis resources are also managed by Helm:
 - `REDIS_HOST`
 - `REDIS_PORT`
 
-`REDIS_HOST` and `REDIS_PORT` default to chart-managed Redis settings (service `tombolo-redis` and `.Values.redis.service.port`) when left empty in `runtime.config`.
+When `redis.enabled=true`, `REDIS_HOST` and `REDIS_PORT` default to chart-managed Redis settings (service `tombolo-redis` and `.Values.redis.service.port`) when left empty in `runtime.config`.
+
+When `redis.enabled=false`, you must set explicit external Redis values for `runtime.config.REDIS_HOST` and `runtime.config.REDIS_PORT`.
 
 ## Script Workflow (Recommended)
 

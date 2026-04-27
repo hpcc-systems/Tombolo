@@ -1,6 +1,6 @@
 namespace:
   create: true
-  name: tombolo
+  # Namespace name is taken from Helm release namespace (-n/--namespace).
 
 imagePullSecrets: []
 
@@ -9,8 +9,8 @@ runtime:
     DB_HOSTNAME: localhost
     DB_PORT: "3306"
     DB_NAME: tombolo_kube
-    REDIS_HOST: "" # Leave empty for redis pod
-    REDIS_PORT: "" # Leave empty for redis pod
+    REDIS_HOST: "" # Leave empty only when redis.enabled=true
+    REDIS_PORT: "" # Leave empty only when redis.enabled=true
     REDIS_DB: "0"
   secret:
     DB_USERNAME: "" # Leave empty for secret fetching
@@ -50,6 +50,7 @@ server:
     HPCC_TOOLS_REPO_URL: ssh://git@ssh.github.com:443/hpcc-systems/hpcc-tools.git
     AKEYLESS_API_URL: https://api.akeyless.io
     AKEYLESS_PATH_PREFIX: /tombolo/dev
+    CLIENT_ID_MS_GRAPH: ""
   startupProbe:
     path: /api/status/health
     failureThreshold: 30
@@ -79,6 +80,7 @@ server:
     CLIENT_ID: ""
     CLIENT_SECRET: ""
     REDIRECT_URI: ""
+    CLIENT_SECRET_MS_GRAPH: ""
     EMAIL_SMTP_HOST: ""
     EMAIL_PORT: ""
     EMAIL_SENDER: donotreply@tombolo.com

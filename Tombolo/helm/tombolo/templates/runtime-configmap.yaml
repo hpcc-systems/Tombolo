@@ -8,5 +8,10 @@ data:
   DB_PORT: {{ .Values.runtime.config.DB_PORT | quote }}
   DB_NAME: {{ .Values.runtime.config.DB_NAME | quote }}
   REDIS_DB: {{ .Values.runtime.config.REDIS_DB | quote }}
+{{- if .Values.redis.enabled }}
   REDIS_HOST: {{ (.Values.runtime.config.REDIS_HOST | default "tombolo-redis") | quote }}
   REDIS_PORT: {{ (.Values.runtime.config.REDIS_PORT | default (printf "%v" .Values.redis.service.port)) | quote }}
+{{- else }}
+  REDIS_HOST: {{ required "Missing required value: runtime.config.REDIS_HOST when redis.enabled=false" .Values.runtime.config.REDIS_HOST | quote }}
+  REDIS_PORT: {{ required "Missing required value: runtime.config.REDIS_PORT when redis.enabled=false" .Values.runtime.config.REDIS_PORT | quote }}
+{{- end }}

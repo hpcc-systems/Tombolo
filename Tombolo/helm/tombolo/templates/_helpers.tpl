@@ -1,5 +1,5 @@
 {{- define "tombolo.namespace" -}}
-{{- .Values.namespace.name -}}
+{{- .Release.Namespace -}}
 {{- end -}}
 
 {{- define "tombolo.name" -}}
@@ -10,7 +10,7 @@ tombolo
 {{- $value := index . 0 -}}
 {{- $path := index . 1 -}}
 {{- if eq (trim (toString $value)) "" -}}
-{{- fail (printf "Missing required value: %s. Provide it via values-secrets.local.yaml or another override file." $path) -}}
+{{- fail (printf "Missing required value: %s. Provide it via values-secrets.<env>.yaml or another override file." $path) -}}
 {{- end -}}
 {{- end -}}
 
