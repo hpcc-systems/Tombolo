@@ -111,7 +111,7 @@ const validateAnalyticsQuery = [
 // Validation for GET /api/analytics/schema
 const validateGetSchema = [
   query('tableName')
-    .optional({ checkFalsy: true, nullable: false })
+    .optional({ values: 'falsy' })
     .isString()
     .withMessage('tableName must be a string')
     .isLength({ max: 200 })
@@ -134,11 +134,11 @@ const validateScopedAnalyticsQuery = [
     .withMessage('options must be an object'),
 
   body('options.scopeToWuid')
-    .exists({ checkFalsy: true })
+    .exists({ values: 'falsy' })
     .withMessage('scopeToWuid is required for scoped queries'),
 
   body('options.scopeToClusterId')
-    .exists({ checkFalsy: true })
+    .exists({ values: 'falsy' })
     .withMessage('scopeToClusterId is required for scoped queries'),
 
   body('sql').custom((value, { req }) => {
@@ -171,7 +171,7 @@ const validateScopedAnalyticsQuery = [
 const validateGetScopedSchema = [
   ...validateGetSchema,
   query('tableName')
-    .optional({ checkFalsy: true, nullable: false })
+    .optional({ values: 'falsy' })
     .isIn([...SCOPEABLE_WORKUNIT_ANALYTICS_TABLES])
     .withMessage(
       `Only ${SCOPEABLE_WORKUNIT_ANALYTICS_TABLES.join(', ')} tables are available on the scoped schema endpoint`

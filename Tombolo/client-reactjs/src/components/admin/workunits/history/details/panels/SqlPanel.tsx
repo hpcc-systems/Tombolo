@@ -24,20 +24,6 @@ interface Props {
   clusterName?: string;
 }
 
-type SchemaColumn = {
-  name: string;
-};
-
-type SchemaData = Record<string, SchemaColumn[]>;
-
-const FALLBACK_ALLOWED_TABLES = [
-  'work_unit_details',
-  'work_units',
-  'clusters',
-  'work_unit_exceptions',
-  'work_unit_files',
-];
-
 const FALLBACK_ALLOWED_TABLES = ['work_unit_details', 'work_units', 'work_unit_exceptions', 'work_unit_files'];
 
 const BASE_COLUMNS = ['id', 'wuId', 'clusterId', 'scopeId', 'scopeName', 'scopeType', 'label', 'fileName'];

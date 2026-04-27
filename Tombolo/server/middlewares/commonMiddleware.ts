@@ -66,9 +66,16 @@ const createValidationFactory = (
     if (options.required && !options.optional) {
       validator = validator.notEmpty().withMessage(`${field} is required`);
     } else if (options.optional) {
+      const shouldCheckFalsy = options.checkFalsy ?? true;
+      const shouldAllowNull = options.nullable ?? false;
+      const optionalValues: 'falsy' | 'null' | 'undefined' = shouldCheckFalsy
+        ? 'falsy'
+        : shouldAllowNull
+          ? 'null'
+          : 'undefined';
+
       validator = validator.optional({
-        checkFalsy: options.checkFalsy ?? true,
-        nullable: options.nullable ?? false,
+        values: optionalValues,
       });
     }
 
