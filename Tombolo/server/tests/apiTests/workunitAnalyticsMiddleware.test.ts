@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { Request } from 'express';
 import { validationResult } from 'express-validator';
-import { validateAnalyticsQuery } from '../../middlewares/workunitAnalyticsMiddleware.js';
+import {
+  validateAnalyticsQuery,
+  validateGetSchema,
+} from '../../middlewares/workunitAnalyticsMiddleware.js';
 
 async function runValidation(body: Record<string, unknown>) {
   const req = {
@@ -9,6 +12,21 @@ async function runValidation(body: Record<string, unknown>) {
   } as Request;
 
   for (const validator of validateAnalyticsQuery) {
+    await validator.run(req);
+  }
+
+  return {
+    req,
+    errors: validationResult(req).array(),
+  };
+}
+
+async function runSchemaValidation(query: Record<string, unknown>) {
+  const req = {
+    query,
+  } as Request;
+
+  for (const validator of validateGetSchema) {
     await validator.run(req);
   }
 
@@ -28,6 +46,22 @@ describe('workunitAnalyticsMiddleware AST validation', () => {
     expect(req.analyticsSqlContext).toBeDefined();
     expect(req.analyticsSqlContext?.ast.type).toBe('select');
     expect(req.analyticsSqlContext?.ast.set_op).toBe('union');
+  });
+
+  it('accepts selects from work_unit_exceptions table', async () => {
+    const { errors } = await runValidation({
+      sql: 'SELECT wuId, clusterId, severity FROM work_unit_exceptions LIMIT 10',
+    });
+
+    expect(errors).toEqual([]);
+  });
+
+  it('accepts selects from work_unit_files table', async () => {
+    const { errors } = await runValidation({
+      sql: 'SELECT wuId, clusterId, fileType FROM work_unit_files LIMIT 10',
+    });
+
+    expect(errors).toEqual([]);
   });
 
   it('rejects non-select destructive statements', async () => {
@@ -82,5 +116,25 @@ describe('workunitAnalyticsMiddleware AST validation', () => {
     expect(req.analyticsSqlContext?.normalizedSql).toBe(
       'SELECT wuId, clusterId FROM work_unit_details'
     );
+  });
+});
+
+describe('workunitAnalyticsMiddleware schema validation', () => {
+  it('accepts supported tableName values for schema endpoint', async () => {
+    const { errors } = await runSchemaValidation({
+      tableName: 'work_unit_exceptions',
+    });
+
+    expect(errors).toEqual([]);
+  });
+
+  it('rejects unsupported tableName values for schema endpoint', async () => {
+    const { errors } = await runSchemaValidation({
+      tableName: 'users',
+    });
+
+    expect(errors.length).toBeGreaterThan(0);
+    expect(String(errors[0]?.msg)).toContain('work_unit_exceptions');
+    expect(String(errors[0]?.msg)).toContain('work_unit_files');
   });
 });

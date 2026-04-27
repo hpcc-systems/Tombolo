@@ -2,6 +2,8 @@ export const ALLOWED_WORKUNIT_ANALYTICS_TABLES = [
   'work_unit_details',
   'work_units',
   'clusters',
+  'work_unit_exceptions',
+  'work_unit_files',
 ];
 
 export const ALLOWED_WORKUNIT_ANALYTICS_TABLE_SET = new Set(
