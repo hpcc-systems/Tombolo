@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Layout,
   Button,
@@ -204,7 +204,7 @@ const getBackendErrorForToast = (
 };
 
 const AnalyticsWorkspace = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
   const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
   const completionProviderRef = useRef<{ dispose: () => void } | null>(null);
   const schemaDataRef = useRef<SchemaData | null>(null);
@@ -1341,10 +1341,7 @@ const AnalyticsWorkspace = () => {
         // If column is wuId, make it clickable
         if (col === 'wuId' && record.clusterId) {
           return (
-            <Button
-              type="link"
-              size="small"
-              onClick={() => history.push(`/workunits/history/${record.clusterId}/${text}`)}>
+            <Button type="link" size="small" onClick={() => navigate(`/workunits/history/${record.clusterId}/${text}`)}>
               {String(text)}
             </Button>
           );

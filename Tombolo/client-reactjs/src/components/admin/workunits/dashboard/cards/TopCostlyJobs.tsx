@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { Card, Table, Space, Tag, Button, Tooltip } from 'antd';
 import { EyeOutlined } from '@ant-design/icons';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { formatCurrency } from '@tombolo/shared';
 import { groupWorkunitsByName } from '@/components/admin/workunits/history/common/fuzzyMatch';
 import type { ExpensiveWorkunit } from '@/services/workunitDashboard.service';
@@ -146,7 +146,7 @@ const CostBreakdownBar = ({
 };
 
 export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
-  const history = useHistory();
+  const navigate = useNavigate();
   const [visibleCount, setVisibleCount] = useState(5);
   const [clusters, setClusters] = useState<any[]>([]);
   const suppressNextRowClick = useRef(false);
@@ -198,7 +198,7 @@ export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
   };
 
   const handleView = (record: ExpensiveWorkunit) => {
-    history.push(`/workunits/history/${record.clusterId}/${record.wuId}`);
+    navigate(`/workunits/history/${record.clusterId}/${record.wuId}`);
   };
 
   // Main table columns (parent rows - job groups)

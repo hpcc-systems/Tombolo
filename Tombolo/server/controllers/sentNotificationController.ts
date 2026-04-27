@@ -175,14 +175,19 @@ async function getNotificationHtml(req: Request, res: Response) {
       return sendError(res, 'No details for this notification', 404);
     }
 
-    const templateName = notification.metaData.notificationDetails.templateName;
+    const notificationDetails = notification.metaData.notificationDetails;
+    const templateName = notificationDetails.templateName;
     if (!templateName) {
       return sendError(res, 'Notification template not found', 404);
     }
 
+    // Support legacy shape (template data at notificationDetails)
+    // and new jobs shape (template data at notificationDetails.metaData).
+    const templateData = notificationDetails.metaData ?? notificationDetails;
+
     const htmlCode = emailNotificationHtmlCode({
       templateName,
-      data: notification.metaData.notificationDetails,
+      data: templateData,
     });
     return sendSuccess(
       res,

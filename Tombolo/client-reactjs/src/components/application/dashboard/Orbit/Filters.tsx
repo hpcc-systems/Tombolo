@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Form, Select, DatePicker, Button, Checkbox, Drawer } from 'antd';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { handleError } from '@/components/common/handleResponse';
 import styles from '../common/dashboard.module.css';
 import { FilterOutlined } from '@ant-design/icons';
@@ -19,7 +19,7 @@ interface Props {
 
 const Filters: React.FC<Props> = ({ groupDataBy, setGroupDataBy, dashboardFilters, setDashboardFilters }) => {
   const [form] = Form.useForm();
-  const history = useHistory();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
   const showDrawer = () => setOpen(true);
@@ -44,7 +44,7 @@ const Filters: React.FC<Props> = ({ groupDataBy, setGroupDataBy, dashboardFilter
     const allFilters = { ...dashboardFilters, ...param };
     const allowedURLParams = ['initialStatus', 'finalStatus', 'severity', 'dateRange', 'groupDataBy'];
     for (let key in allFilters) if (allowedURLParams.includes(key)) newParams.set(key, allFilters[key]);
-    history.push(`?${newParams.toString()}`);
+    navigate(`?${newParams.toString()}`);
   };
 
   const selectAll = (e: any, option: string) => {

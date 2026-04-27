@@ -4,8 +4,7 @@ import type { FC } from 'react';
 import { useState, useEffect, useRef, Suspense, useMemo } from 'react';
 import { useAppSelector, useAppDispatch } from '@/redux/store/hooks';
 import { Layout, ConfigProvider } from 'antd';
-import { Router } from 'react-router-dom';
-import history from './components/common/History';
+import { useLocation } from 'react-router-dom';
 
 // Shared layout, etc.
 import LeftNav from './components/layout/LeftNav';
@@ -37,6 +36,8 @@ import Wizard from './components/InitialExperience/Wizard';
 const { Content } = Layout;
 
 const App: FC = () => {
+  const location = useLocation();
+
   //left nav collapsed state
   const [collapsed, setCollapsed] = useState(localStorage.getItem('collapsed') === 'true');
 
@@ -85,7 +86,7 @@ const App: FC = () => {
   // Capture intended URL when user needs to authenticate
   useEffect(() => {
     if (ownerExists && !user?.isAuthenticated) {
-      const currentPath = history.location.pathname + history.location.search + history.location.hash;
+      const currentPath = `${location.pathname}${location.search}${location.hash}`;
       // Don't store auth routes, home page, or URLs with Azure auth parameters
       if (
         !currentPath.startsWith('/login') &&
@@ -99,7 +100,7 @@ const App: FC = () => {
         localStorage.setItem('intendedUrl', currentPath);
       }
     }
-  }, [ownerExists, user?.isAuthenticated]);
+  }, [location.hash, location.pathname, location.search, ownerExists, user?.isAuthenticated]);
 
   //left nav collapse method
   const onCollapse = (c: boolean) => {
@@ -119,56 +120,54 @@ const App: FC = () => {
   return (
     <ConfigProvider>
       <Suspense fallback={<Fallback />}>
-        <Router history={history}>
-          <Layout className="custom-scroll" style={{ height: '100vh', overflow: 'auto' }}>
-            {/*Backend Loading sequence going until everthing is retrieved*/}
-            {!isConnected || !ownerRetrieved ? (
-              <LoadingScreen isConnected={isConnected} statusRetrieved={statusRetrieved} message={message} />
-            ) : (
-              <>
-                {/*No owner, force user to register one*/}
-                {!ownerExists ? <Wizard /> : null}
-                {/*User is not authenticated, show auth pages*/}
-                {!user?.isAuthenticated && ownerExists ? <AuthRoutes /> : null}
-                {/*User is authenticated, show application*/}
-                {user?.isAuthenticated && ownerExists ? (
-                  <>
-                    <AppHeader />
-                    <ConfigProvider componentDisabled={isReader}>
-                      <Layout style={{ marginTop: '69px' }}>
-                        <LeftNav
-                          onCollapse={onCollapse}
-                          collapsed={collapsed}
-                          appLinkRef={appLinkRef}
-                          clusterLinkRef={clusterLinkRef}
-                        />
-                        {isOwnerOrAdmin && <Tours appLinkRef={appLinkRef} clusterLinkRef={clusterLinkRef} />}
-                        <Content
-                          style={{
-                            transition: '.1s linear',
-                            // margin: '55px 0px',
-                            marginLeft: collapsed ? '55px' : '200px',
-                          }}>
-                          <ErrorBoundary>
-                            <Suspense fallback={<Fallback />}>
-                              {!userHasRoleandApplication && !isOwnerOrAdmin ? (
-                                <NoAccessRoutes />
-                              ) : (
-                                <AppRoutes allowAdminOrWorkunitPaths={isOwnerOrAdmin} />
-                              )}
+        <Layout className="custom-scroll" style={{ height: '100vh', overflow: 'auto' }}>
+          {/*Backend Loading sequence going until everthing is retrieved*/}
+          {!isConnected || !ownerRetrieved ? (
+            <LoadingScreen isConnected={isConnected} statusRetrieved={statusRetrieved} message={message} />
+          ) : (
+            <>
+              {/*No owner, force user to register one*/}
+              {!ownerExists ? <Wizard /> : null}
+              {/*User is not authenticated, show auth pages*/}
+              {!user?.isAuthenticated && ownerExists ? <AuthRoutes /> : null}
+              {/*User is authenticated, show application*/}
+              {user?.isAuthenticated && ownerExists ? (
+                <>
+                  <AppHeader />
+                  <ConfigProvider componentDisabled={isReader}>
+                    <Layout style={{ marginTop: '69px' }}>
+                      <LeftNav
+                        onCollapse={onCollapse}
+                        collapsed={collapsed}
+                        appLinkRef={appLinkRef}
+                        clusterLinkRef={clusterLinkRef}
+                      />
+                      {isOwnerOrAdmin && <Tours appLinkRef={appLinkRef} clusterLinkRef={clusterLinkRef} />}
+                      <Content
+                        style={{
+                          transition: '.1s linear',
+                          // margin: '55px 0px',
+                          marginLeft: collapsed ? '55px' : '200px',
+                        }}>
+                        <ErrorBoundary>
+                          <Suspense fallback={<Fallback />}>
+                            {!userHasRoleandApplication && !isOwnerOrAdmin ? (
+                              <NoAccessRoutes />
+                            ) : (
+                              <AppRoutes allowAdminOrWorkunitPaths={isOwnerOrAdmin} />
+                            )}
 
-                              {isOwnerOrAdmin && <AdminRoutes />}
-                            </Suspense>
-                          </ErrorBoundary>
-                        </Content>
-                      </Layout>
-                    </ConfigProvider>
-                  </>
-                ) : null}
-              </>
-            )}
-          </Layout>
-        </Router>
+                            {isOwnerOrAdmin && <AdminRoutes />}
+                          </Suspense>
+                        </ErrorBoundary>
+                      </Content>
+                    </Layout>
+                  </ConfigProvider>
+                </>
+              ) : null}
+            </>
+          )}
+        </Layout>
       </Suspense>
     </ConfigProvider>
   );

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Table, Switch, Button } from 'antd';
 import { SettingOutlined } from '@ant-design/icons';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { handleError } from '../../common/handleResponse';
 
@@ -17,7 +17,7 @@ interface Props {
 }
 
 const IntegrationsTable: React.FC<Props> = ({ allIntegrations }) => {
-  const history = useHistory();
+  const navigate = useNavigate();
   const dispatch = useDispatch<any>();
 
   const applicationId = useSelector((state: any) => state.application.application.applicationId);
@@ -74,7 +74,7 @@ const IntegrationsTable: React.FC<Props> = ({ allIntegrations }) => {
             onChange={active => handleToggleIntegrationStatus({ record, application_id: applicationId, active })}
           />
           {isIntegrationActive({ integration_id: record.id, applicationId }) && (
-            <Button type="link" size="small" onClick={() => history.push(`/admin/integrations/${record.name}`)}>
+            <Button type="link" size="small" onClick={() => navigate(`/admin/integrations/${record.name}`)}>
               <SettingOutlined />
             </Button>
           )}

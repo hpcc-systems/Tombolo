@@ -57,6 +57,8 @@ import { handleError, handleSuccess } from '@/components/common/handleResponse';
 import { setUser } from '@/components/common/userStorage';
 import { useParams } from 'react-router-dom';
 
+const mockedUseParams = useParams as unknown as ReturnType<typeof vi.fn>;
+
 describe('ResetPasswordWithToken', () => {
   const mockResetToken = 'test-reset-token-123';
   const mockUserDetails = {
@@ -73,7 +75,7 @@ describe('ResetPasswordWithToken', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    useParams.mockReturnValue({ resetToken: mockResetToken });
+    mockedUseParams.mockReturnValue({ resetToken: mockResetToken });
     // Mock window.location.href
     delete (window as any).location;
     (window as any).location = { href: vi.fn() };
@@ -99,7 +101,7 @@ describe('ResetPasswordWithToken', () => {
     });
 
     it('shows error when resetToken is undefined', async () => {
-      useParams.mockReturnValue({ resetToken: undefined });
+      mockedUseParams.mockReturnValue({ resetToken: undefined });
 
       render(
         <BrowserRouter>

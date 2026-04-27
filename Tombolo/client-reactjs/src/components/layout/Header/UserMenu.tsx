@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Dropdown } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
-import history from '../../common/History';
+import { useNavigate } from 'react-router-dom';
 import { getUser } from '../../common/userStorage';
 
 interface Props {
@@ -9,6 +9,7 @@ interface Props {
 }
 
 const UserMenu: React.FC<Props> = ({ handleLogOut }) => {
+  const navigate = useNavigate();
   const [user, setUser] = useState<any>(getUser());
 
   useEffect(() => {
@@ -22,7 +23,7 @@ const UserMenu: React.FC<Props> = ({ handleLogOut }) => {
 
   const handleUserActionMenuClick = (e: any) => {
     if (e.key === '1') {
-      history.push('/myaccount');
+      navigate('/myaccount');
     } else if (e.key === '2') {
       handleLogOut();
     }
