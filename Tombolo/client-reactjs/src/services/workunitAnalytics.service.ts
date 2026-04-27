@@ -1,16 +1,69 @@
 import { apiClient } from '@/services/api';
+import type { AxiosRequestConfig } from 'axios';
+
+type QueryOptions = {
+  clusterId?: string;
+  limit?: number;
+};
+
+type ScopedQueryOptions = {
+  scopeToWuid: string;
+  scopeToClusterId: string;
+  limit?: number;
+};
+
+type AnalyticsSchemaColumn = {
+  name: string;
+  type?: string;
+  nullable?: string;
+  key?: string;
+  description?: string;
+  ORDINAL_POSITION?: number;
+  keyType?: 'PRI' | 'FK' | 'MUL' | null;
+};
+
+type AnalyticsSchemaData = Record<string, AnalyticsSchemaColumn[]>;
 
 const analyticsService = {
-  executeQuery: async (sql: string, options: { clusterId?: string; limit?: number } = {}): Promise<any> => {
-    const response = await apiClient.post('/workunitAnalytics/query', {
-      sql,
-      options,
-    });
+  executeQuery: async (
+    sql: string,
+    options: QueryOptions = {},
+    requestConfig: AxiosRequestConfig = {}
+  ): Promise<any> => {
+    const response = await apiClient.post(
+      '/workunitAnalytics/query',
+      {
+        sql,
+        options,
+      },
+      requestConfig
+    );
     return response.data;
   },
 
-  getSchema: async (): Promise<any[]> => {
+  executeScopedQuery: async (
+    sql: string,
+    options: ScopedQueryOptions,
+    requestConfig: AxiosRequestConfig = {}
+  ): Promise<any> => {
+    const response = await apiClient.post(
+      '/workunitAnalytics/scoped/query',
+      {
+        sql,
+        options,
+      },
+      requestConfig
+    );
+    return response.data;
+  },
+
+  getSchema: async (): Promise<AnalyticsSchemaData> => {
     const response = await apiClient.get('/workunitAnalytics/schema');
+    return response.data;
+  },
+
+  getScopedSchema: async (): Promise<AnalyticsSchemaData> => {
+    const response = await apiClient.get('/workunitAnalytics/scoped/schema');
     return response.data;
   },
 
