@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Table,
   Card,
@@ -40,7 +40,7 @@ const { RangePicker } = DatePicker;
 const { Option } = Select;
 
 const WorkUnitHistory: React.FC = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState<boolean>(false);
   const [data, setData] = useState<any[]>([]);
   const [total, setTotal] = useState<number>(0);
@@ -240,7 +240,7 @@ const WorkUnitHistory: React.FC = () => {
   const suppressNextRowClick = useRef(false);
 
   const handleView = (record: any) => {
-    history.push(`/workunits/history/${record.clusterId}/${record.wuId}`);
+    navigate(`/workunits/history/${record.clusterId}/${record.wuId}`);
   };
 
   const getClusterById = (clusterId?: string) => {
@@ -455,7 +455,8 @@ const WorkUnitHistory: React.FC = () => {
             size="small"
             icon={<EyeOutlined />}
             disabled={!hasDetails}
-            onClick={() => {
+            onClick={event => {
+              event.stopPropagation();
               if (hasDetails) handleView(record);
             }}
             style={{ color: hasDetails ? '#2563eb' : '#9ca3af', padding: 0 }}>
@@ -653,7 +654,8 @@ const WorkUnitHistory: React.FC = () => {
             size="small"
             icon={<EyeOutlined />}
             disabled={!hasDetails}
-            onClick={() => {
+            onClick={event => {
+              event.stopPropagation();
               if (hasDetails) handleView(record);
             }}
             style={{ color: hasDetails ? '#2563eb' : '#9ca3af', padding: 0 }}>

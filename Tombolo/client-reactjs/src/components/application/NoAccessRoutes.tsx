@@ -1,12 +1,12 @@
 import React from 'react';
-import { Route, Switch } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import NoAccess from './noAccess';
 
 const NoAccessRoutes: React.FC<any> = () => (
-  <Switch>
-    <Route path="/no-access" component={NoAccess} />
-    <Route component={NoAccess} />
-  </Switch>
+  <Routes>
+    <Route path="/no-access" element={<NoAccess />} />
+    <Route path="*" element={<NoAccess />} />
+  </Routes>
 );
 
 export default NoAccessRoutes;

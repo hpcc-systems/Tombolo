@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Divider, Spin } from 'antd';
 import { CheckCircleFilled, LoadingOutlined, CloseCircleFilled } from '@ant-design/icons';
-import { useLocation, useHistory, Link } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 
 import RegisterUserForm from './registerUserForm';
@@ -36,7 +36,7 @@ if (methods.includes('azure') && !hasAllAzureEnv) {
 
 const Register: React.FC = () => {
   const dispatch: any = useDispatch();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const [form] = Form.useForm();
   const [registrationComplete, setRegistrationComplete] = useState(false);
@@ -80,7 +80,7 @@ const Register: React.FC = () => {
           setRegistrationComplete(true);
           setVerifying(false);
           setUser(JSON.stringify(response));
-          history.push('/');
+          navigate('/');
         } catch (err: any) {
           setVerifying(false);
           setVerificationFailed(err?.messages?.[0] || err.message || 'Verification failed');
@@ -101,7 +101,7 @@ const Register: React.FC = () => {
       const res: any = await dispatch(loginOrRegisterAzureUser(code));
 
       if (res?.payload?.type === 'LOGIN_SUCCESS') {
-        history.push('/');
+        navigate('/');
         return;
       }
     } catch (err: any) {

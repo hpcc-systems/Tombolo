@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useHistory } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Layout, Menu, Typography, Tooltip } from 'antd';
 import {
   DashboardOutlined,
@@ -56,7 +56,7 @@ const LeftNav: React.FC<Props> = ({ collapsed, onCollapse, clusterLinkRef, appLi
   const [current, setCurrent] = useState<string>('0');
   const [disabled, setDisabled] = useState(true);
   const [clusterDisabled, setClusterDisabled] = useState(true);
-  const history = useHistory();
+  const location = useLocation();
 
   const application = useAppSelector(state => state.application.application) as ApplicationUI | null | undefined;
   const clusters = useAppSelector(state => state.application.clusters || []) as ClusterUI[];
@@ -106,12 +106,12 @@ const LeftNav: React.FC<Props> = ({ collapsed, onCollapse, clusterLinkRef, appLi
 
     // on init we check pathname if it contains options key in name, if it does => highlight that menu item
     for (const key in options) {
-      const path = history.location.pathname;
+      const path = location.pathname;
       if (path.includes(key)) {
         setCurrent(options[key]);
       }
     }
-  }, [history.location.pathname]);
+  }, [location.pathname]);
 
   // Only render if authenticated
   if (!isAuthenticated) return null;
@@ -240,18 +240,20 @@ const LeftNav: React.FC<Props> = ({ collapsed, onCollapse, clusterLinkRef, appLi
             <span style={{ marginLeft: '1rem' }}>Clusters</span>
           </span>
         ) : (
-          <Link ref={clusterLinkRef} style={{ color: 'rgba(255, 255, 255, .65)' }} to={'/admin/clusters'}>
-            <Tooltip
-              placement="right"
-              arrow={false}
-              styles={{ body: { left: 35 } }}
-              open={collapsed && clusterConnectionIssue ? true : false}
-              title={<WarningFilled style={{ color: 'yellow', marginLeft: '1rem' }} />}>
-              <ClusterOutlined style={{ color: 'rgba(255, 255, 255, .65)' }} />
-            </Tooltip>
-            <span style={{ marginLeft: '1rem', color: 'rgb(255, 255, 255, .65)' }}>Clusters</span>
-            {clusterConnectionIssue && <WarningFilled style={{ color: 'yellow', marginLeft: '1rem' }} />}
-          </Link>
+          <span ref={clusterLinkRef}>
+            <Link style={{ color: 'rgba(255, 255, 255, .65)' }} to={'/admin/clusters'}>
+              <Tooltip
+                placement="right"
+                arrow={false}
+                styles={{ body: { left: 35 } }}
+                open={collapsed && clusterConnectionIssue ? true : false}
+                title={<WarningFilled style={{ color: 'yellow', marginLeft: '1rem' }} />}>
+                <ClusterOutlined style={{ color: 'rgba(255, 255, 255, .65)' }} />
+              </Tooltip>
+              <span style={{ marginLeft: '1rem', color: 'rgb(255, 255, 255, .65)' }}>Clusters</span>
+              {clusterConnectionIssue && <WarningFilled style={{ color: 'yellow', marginLeft: '1rem' }} />}
+            </Link>
+          </span>
         )}
       </>,
       '6',
@@ -311,10 +313,12 @@ const LeftNav: React.FC<Props> = ({ collapsed, onCollapse, clusterLinkRef, appLi
 
   const adminItems = [
     getItem(
-      <Link ref={appLinkRef} style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/applications'}>
-        <i className="fa fa-fw fa-desktop" />
-        <span style={{ marginLeft: '1rem' }}>Applications</span>
-      </Link>,
+      <span ref={appLinkRef}>
+        <Link style={{ color: 'rgba(255, 255, 255, 0.65)' }} to={'/admin/applications'}>
+          <i className="fa fa-fw fa-desktop" />
+          <span style={{ marginLeft: '1rem' }}>Applications</span>
+        </Link>
+      </span>,
       '10',
       null
     ),

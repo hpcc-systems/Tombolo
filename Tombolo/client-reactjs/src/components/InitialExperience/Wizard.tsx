@@ -1,7 +1,7 @@
 // Library imports
 import React, { useState, useEffect } from 'react';
 import { Form, Steps, Button, Divider, Card, Space } from 'antd';
-import { Route, Switch } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import {
   FormOutlined,
   SolutionOutlined,
@@ -265,9 +265,9 @@ const Wizard: React.FC = () => {
   };
 
   return (
-    <Switch>
-      <Route path="*" component={WizardContent} />
-    </Switch>
+    <Routes>
+      <Route path="*" element={<WizardContent />} />
+    </Routes>
   );
 };
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, useHistory } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Spin, Button, message, Alert, Space } from 'antd';
 import { ArrowLeftOutlined, ReloadOutlined } from '@ant-design/icons';
@@ -10,7 +10,7 @@ import styles from '../workunitHistory.module.css';
 
 const WorkUnitDetails: React.FC = () => {
   const { clusterId, wuid } = useParams<any>();
-  const history = useHistory();
+  const navigate = useNavigate();
   const clusters = useSelector((state: any) => state.application.clusters);
 
   const clusterName = useMemo(() => {
@@ -28,11 +28,11 @@ const WorkUnitDetails: React.FC = () => {
 
   const handleBackNavigation = () => {
     // Use browser's back functionality to return to previous page
-    if (history.length > 1) {
-      history.goBack();
+    if (window.history.length > 1) {
+      navigate(-1);
     } else {
       // Fallback if no history (e.g., direct URL access)
-      history.push('/workunits/history');
+      navigate('/workunits/history');
     }
   };
 
