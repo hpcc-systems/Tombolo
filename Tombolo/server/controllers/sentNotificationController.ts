@@ -1,11 +1,18 @@
 import { Request, Response } from 'express';
 import moment from 'moment';
 import { Op } from 'sequelize';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import ejs from 'ejs';
 
 //Local imports
 import logger from '../config/logger.js';
 import { SentNotification, sequelize } from '@tombolo/db';
 import { sendSuccess, sendError } from '../utils/response.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function createSentNotification(req: Request, res: Response) {
   try {
@@ -65,6 +72,44 @@ async function getSentNotification(req: Request, res: Response) {
   } catch (err) {
     logger.error('getSentNotification: ', err);
     return sendError(res, 'Failed to get sent notification', 500);
+  }
+}
+
+async function getNotificationHtml(req: Request, res: Response) {
+  try {
+    const { id } = req.body as { id: string };
+    const notification = await SentNotification.findByPk(id, { raw: true });
+    if (!notification) {
+      return sendError(res, 'Sent notification not found', 404);
+    }
+
+    const payload = (notification as any).metaData?.notificationDetails;
+    const templateName = payload?.templateName;
+    if (!templateName) {
+      return sendSuccess(res, null, 'No template name found');
+    }
+
+    const templatePath = path.resolve(
+      __dirname,
+      '../../jobs/notificationTemplates/email',
+      `${templateName}.ejs`
+    );
+
+    if (!fs.existsSync(templatePath)) {
+      return sendSuccess(res, null, `Template ${templateName} not found`);
+    }
+
+    const template = fs.readFileSync(templatePath, 'utf-8');
+    const html = ejs.render(
+      template,
+      { ...(payload?.metaData ?? {}) },
+      { filename: templatePath }
+    );
+
+    return sendSuccess(res, html, 'Notification HTML retrieved successfully');
+  } catch (err) {
+    logger.error('getNotificationHtml: ', err);
+    return sendError(res, 'Failed to get notification HTML', 500);
   }
 }
 
@@ -170,4 +215,5 @@ export {
   getSentNotification,
   getSentNotifications,
   createSentNotification,
+  getNotificationHtml,
 };

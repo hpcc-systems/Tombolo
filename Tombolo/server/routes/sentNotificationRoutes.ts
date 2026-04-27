@@ -16,10 +16,18 @@ import {
   createSentNotification,
   getSentNotifications,
   getSentNotification,
+  getNotificationHtml,
   deleteSentNotification,
   deleteSentNotifications,
   updateSentNotifications,
 } from '../controllers/sentNotificationController.js';
+
+// Get notification HTML (re-rendered from jobs templates)
+router.post(
+  '/getNotificationHtmlCode',
+  validate(validateBodyId),
+  getNotificationHtml
+);
 
 // Create a new sent notification
 router.post(
