@@ -28,7 +28,7 @@ const domainMap = new Map();
 const productMap = new Map();
 const clusterMap = new Map();
 let asrEnabled = null;
-type NotificationQueuePayload = NotificationEnqueueInput;
+type NotificationQueuePayload = Required<NotificationEnqueueInput>;
 
 async function checkIfAsrEnabled() {
   if (asrEnabled === null) {
