@@ -19,7 +19,6 @@ import {
   deleteSentNotification,
   deleteSentNotifications,
   updateSentNotifications,
-  getNotificationHtml,
 } from '../controllers/sentNotificationController.js';
 
 // Create a new sent notification
@@ -62,13 +61,6 @@ router.patch(
   '/',
   validate(validateUpdateSentNotifications),
   updateSentNotifications
-);
-
-// Get notification html code
-router.post(
-  '/getNotificationHtmlCode',
-  validate(validateBodyId),
-  getNotificationHtml
 );
 
 export default router;

@@ -5,7 +5,6 @@ import { Op } from 'sequelize';
 //Local imports
 import logger from '../config/logger.js';
 import { SentNotification, sequelize } from '@tombolo/db';
-import emailNotificationHtmlCode from '../utils/emailNotificationHtmlCode.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 
 async function createSentNotification(req: Request, res: Response) {
@@ -164,39 +163,7 @@ async function updateSentNotifications(req: Request, res: Response) {
   }
 }
 
-async function getNotificationHtml(req: Request, res: Response) {
-  try {
-    const notification = await SentNotification.findByPk(req.body.id);
-    if (!notification) {
-      return sendError(res, 'Sent notification not found', 404);
-    }
-
-    if (!notification.metaData || !notification.metaData.notificationDetails) {
-      return sendError(res, 'No details for this notification', 404);
-    }
-
-    const templateName = notification.metaData.notificationDetails.templateName;
-    if (!templateName) {
-      return sendError(res, 'Notification template not found', 404);
-    }
-
-    const htmlCode = emailNotificationHtmlCode({
-      templateName,
-      data: notification.metaData.notificationDetails,
-    });
-    return sendSuccess(
-      res,
-      htmlCode,
-      'Successfully fetched notification details'
-    );
-  } catch (err) {
-    logger.error(err.message);
-    return sendError(res, 'Failed to get notification html code', 500);
-  }
-}
-
 export {
-  getNotificationHtml,
   updateSentNotifications,
   deleteSentNotifications,
   deleteSentNotification,

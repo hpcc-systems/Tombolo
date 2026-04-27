@@ -7,7 +7,6 @@
   "main": "dist/server.js",
   "files": [
     "dist",
-    "notificationTemplates",
     "process.yml",
     "docker-entry.sh"
   ],
