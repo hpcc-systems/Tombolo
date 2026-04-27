@@ -4,7 +4,6 @@ import {
   IntegrationMapping,
   OrbitBuilds,
   MonitoringNotification,
-  NotificationQueue,
 } from '@tombolo/db';
 
 import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';

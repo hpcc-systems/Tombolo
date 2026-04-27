@@ -4,7 +4,6 @@ import { mockedModels } from '../mockedModels.js';
 const {
   ClusterMonitoring,
   MonitoringType,
-  NotificationQueue,
   AsrProduct,
   AsrDomain,
   MonitoringLog,
@@ -31,7 +30,6 @@ const originalEnv = process.env;
 beforeEach(() => {
   vi.clearAllMocks();
   vi.clearAllMocks();
-  NotificationQueue.create.mockResolvedValue({});
   MonitoringLog.upsert.mockResolvedValue({});
   // Set up ENCRYPTION_KEY for tests
   process.env = {

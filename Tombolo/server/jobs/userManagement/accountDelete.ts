@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 //Local Imports
 import { logOrPostMessage } from '../jobUtils.js';
-import { User, UserRole, RoleType, NotificationQueue } from '@tombolo/db';
+import { User, UserRole, RoleType } from '@tombolo/db';
 import { trimURL, deleteUser } from '../../utils/authUtil.js';
 import { accountDeleteAlertDaysForUser } from '../../config/monitorings.js';
 import { enqueueNotification } from '../../services/notificationProducer.js';

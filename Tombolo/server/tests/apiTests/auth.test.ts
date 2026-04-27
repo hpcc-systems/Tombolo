@@ -264,7 +264,6 @@ describe('Auth Routes', () => {
     expect(mockedModels.User.findOne).toHaveBeenCalled();
     expect(mockedModels.InstanceSettings.findOne).toHaveBeenCalled();
     expect(mockedModels.SentNotification.findOne).toHaveBeenCalled();
-    expect(mockedModels.NotificationQueue.create).not.toHaveBeenCalled();
   });
 
   describe('refresh-token endpoint', () => {

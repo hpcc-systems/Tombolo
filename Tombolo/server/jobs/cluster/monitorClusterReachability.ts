@@ -5,7 +5,7 @@ import { passwordExpiryAlertDaysForCluster } from '../../config/monitorings.js';
 import { passwordExpiryInProximityNotificationPayload } from './clusterReachabilityMonitoringUtils.js';
 import type { ClusterWithPassword } from '../../types/cluster.js';
 import { decryptString } from '@tombolo/shared';
-import { Cluster, NotificationQueue } from '@tombolo/db';
+import { Cluster } from '@tombolo/db';
 import { getClusterOptions } from '../../utils/getClusterOptions.js';
 import { enqueueNotification } from '../../services/notificationProducer.js';
 

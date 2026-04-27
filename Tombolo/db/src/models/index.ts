@@ -32,7 +32,6 @@ import { License } from './License.js';
 import { MonitoringLog } from './MonitoringLog.js';
 import { MonitoringNotification } from './MonitoringNotification.js';
 import { MonitoringType } from './MonitoringType.js';
-import { NotificationQueue } from './NotificationQueue.js';
 import { OrbitBuildData } from './OrbitBuildData.js';
 import { OrbitBuilds } from './OrbitBuilds.js';
 import { OrbitMonitoring } from './OrbitMonitoring.js';
@@ -182,7 +181,6 @@ const sequelizeOptions: SequelizeOptions & { models: ModelCtor[] } = {
     MonitoringLog,
     MonitoringNotification,
     MonitoringType,
-    NotificationQueue,
     OrbitBuildData,
     OrbitBuilds,
     OrbitMonitoring,
@@ -250,7 +248,6 @@ export {
   MonitoringLog,
   MonitoringNotification,
   MonitoringType,
-  NotificationQueue,
   OrbitBuildData,
   OrbitBuilds,
   OrbitMonitoring,
@@ -299,7 +296,6 @@ export default {
   MonitoringLog,
   MonitoringNotification,
   MonitoringType,
-  NotificationQueue,
   OrbitBuildData,
   OrbitBuilds,
   OrbitMonitoring,

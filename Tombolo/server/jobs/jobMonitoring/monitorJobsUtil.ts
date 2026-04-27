@@ -1,14 +1,13 @@
 // Local imports
 import { AsrDomain, AsrProduct } from '@tombolo/db';
-import type { NotificationQueue } from '@tombolo/db';
-import type { CreationAttributes } from 'sequelize';
+import type { NotificationEnqueueInput } from '../../services/notificationProducer.js';
 
 //Package(s)
 import moment from 'moment';
 import cronParser from 'cron-parser';
 import logger from '../../config/logger.js';
 
-type NotificationQueuePayload = CreationAttributes<NotificationQueue>;
+type NotificationQueuePayload = NotificationEnqueueInput;
 type WorkunitTimePoint = {
   When: string | number | Date;
 };
