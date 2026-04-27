@@ -14,6 +14,7 @@ import styles from '../../workunitHistory.module.css';
 import { disposeSqlAutocomplete, registerSqlAutocomplete } from '@/components/common/sqlAutocomplete';
 import { compareQueryValues } from '@/components/common/sqlResultsSorting';
 import type { ColumnTypeMetadata, SortDirection } from '@/components/common/sqlResultsSorting';
+import { getSqlErrorForToast } from '@/components/common/sqlError';
 
 const { Text } = Typography;
 
@@ -202,14 +203,8 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
       if (axios.isCancel(err)) {
         message.info('Query cancelled');
       } else {
-        const anyErr = err as {
-          response?: { data?: { message?: string } };
-          messages?: string[];
-          raw?: { message?: string };
-        };
-        const serverMsg = anyErr?.response?.data?.message || anyErr?.messages?.[0];
-        const detailedMsg = serverMsg || anyErr?.raw?.message || 'Failed to execute SQL';
-        setError(detailedMsg);
+        const detailedMsg = getSqlErrorForToast(err, 'Failed to execute SQL');
+        setError(Array.isArray(detailedMsg) ? detailedMsg.join('; ') : detailedMsg);
         message.error('Failed to execute SQL');
       }
     } finally {

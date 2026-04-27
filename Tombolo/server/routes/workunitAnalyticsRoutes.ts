@@ -1,7 +1,6 @@
 import express from 'express';
 import {
   executeAnalyticsQuery,
-  executeScopedAnalyticsQuery,
   getSchema,
   getScopedSchema,
   getDatabaseStats,
@@ -52,7 +51,7 @@ router.post(
 router.post(
   '/scoped/query',
   validateWithFirstErrorMessage(validateScopedAnalyticsQuery),
-  executeScopedAnalyticsQuery
+  executeAnalyticsQuery
 );
 
 /**

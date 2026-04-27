@@ -598,10 +598,6 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
   }
 }
 
-async function executeScopedAnalyticsQuery(req: Request, res: Response) {
-  return executeAnalyticsQuery(req, res);
-}
-
 /**
  * Get scoped database schema information (scopeable tables only)
  */
@@ -894,10 +890,4 @@ async function getDatabaseStats(req: Request, res: Response) {
   }
 }
 
-export {
-  executeAnalyticsQuery,
-  executeScopedAnalyticsQuery,
-  getSchema,
-  getScopedSchema,
-  getDatabaseStats,
-};
+export { executeAnalyticsQuery, getSchema, getScopedSchema, getDatabaseStats };
