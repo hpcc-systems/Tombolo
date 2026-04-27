@@ -19,7 +19,7 @@ import { tokenValidationMiddleware as validateToken } from './middlewares/tokenV
 import cors from 'cors';
 import compression from 'compression';
 import helmet from 'helmet';
-import { sequelize as dbConnection } from './models/index.js';
+import { sequelize as dbConnection } from '@tombolo/db';
 
 import logger from './config/logger.js';
 import './utils/tokenBlackListing.js';

@@ -1,8 +1,102 @@
 import { Request, Response } from 'express';
 import { QueryTypes } from 'sequelize';
-import { sequelize } from '../models/index.js';
+import { getReadOnlySequelize } from '@tombolo/db';
 import { sendSuccess, sendError } from '../utils/response.js';
 import logger from '../config/logger.js';
+import { activityKindLabels } from '@tombolo/shared';
+import type { Select } from 'node-sql-parser';
+import {
+  applyScopeToSelect,
+  collectReferencedTables,
+  enforceRowLimit,
+  getOutputToSourceColumnMapFromAst,
+  parseAndValidateAnalyticsSql,
+  sqlifySelect,
+} from '../utils/workunitAnalyticsSqlAst.js';
+import {
+  ALLOWED_WORKUNIT_ANALYTICS_TABLES,
+  ALLOWED_WORKUNIT_ANALYTICS_TABLE_SET,
+  SENSITIVE_WORKUNIT_ANALYTICS_CLUSTER_COLUMN_SET,
+} from '../config/workunitAnalyticsPolicy.js';
+
+const readOnlySequelize = getReadOnlySequelize();
+
+const ACTIVITY_KIND_SOURCE_COLUMNS = new Set(['kind']);
+
+function mapActivityKindIdsInRows(
+  rows: Record<string, unknown>[],
+  outputToSourceColumnMap: Record<string, string>
+): {
+  mappedRows: number;
+  mappedCells: number;
+  kindOutputColumns: string[];
+  aliasMapSize: number;
+} {
+  const mappedOutputColumns = new Set(
+    Object.entries(outputToSourceColumnMap)
+      .filter(([, sourceColumn]) =>
+        ACTIVITY_KIND_SOURCE_COLUMNS.has(sourceColumn.toLowerCase())
+      )
+      .map(([outputColumn]) => outputColumn.toLowerCase())
+  );
+
+  const explicitKindColumns = new Set<string>();
+  let mappedCells = 0;
+  let mappedRows = 0;
+
+  for (const row of rows) {
+    let rowMapped = false;
+    for (const [columnName, value] of Object.entries(row)) {
+      const normalizedColumnName = columnName.toLowerCase();
+      const sourceColumn = outputToSourceColumnMap[normalizedColumnName];
+      const isMappedFromKind =
+        sourceColumn !== undefined
+          ? ACTIVITY_KIND_SOURCE_COLUMNS.has(sourceColumn.toLowerCase())
+          : ACTIVITY_KIND_SOURCE_COLUMNS.has(normalizedColumnName);
+
+      if (!isMappedFromKind && !mappedOutputColumns.has(normalizedColumnName)) {
+        continue;
+      }
+
+      explicitKindColumns.add(columnName);
+
+      const kindId =
+        typeof value === 'number'
+          ? value
+          : typeof value === 'bigint' &&
+              value >= BigInt(Number.MIN_SAFE_INTEGER) &&
+              value <= BigInt(Number.MAX_SAFE_INTEGER)
+            ? Number(value)
+            : typeof value === 'string' &&
+                value.trim() !== '' &&
+                !Number.isNaN(Number(value))
+              ? Number(value)
+              : null;
+
+      if (
+        kindId !== null &&
+        Number.isInteger(kindId) &&
+        kindId >= 0 &&
+        kindId < activityKindLabels.length
+      ) {
+        row[columnName] = `${activityKindLabels[kindId]} (${kindId})`;
+        mappedCells += 1;
+        rowMapped = true;
+      }
+    }
+
+    if (rowMapped) {
+      mappedRows += 1;
+    }
+  }
+
+  return {
+    mappedRows,
+    mappedCells,
+    kindOutputColumns: Array.from(explicitKindColumns),
+    aliasMapSize: Object.keys(outputToSourceColumnMap).length,
+  };
+}
 
 interface SchemaColumnRow {
   name: string;
@@ -12,6 +106,240 @@ interface SchemaColumnRow {
   description: string;
   ORDINAL_POSITION: number;
   keyType: 'PRI' | 'FK' | 'MUL' | null;
+}
+
+type ColumnSortFamily =
+  | 'number'
+  | 'date'
+  | 'datetime'
+  | 'time'
+  | 'boolean'
+  | 'string'
+  | 'json'
+  | 'unknown';
+
+interface ColumnTypeMetadata {
+  family: ColumnSortFamily;
+  rawType: string | null;
+}
+
+function normalizeColumnFamily(rawType: string | null): ColumnSortFamily {
+  if (!rawType) return 'unknown';
+  const type = rawType.toLowerCase();
+
+  if (
+    [
+      'int',
+      'integer',
+      'tinyint',
+      'smallint',
+      'mediumint',
+      'bigint',
+      'decimal',
+      'numeric',
+      'float',
+      'double',
+      'real',
+      'bit',
+      'year',
+    ].includes(type)
+  ) {
+    return 'number';
+  }
+
+  if (type === 'date') return 'date';
+  if (['datetime', 'timestamp'].includes(type)) return 'datetime';
+  if (type === 'time') return 'time';
+  if (['bool', 'boolean'].includes(type)) return 'boolean';
+  if (type === 'json') return 'json';
+
+  if (
+    [
+      'char',
+      'varchar',
+      'text',
+      'tinytext',
+      'mediumtext',
+      'longtext',
+      'enum',
+      'set',
+      'binary',
+      'varbinary',
+      'blob',
+      'tinyblob',
+      'mediumblob',
+      'longblob',
+    ].includes(type)
+  ) {
+    return 'string';
+  }
+
+  return 'unknown';
+}
+
+function inferFamilyFromValues(
+  rows: Record<string, unknown>[],
+  columnName: string
+): ColumnSortFamily {
+  const observedValues = rows
+    .map(row => row[columnName])
+    .filter(value => value !== null && value !== undefined)
+    .slice(0, 100);
+
+  if (observedValues.length === 0) {
+    return 'unknown';
+  }
+
+  if (
+    observedValues.every(
+      value =>
+        typeof value === 'object' &&
+        value !== null &&
+        !(value instanceof Date) &&
+        !Array.isArray(value)
+    )
+  ) {
+    return 'json';
+  }
+
+  if (observedValues.every(value => typeof value === 'boolean')) {
+    return 'boolean';
+  }
+
+  const normalizedStrings = observedValues
+    .map(value => String(value).trim().toLowerCase())
+    .filter(value => value !== '');
+
+  if (
+    normalizedStrings.length > 0 &&
+    normalizedStrings.every(value =>
+      ['0', '1', 'true', 'false', 'yes', 'no'].includes(value)
+    )
+  ) {
+    return 'boolean';
+  }
+
+  if (
+    observedValues.every(value => {
+      if (typeof value === 'number') return Number.isFinite(value);
+      if (typeof value === 'bigint') return true;
+      if (typeof value === 'string' && value.trim() !== '') {
+        const numeric = Number(value);
+        return Number.isFinite(numeric);
+      }
+      return false;
+    })
+  ) {
+    return 'number';
+  }
+
+  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+  const dateTimePattern =
+    /^\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/;
+  const timePattern = /^\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/;
+
+  if (
+    observedValues.every(value => {
+      if (value instanceof Date) return true;
+      if (typeof value !== 'string') return false;
+      const trimmed = value.trim();
+      return (
+        dateTimePattern.test(trimmed) || !Number.isNaN(Date.parse(trimmed))
+      );
+    })
+  ) {
+    if (
+      observedValues.every(
+        value => typeof value === 'string' && datePattern.test(value.trim())
+      )
+    ) {
+      return 'date';
+    }
+
+    if (
+      observedValues.every(
+        value => typeof value === 'string' && timePattern.test(value.trim())
+      )
+    ) {
+      return 'time';
+    }
+
+    if (
+      observedValues.some(
+        value => typeof value === 'string' && dateTimePattern.test(value.trim())
+      )
+    ) {
+      return 'datetime';
+    }
+
+    return 'date';
+  }
+
+  return 'string';
+}
+
+async function fetchTableColumnTypes(
+  tableNames: string[]
+): Promise<Record<string, Set<string>>> {
+  const typeLookup: Record<string, Set<string>> = {};
+
+  for (const tableName of tableNames) {
+    const columns = (await readOnlySequelize.query(
+      `
+        SELECT c.COLUMN_NAME as name, c.DATA_TYPE as type
+        FROM INFORMATION_SCHEMA.COLUMNS c
+        WHERE c.TABLE_SCHEMA = DATABASE()
+          AND c.TABLE_NAME = ?
+      `,
+      {
+        replacements: [tableName],
+        type: QueryTypes.SELECT,
+      }
+    )) as Array<{ name: string; type: string }>;
+
+    for (const column of columns) {
+      const normalized = column.name.toLowerCase();
+      if (!typeLookup[normalized]) {
+        typeLookup[normalized] = new Set();
+      }
+      typeLookup[normalized].add(column.type);
+    }
+  }
+
+  return typeLookup;
+}
+
+async function buildColumnTypeMetadata(
+  queryAst: Select,
+  columns: string[],
+  rows: Record<string, unknown>[]
+): Promise<Record<string, ColumnTypeMetadata>> {
+  const outputToSourceColumnMap = getOutputToSourceColumnMapFromAst(queryAst);
+  const referencedTables = collectReferencedTables(queryAst);
+  const tableColumnTypeLookup = await fetchTableColumnTypes(referencedTables);
+  const columnTypes: Record<string, ColumnTypeMetadata> = {};
+
+  for (const column of columns) {
+    const outputColumn = column.toLowerCase();
+    const sourceColumn = outputToSourceColumnMap[outputColumn] || outputColumn;
+    const candidateTypes = tableColumnTypeLookup[sourceColumn]
+      ? Array.from(tableColumnTypeLookup[sourceColumn])
+      : [];
+
+    const rawType = candidateTypes.length === 1 ? candidateTypes[0] : null;
+    const normalizedFamily = normalizeColumnFamily(rawType);
+    const family =
+      normalizedFamily === 'unknown'
+        ? inferFamilyFromValues(rows, column)
+        : normalizedFamily;
+
+    columnTypes[column] = {
+      family,
+      rawType,
+    };
+  }
+
+  return columnTypes;
 }
 
 /**
@@ -41,14 +369,24 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
     scopeToClusterId: string | null;
   } = {
     source: querySource,
-    userId: (req as Request & { user?: { id?: string } }).user?.id,
+    userId: req.user?.id,
     scopeToWuid: null,
     scopeToClusterId: null,
   };
 
   try {
-    // SQL and options are already validated by middleware
-    const rawSql = req.body.sql.trim();
+    const inputSql =
+      typeof req.body.sql === 'string' ? req.body.sql.trim() : '';
+    const parsedSqlContext =
+      req.analyticsSqlContext || parseAndValidateAnalyticsSql(inputSql);
+    req.analyticsSqlContext = parsedSqlContext;
+
+    const hadTrailingSemicolon = parsedSqlContext.hadTrailingSemicolon;
+    const rawSql = parsedSqlContext.normalizedSql;
+    const finalSelectAst = JSON.parse(
+      JSON.stringify(parsedSqlContext.ast)
+    ) as Select;
+
     options = req.body.options || {};
     const isScopedQuery = Boolean(
       options.scopeToWuid || options.scopeToClusterId
@@ -56,7 +394,7 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
     querySource = isScopedQuery ? 'scoped-workunit-sql' : 'analytics-page-sql';
     logContext = {
       source: querySource,
-      userId: (req as Request & { user?: { id?: string } }).user?.id,
+      userId: req.user?.id,
       scopeToWuid: options.scopeToWuid || null,
       scopeToClusterId: options.scopeToClusterId || null,
     };
@@ -67,100 +405,39 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
       sql: rawSql,
     });
 
-    // Apply automatic scoping if provided
-    let scopedSql = rawSql;
-    if (options.scopeToWuid || options.scopeToClusterId) {
-      // Parse the SQL to add WHERE conditions for scoping
-      const lowerSql = rawSql.toLowerCase();
+    const scopeApplied = applyScopeToSelect(finalSelectAst, {
+      scopeToWuid: options.scopeToWuid,
+      scopeToClusterId: options.scopeToClusterId,
+    });
 
-      // Build the scoping conditions
-      const scopeConditions = [];
-      if (options.scopeToWuid) {
-        scopeConditions.push(
-          `wuId = '${options.scopeToWuid.replace(/'/g, "''")}'`
-        );
-      }
-      if (options.scopeToClusterId) {
-        scopeConditions.push(
-          `clusterId = '${options.scopeToClusterId.replace(/'/g, "''")}'`
-        );
-      }
-
-      const scopeClause = scopeConditions.join(' AND ');
-
-      // Check if query already has a WHERE clause
-      const whereIndex = lowerSql.indexOf(' where ');
-      if (whereIndex !== -1) {
-        // Find where the WHERE clause ends (before ORDER BY, GROUP BY, HAVING, or LIMIT)
-        const afterWhereStart = whereIndex + 7; // start after ' where '
-        const afterWhereSql = rawSql.substring(afterWhereStart);
-        const afterWhereLower = lowerSql.substring(afterWhereStart);
-
-        // Find the first occurrence of ORDER BY, GROUP BY, HAVING, or LIMIT
-        // Use word boundaries to prevent ReDoS with repeated whitespace
-        const endClausePattern = /\b(?:order\s+by|group\s+by|having|limit)\b/i;
-        const endMatch = endClausePattern.exec(afterWhereLower);
-
-        if (endMatch) {
-          // Extract just the WHERE conditions (before ORDER BY, etc.)
-          const whereConditions = afterWhereSql.substring(0, endMatch.index);
-          const restOfQuery = afterWhereSql.substring(endMatch.index);
-          const beforeWhere = rawSql.substring(0, whereIndex + 7);
-          scopedSql = `${beforeWhere}(${scopeClause}) AND (${whereConditions})${restOfQuery}`;
-        } else {
-          // No ORDER BY, GROUP BY, HAVING, or LIMIT - WHERE conditions go to end
-          const beforeWhere = rawSql.substring(0, whereIndex + 7);
-          scopedSql = `${beforeWhere}(${scopeClause}) AND (${afterWhereSql})`;
-        }
-      } else {
-        // Add WHERE clause before ORDER BY, GROUP BY, or LIMIT
-        // Use word boundaries to prevent ReDoS with repeated whitespace
-        const insertBeforePattern = /\b(?:order\s+by|group\s+by|limit)\b/i;
-        const match = insertBeforePattern.exec(rawSql);
-
-        if (match) {
-          const insertPos = match.index;
-          scopedSql = `${rawSql.substring(0, insertPos)} WHERE ${scopeClause} ${rawSql.substring(insertPos)}`;
-        } else {
-          // No WHERE, ORDER BY, GROUP BY, or LIMIT - add at the end
-          scopedSql = `${rawSql} WHERE ${scopeClause}`;
-        }
-      }
-
-      logger.debug('Applied scoping to query:', {
+    if (scopeApplied) {
+      logger.debug('Applied AST-based scoping to query', {
         original: rawSql,
-        scoped: scopedSql,
+        scoped: sqlifySelect(finalSelectAst),
         options,
       });
     }
 
     // Enforce row limit (already validated to be <= 5000)
     const MAX_LIMIT = options.limit || 1000;
+    enforceRowLimit(finalSelectAst, MAX_LIMIT);
 
-    // Check if query already has a LIMIT clause
-    let finalSql = scopedSql;
-    const limitMatch = finalSql.toLowerCase().match(/\blimit\s+(\d+)/);
+    let finalSql = sqlifySelect(finalSelectAst);
 
-    if (limitMatch) {
-      const requestedLimit = parseInt(limitMatch[1], 10);
-      if (!Number.isFinite(requestedLimit) || requestedLimit > MAX_LIMIT) {
-        // Replace with enforced limit
-        finalSql = finalSql.replace(/\blimit\s+\d+/i, `LIMIT ${MAX_LIMIT}`);
-      }
-    } else {
-      // Add limit if not present
-      finalSql = `${finalSql} LIMIT ${MAX_LIMIT}`;
+    // Preserve a single trailing semicolon if the original query had one.
+    if (hadTrailingSemicolon) {
+      finalSql = `${finalSql.replace(/;\s*$/, '')};`;
     }
 
     // Use a transaction to pin both the CONNECTION_ID() query and the user query to the
     // same MySQL thread. This is the idiomatic Sequelize way to guarantee same-connection
     // execution — the transaction is never committed since we only run SELECTs.
-    const t = await sequelize.transaction();
+    const t = await readOnlySequelize.transaction();
 
     let connectionId: number | null = null;
     try {
       // Retrieve the MySQL connection ID for this thread so we can cancel it if needed.
-      const connIdRows = (await sequelize.query(
+      const connIdRows = (await readOnlySequelize.query(
         'SELECT CONNECTION_ID() AS id',
         {
           type: QueryTypes.SELECT,
@@ -193,7 +470,7 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
 
       // Only issue KILL QUERY when we have the connection ID.
       if (connectionId !== null) {
-        sequelize
+        readOnlySequelize
           .query(`KILL QUERY ${connectionId}`)
           .then(() => {
             logger.debug(
@@ -214,7 +491,7 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
 
     let rows: Record<string, unknown>[];
     try {
-      rows = (await sequelize.query(finalSql, {
+      rows = (await readOnlySequelize.query(finalSql, {
         type: QueryTypes.SELECT,
         logging: sql => logger.debug('Analytics query:', sql),
         transaction: t,
@@ -241,9 +518,42 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
     const executionTime = Date.now() - startTime;
     const totalResponseTimeMs = Date.now() - requestStartedAt;
 
+    // Replace activity kind ids with backend-owned labels before sending to clients.
+    const outputToSourceColumnMap =
+      getOutputToSourceColumnMapFromAst(finalSelectAst);
+    const activityKindMappingStats = mapActivityKindIdsInRows(
+      rows,
+      outputToSourceColumnMap
+    );
+
+    logger.debug('Activity kind mapping analysis', {
+      ...logContext,
+      aliasMapSize: activityKindMappingStats.aliasMapSize,
+      aliasMap: outputToSourceColumnMap,
+      kindOutputColumns: activityKindMappingStats.kindOutputColumns,
+      mappedRows: activityKindMappingStats.mappedRows,
+      mappedCells: activityKindMappingStats.mappedCells,
+    });
+
     // Extract column names
     const columns =
       Array.isArray(rows) && rows.length > 0 ? Object.keys(rows[0]) : [];
+    const columnTypes = await buildColumnTypeMetadata(
+      finalSelectAst,
+      columns,
+      rows
+    );
+
+    const unresolvedColumns = Object.entries(columnTypes)
+      .filter(([, metadata]) => metadata.rawType === null)
+      .map(([columnName]) => columnName);
+
+    logger.debug('Analytics SQL query column type metadata', {
+      ...logContext,
+      columnCount: columns.length,
+      unresolvedTypeColumns: unresolvedColumns,
+      unresolvedTypeCount: unresolvedColumns.length,
+    });
 
     logger.info('Analytics SQL query completed', {
       ...logContext,
@@ -258,6 +568,7 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
       executionTime,
       rowCount: rows.length,
       limited: rows.length === MAX_LIMIT,
+      columnTypes,
     });
   } catch (err) {
     if (onClose) res.off('close', onClose);
@@ -290,37 +601,37 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
 async function getSchema(req: Request, res: Response) {
   try {
     const tableName = req.query.tableName as string | undefined;
-    const allowedTables = ['work_unit_details', 'work_units', 'clusters'];
 
     // If tableName is provided, return just that table's schema
     if (tableName) {
-      if (!allowedTables.includes(tableName.toLowerCase())) {
+      const normalizedTableName = tableName.toLowerCase();
+      if (!ALLOWED_WORKUNIT_ANALYTICS_TABLE_SET.has(normalizedTableName)) {
         return sendError(
           res,
-          `Invalid table name. Allowed: ${allowedTables.join(', ')}`,
+          `Invalid table name. Allowed: ${ALLOWED_WORKUNIT_ANALYTICS_TABLES.join(', ')}`,
           400
         );
       }
 
-      const columns = await sequelize.query(
+      const columns = await readOnlySequelize.query(
         `
-        SELECT 
+        SELECT
           c.COLUMN_NAME as name,
           c.DATA_TYPE as type,
           c.IS_NULLABLE as nullable,
           c.COLUMN_KEY as \`key\`,
           c.COLUMN_COMMENT as description,
           c.ORDINAL_POSITION,
-          CASE 
+          CASE
             WHEN c.COLUMN_KEY = 'PRI' THEN 'PRI'
             WHEN MAX(kcu.REFERENCED_TABLE_NAME) IS NOT NULL THEN 'FK'
             WHEN c.COLUMN_KEY = 'MUL' THEN 'MUL'
             ELSE NULL
           END as keyType
         FROM INFORMATION_SCHEMA.COLUMNS c
-        LEFT JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu 
-          ON c.TABLE_SCHEMA = kcu.TABLE_SCHEMA 
-          AND c.TABLE_NAME = kcu.TABLE_NAME 
+        LEFT JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
+          ON c.TABLE_SCHEMA = kcu.TABLE_SCHEMA
+          AND c.TABLE_NAME = kcu.TABLE_NAME
           AND c.COLUMN_NAME = kcu.COLUMN_NAME
           AND kcu.REFERENCED_TABLE_NAME IS NOT NULL
         WHERE c.TABLE_SCHEMA = DATABASE()
@@ -329,22 +640,19 @@ async function getSchema(req: Request, res: Response) {
         ORDER BY c.ORDINAL_POSITION
       `,
         {
-          replacements: [tableName],
+          replacements: [normalizedTableName],
           type: QueryTypes.SELECT,
         }
       );
 
       // Filter out sensitive columns from clusters table
-      const sensitiveColumns = [
-        'username',
-        'hash',
-        'password',
-        'password_hash',
-      ];
       const filteredColumns =
-        tableName === 'clusters'
+        normalizedTableName === 'clusters'
           ? (columns as SchemaColumnRow[]).filter(
-              col => !sensitiveColumns.includes(col.name.toLowerCase())
+              col =>
+                !SENSITIVE_WORKUNIT_ANALYTICS_CLUSTER_COLUMN_SET.has(
+                  col.name.toLowerCase()
+                )
             )
           : columns;
 
@@ -353,28 +661,27 @@ async function getSchema(req: Request, res: Response) {
 
     // If no tableName, return all allowed tables with their schemas
     const allSchemas: Record<string, SchemaColumnRow[]> = {};
-    const sensitiveColumns = ['username', 'hash', 'password', 'password_hash'];
 
-    for (const table of allowedTables) {
-      const columns = await sequelize.query(
+    for (const table of ALLOWED_WORKUNIT_ANALYTICS_TABLES) {
+      const columns = await readOnlySequelize.query(
         `
-        SELECT 
+        SELECT
           c.COLUMN_NAME as name,
           c.DATA_TYPE as type,
           c.IS_NULLABLE as nullable,
           c.COLUMN_KEY as \`key\`,
           c.COLUMN_COMMENT as description,
           c.ORDINAL_POSITION,
-          CASE 
+          CASE
             WHEN c.COLUMN_KEY = 'PRI' THEN 'PRI'
             WHEN MAX(kcu.REFERENCED_TABLE_NAME) IS NOT NULL THEN 'FK'
             WHEN c.COLUMN_KEY = 'MUL' THEN 'MUL'
             ELSE NULL
           END as keyType
         FROM INFORMATION_SCHEMA.COLUMNS c
-        LEFT JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu 
-          ON c.TABLE_SCHEMA = kcu.TABLE_SCHEMA 
-          AND c.TABLE_NAME = kcu.TABLE_NAME 
+        LEFT JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
+          ON c.TABLE_SCHEMA = kcu.TABLE_SCHEMA
+          AND c.TABLE_NAME = kcu.TABLE_NAME
           AND c.COLUMN_NAME = kcu.COLUMN_NAME
           AND kcu.REFERENCED_TABLE_NAME IS NOT NULL
         WHERE c.TABLE_SCHEMA = DATABASE()
@@ -391,7 +698,10 @@ async function getSchema(req: Request, res: Response) {
       // Filter out sensitive columns from clusters table
       if (table === 'clusters') {
         allSchemas[table] = (columns as SchemaColumnRow[]).filter(
-          col => !sensitiveColumns.includes(col.name.toLowerCase())
+          col =>
+            !SENSITIVE_WORKUNIT_ANALYTICS_CLUSTER_COLUMN_SET.has(
+              col.name.toLowerCase()
+            )
         );
       } else {
         allSchemas[table] = columns as SchemaColumnRow[];
@@ -406,42 +716,13 @@ async function getSchema(req: Request, res: Response) {
 }
 
 /**
- * Analyze query without executing it
- * Returns estimated execution plan
- */
-async function analyzeQuery(req: Request, res: Response) {
-  try {
-    const rawSql = (req.body.sql || '').trim();
-
-    if (!rawSql) {
-      return sendError(res, 'SQL query is required', 400);
-    }
-
-    // Run EXPLAIN on the query
-    // Note: rawSql is pre-validated by analyticsMiddleware to ensure it's a safe SELECT query
-    // This is intentional - the feature allows users to write custom analytics queries
-    const [explanation] = await sequelize.query(`EXPLAIN ${rawSql}`, {
-      type: QueryTypes.SELECT,
-    });
-
-    return sendSuccess(res, {
-      plan: explanation,
-      analyzed: true,
-    });
-  } catch (err) {
-    logger.error('Query analysis error:', err);
-    return sendError(res, err.message || 'Failed to analyze query', 400);
-  }
-}
-
-/**
  * Get database statistics
  */
 async function getDatabaseStats(req: Request, res: Response) {
   try {
     // Get table statistics for both tables
-    const [tableStats] = await sequelize.query(`
-      SELECT 
+    const [tableStats] = await readOnlySequelize.query(`
+      SELECT
         table_name,
         table_rows,
         data_length,
@@ -453,9 +734,9 @@ async function getDatabaseStats(req: Request, res: Response) {
     `);
 
     // Get record count by cluster from work_unit_details
-    const clusterCounts = await sequelize.query(
+    const clusterCounts = await readOnlySequelize.query(
       `
-      SELECT 
+      SELECT
         clusterId,
         COUNT(*) as count
       FROM work_unit_details
@@ -466,9 +747,9 @@ async function getDatabaseStats(req: Request, res: Response) {
     );
 
     // Get state distribution from work_unit_details
-    const stateCounts = await sequelize.query(
+    const stateCounts = await readOnlySequelize.query(
       `
-      SELECT 
+      SELECT
         state,
         COUNT(*) as count
       FROM work_unit_details
@@ -479,16 +760,16 @@ async function getDatabaseStats(req: Request, res: Response) {
     );
 
     // Get date range from work_unit_details
-    const [dateRange] = await sequelize.query(`
-      SELECT 
+    const [dateRange] = await readOnlySequelize.query(`
+      SELECT
         MIN(workUnitTimestamp) as earliest,
         MAX(workUnitTimestamp) as latest
       FROM work_unit_details
     `);
 
     // Get workunits table stats
-    const [workunitStats] = await sequelize.query(`
-      SELECT 
+    const [workunitStats] = await readOnlySequelize.query(`
+      SELECT
         COUNT(*) as total_workunits,
         COUNT(DISTINCT cluster_id) as unique_clusters,
         MIN(createdAt) as earliest_workunit,
@@ -509,4 +790,4 @@ async function getDatabaseStats(req: Request, res: Response) {
   }
 }
 
-export { executeAnalyticsQuery, getSchema, analyzeQuery, getDatabaseStats };
+export { executeAnalyticsQuery, getSchema, getDatabaseStats };

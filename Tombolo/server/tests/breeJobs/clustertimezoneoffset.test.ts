@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import getClusterTimezoneOffset from '../../jobs/cluster/clustertimezoneoffset.js';
-import { getClusterTimezoneOffset as utilGetClusterTzOffset } from '../../utils/hpcc-util.js';
+import { getClusterTimezoneOffset as utilGetClusterTzOffset } from '@tombolo/core';
 import { mockedModels } from '../mockedModels.js';
 const { Cluster } = mockedModels;
 import { parentPort } from 'worker_threads';
@@ -9,7 +9,7 @@ const workerParentPort = parentPort as NonNullable<typeof parentPort>;
 const mockedGetClusterTzOffset =
   utilGetClusterTzOffset as unknown as ReturnType<typeof vi.fn>;
 
-vi.mock('../../utils/hpcc-util.js');
+vi.mock('@tombolo/core');
 vi.mock('../../jobs/workerUtils.js', () => ({
   default: () => ({
     log: vi.fn(),

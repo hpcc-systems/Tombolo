@@ -4,7 +4,7 @@ import Sequelize from 'sequelize';
 
 // Local Imports
 import logger from '../config/logger.js';
-import { OrbitProfileMonitoring, sequelize } from '../models/index.js';
+import { OrbitProfileMonitoring, sequelize } from '@tombolo/db';
 import { APPROVAL_STATUS } from '../config/constants.js';
 import { sendError, sendSuccess } from '../utils/response.js';
 import { getUserFkIncludes } from '../utils/getUserFkIncludes.js';
@@ -53,7 +53,7 @@ const getOrbitProfileMonitoringById = async (req: Request, res: Response) => {
 const createOrbitProfileMonitoring = async (req: Request, res: Response) => {
   try {
     const { monitoringName, description, metaData, applicationId } = req.body;
-    const userId = (req as any).user.id;
+    const userId = req.user.id;
 
     const newOrbitProfileMonitoring = await OrbitProfileMonitoring.create({
       applicationId,
@@ -103,7 +103,7 @@ const updateOrbitProfileMonitoring = async (req: Request, res: Response) => {
   try {
     const { id } = req.params as { id: string };
     const updateData = req.body;
-    const userId = (req as any).user.id;
+    const userId = req.user.id;
 
     // Remove application id from update data to prevent modification
     delete updateData.applicationId;
@@ -155,7 +155,7 @@ const updateOrbitProfileMonitoring = async (req: Request, res: Response) => {
 const deleteOrbitProfileMonitoring = async (req: Request, res: Response) => {
   try {
     const { ids } = req.body;
-    const userId = (req as any).user.id;
+    const userId = req.user.id;
 
     // Find the orbit profile monitoring for all the ids and delete them and also update deletedBy and deletedAt
     await sequelize.transaction(async t => {
@@ -185,7 +185,7 @@ const toggleOrbitProfileMonitoringStatus = async (
 ) => {
   try {
     const { ids, isActive } = req.body;
-    const userId = (req as any).user.id;
+    const userId = req.user.id;
 
     // Find all for ids where the approvalStatus is approved
     const orbitProfileMonitorings = await OrbitProfileMonitoring.findAll({
@@ -235,7 +235,7 @@ const toggleOrbitProfileMonitoringStatus = async (
 const evaluateOrbitProfileMonitoring = async (req: Request, res: Response) => {
   try {
     const { approverComment, ids, isActive, approvalStatus } = req.body;
-    const userId = (req as any).user.id;
+    const userId = req.user.id;
 
     // Find all for ids and update approverComment, approvalStatus, isActive
     await OrbitProfileMonitoring.update(
@@ -283,7 +283,7 @@ const bulkUpdateOrbitProfileMonitoring = async (
     if (!Array.isArray(inputMonitorings) || inputMonitorings.length === 0) {
       return sendError(res, 'No monitorings provided for bulk update', 400);
     }
-    const userId = (req as any).user.id;
+    const userId = req.user.id;
 
     if (!Array.isArray(inputMonitorings) || inputMonitorings.length === 0) {
       await transaction.rollback();
@@ -311,7 +311,9 @@ const bulkUpdateOrbitProfileMonitoring = async (
     await transaction.commit();
     sendSuccess(res, null, 'Orbit profile monitorings updated successfully');
   } catch (err) {
-    transaction && (await transaction.rollback());
+    if (transaction) {
+      await transaction.rollback();
+    }
     logger.error('Error bulk updating orbit profile monitorings:', err);
     sendError(res, 'Failed to bulk update orbit profile monitorings');
   }

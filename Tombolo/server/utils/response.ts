@@ -6,8 +6,8 @@ interface ResponseOptions {
   status?: number;
   success?: boolean;
   message?: string;
-  data?: any;
-  errors?: Array<string | Error | object>;
+  data?: unknown;
+  errors?: ErrorValue | ErrorValue[];
 }
 
 interface ErrorInfo {
@@ -20,6 +20,33 @@ interface ErrorMapEntry {
   code: number;
   message: string;
 }
+
+type ErrorValue = string | Error | Record<string, unknown>;
+
+interface StructuredErrorPayload {
+  message: string;
+  data?: unknown;
+  errors?: ErrorValue[];
+}
+
+const getErrorMessage = (value: unknown): string => {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (value instanceof Error) {
+    return value.message;
+  }
+
+  if (value && typeof value === 'object' && 'message' in value) {
+    const maybeMessage = (value as { message?: unknown }).message;
+    if (typeof maybeMessage === 'string') {
+      return maybeMessage;
+    }
+  }
+
+  return JSON.stringify(value);
+};
 
 /**
  * Sends a standardized JSON response to the client.
@@ -35,14 +62,8 @@ const sendResponse = (
   }: ResponseOptions
 ): Response => {
   const normalizedErrors = Array.isArray(errors)
-    ? errors.map(e =>
-        typeof e === 'string' ? e : (e as any)?.message || JSON.stringify(e)
-      )
-    : [
-        typeof errors === 'string'
-          ? errors
-          : (errors as any)?.message || JSON.stringify(errors),
-      ];
+    ? errors.map(e => getErrorMessage(e))
+    : [getErrorMessage(errors)];
 
   return res.status(status).json({
     success,
@@ -57,7 +78,7 @@ const sendResponse = (
  */
 const sendSuccess = (
   res: Response,
-  data: any,
+  data: unknown,
   message = 'OK',
   status = 200
 ): Response =>
@@ -68,15 +89,34 @@ const sendSuccess = (
  */
 const sendError = (
   res: Response,
-  error: string | Error | Array<string | Error>,
+  error: string | Error | Array<string | Error> | StructuredErrorPayload,
   status = 500
 ): Response => {
   let errorsArray: string[];
 
-  if (Array.isArray(error)) {
-    errorsArray = error.map(e =>
-      typeof e === 'string' ? e : (e as any)?.message || JSON.stringify(e)
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    !Array.isArray(error) &&
+    !(error instanceof Error) &&
+    'message' in error
+  ) {
+    const payload = error as StructuredErrorPayload;
+    const normalizedErrors = (payload.errors || [payload.message]).map(e =>
+      getErrorMessage(e)
     );
+
+    return sendResponse(res, {
+      status,
+      success: false,
+      message: payload.message,
+      data: payload.data ?? null,
+      errors: normalizedErrors,
+    });
+  }
+
+  if (Array.isArray(error)) {
+    errorsArray = error?.map(e => getErrorMessage(e));
   } else if (typeof error === 'string') {
     errorsArray = [error];
   } else if (error instanceof Error) {
@@ -227,22 +267,3 @@ const ERROR_MAP: Record<string, ErrorMapEntry> = {
 };
 
 export { sendResponse, sendSuccess, sendError, sendValidationError };
-
-// Test case 1: Send a successful response
-const mockRes = {
-  status: function (code: number) {
-    console.log(`Status set to: ${code}`);
-    return this;
-  },
-  json: function (data: any) {
-    console.log('Response JSON:', JSON.stringify(data, null, 2));
-    return this;
-  },
-} as unknown as Response;
-
-sendSuccess(
-  mockRes,
-  { id: 1, name: 'Test' },
-  'Data retrieved successfully',
-  200
-);

@@ -53,6 +53,12 @@ const validateGetWorkunitDetails = [
   stringParam('wuid', false),
 ];
 
+// Validation for GET /api/workunits/:clusterId/:wuid/files
+const validateGetWorkunitFiles = [
+  stringParam('clusterId', false),
+  stringParam('wuid', false),
+];
+
 // Validation for GET /api/workunits/:clusterId/:wuid/hotspots
 const validateGetWorkunitHotspots = [
   stringParam('clusterId', false),
@@ -118,6 +124,7 @@ export {
   validateGetWorkunits,
   validateGetWorkunit,
   validateGetWorkunitDetails,
+  validateGetWorkunitFiles,
   validateGetWorkunitHotspots,
   validateGetWorkunitTimeline,
   VALID_SORT_FIELDS,

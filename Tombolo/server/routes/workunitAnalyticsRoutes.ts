@@ -2,16 +2,17 @@ import express from 'express';
 import {
   executeAnalyticsQuery,
   getSchema,
-  analyzeQuery,
   getDatabaseStats,
 } from '../controllers/workunitAnalyticsController.js';
 import {
   validateAnalyticsQuery,
-  validateAnalyzeQuery,
   validateGetSchema,
   validateGetDatabaseStats,
 } from '../middlewares/workunitAnalyticsMiddleware.js';
-import { validate } from '../middlewares/validateRequestBody.js';
+import {
+  validate,
+  validateWithFirstErrorMessage,
+} from '../middlewares/validateRequestBody.js';
 import { validateUserRole } from '../middlewares/rbacMiddleware.js';
 import role from '../config/roleTypes.js';
 import logger from '../config/logger.js';
@@ -34,7 +35,7 @@ router.post(
     logger.debug('Request body:', JSON.stringify(req.body, null, 2));
     next();
   },
-  validate(validateAnalyticsQuery),
+  validateWithFirstErrorMessage(validateAnalyticsQuery),
   executeAnalyticsQuery
 );
 
@@ -45,14 +46,6 @@ router.post(
  * @query   { tableName?: string }
  */
 router.get('/schema', validate(validateGetSchema), getSchema);
-
-/**
- * @route   POST /api/workunitAnalytics/analyze
- * @desc    Analyze query execution plan without running it
- * @access  Private
- * @body    { sql: string }
- */
-router.post('/analyze', validate(validateAnalyzeQuery), analyzeQuery);
 
 /**
  * @route   GET /api/workunitAnalytics/stats

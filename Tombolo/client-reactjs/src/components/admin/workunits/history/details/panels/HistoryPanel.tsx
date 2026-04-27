@@ -8,13 +8,14 @@ import {
   Space,
   Button,
   Tag,
-  Select,
   Alert,
   Spin,
   Empty,
   Typography,
   Tooltip,
   message,
+  Select,
+  Divider,
 } from 'antd';
 import { ClockCircleOutlined, LineChartOutlined, ReloadOutlined, RiseOutlined, FallOutlined } from '@ant-design/icons';
 import { Line } from '@ant-design/plots';
@@ -24,16 +25,14 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import workunitsService from '@/services/workunits.service';
 import SwapIcon from '@/components/common/icons/SwapIcon';
 import styles from '../../workunitHistory.module.css';
-import { formatCurrency, formatPercentage } from '@tombolo/shared';
+import { formatCurrency, formatPercentage, formatHours } from '@tombolo/shared';
 
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
 
 const { Text, Title } = Typography;
-const { Option } = Select;
 
 type PerformanceIndicator = 'better' | 'worse' | 'similar';
-type TimeRange = '7d' | '30d' | '90d' | 'all';
 
 // Format seconds to readable duration
 const formatDuration = (seconds: number | null | undefined): string => {
@@ -102,14 +101,14 @@ interface Props {
   wu: any;
   clusterId?: string;
   clusterName?: string;
+  filterType?: 'all' | 'completed';
+  onFilterChange?: (value: 'all' | 'completed') => void;
 }
 
-const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
+const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName, filterType = 'all', onFilterChange }) => {
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [timeRange, setTimeRange] = useState<TimeRange>('30d');
-  const [showOnlyCompleted, setShowOnlyCompleted] = useState(false);
 
   const fetchHistory = async () => {
     if (!wu?.jobName || !clusterId) {
@@ -123,10 +122,6 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
 
     try {
       let startDate: string | null = null;
-      if (timeRange !== 'all') {
-        const days = parseInt(timeRange);
-        startDate = dayjs().subtract(days, 'days').toISOString();
-      }
 
       const data = await workunitsService.getJobHistoryWithStats(clusterId, wu.jobName, {
         startDate,
@@ -165,14 +160,14 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
     } else {
       setLoading(false);
     }
-  }, [wu?.jobName, clusterId, timeRange]);
+  }, [wu?.jobName, clusterId]);
 
   // Filter history
   const filteredHistory = useMemo(() => {
     const data = [...history];
-    const filtered = showOnlyCompleted ? data.filter(item => item.state === 'completed') : data;
+    const filtered = filterType === 'completed' ? data.filter(item => item.state === 'completed') : data;
     return filtered.sort((a, b) => dayjs(b.workUnitTimestamp).diff(dayjs(a.workUnitTimestamp)));
-  }, [history, showOnlyCompleted]);
+  }, [history, filterType]);
 
   // Calculate statistics
   const statistics = useMemo(() => {
@@ -378,6 +373,7 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
     data: chartData,
     xField: 'date',
     yField: 'duration',
+    autoFit: true,
     point: {
       size: (datum: any) => (datum.isCurrent ? 8 : 4),
       shape: 'circle',
@@ -448,37 +444,46 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
       {/* Header with job name */}
       <Card>
         <Row justify="space-between" align="middle">
-          <Col>
-            <Title level={4} style={{ margin: 0 }}>
-              Job History: {wu.jobName}
-            </Title>
-            <Text type="secondary">
-              Showing {filteredHistory.length} run{filteredHistory.length !== 1 ? 's' : ''} on {clusterName}
-            </Text>
+          <Col flex={1}>
+            <Space direction="vertical" size={4}>
+              <Space size={12} align="center">
+                <Title level={4} style={{ margin: 0 }}>
+                  {wu.jobName || wu.wuId}
+                </Title>
+                <Tag color={wu.state === 'completed' ? 'success' : wu.state === 'failed' ? 'error' : 'processing'}>
+                  {wu.state?.toUpperCase()}
+                </Tag>
+              </Space>
+              <Text type="secondary">
+                {wu.wuId} • {clusterName} • Submitted {dayjs(wu.workUnitTimestamp).format('YYYY-MM-DD HH:mm:ss')}
+              </Text>
+              <Text type="secondary">
+                Showing {filteredHistory.length} run{filteredHistory.length !== 1 ? 's' : ''} for this job
+              </Text>
+            </Space>
           </Col>
           <Col>
             <Space>
-              <Select value={timeRange} onChange={v => setTimeRange(v as TimeRange)} style={{ width: 120 }}>
-                <Option value="7d">Last 7 days</Option>
-                <Option value="30d">Last 30 days</Option>
-                <Option value="90d">Last 90 days</Option>
-                <Option value="all">All time</Option>
-              </Select>
-              <Button
-                type={showOnlyCompleted ? 'primary' : 'default'}
-                onClick={() => setShowOnlyCompleted(!showOnlyCompleted)}>
-                {showOnlyCompleted ? 'Show All' : 'Completed Only'}
-              </Button>
-              <Button icon={<ReloadOutlined />} onClick={fetchHistory}>
-                Refresh
+              <Select
+                value={filterType}
+                onChange={onFilterChange}
+                style={{ width: 120 }}
+                options={[
+                  { label: 'Show All', value: 'all' },
+                  { label: 'Show Completed', value: 'completed' },
+                ]}
+              />
+              <Button type="primary" onClick={fetchHistory} ghost>
+                Refresh History
               </Button>
             </Space>
           </Col>
         </Row>
-      </Card>
+        <Divider />
+        {/* </Card> */}
 
-      {/* Performance comparison with previous run */}
-      {comparison && (
+        {/* Performance comparison with previous run */}
+        {/* {comparison && (
         <Card>
           <Alert
             message="Comparison with Previous Run"
@@ -538,61 +543,80 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName }) => {
             showIcon
           />
         </Card>
-      )}
+      )} */}
 
-      {/* Summary statistics */}
-      <Card>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'space-between' }}>
-          {/* <Row gutter={[16, 16]}> */}
-          <Card size="small" className={styles.summaryCard}>
-            <Statistic title="Total Runs" value={statistics.totalRuns} prefix={<LineChartOutlined />} />
+        {/* Summary Statistics */}
+        {/* <Card> */}
+        <Space wrap size="small" style={{ width: '100%', justifyContent: 'space-between' }}>
+          <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+            <Statistic
+              title="Total Runtime"
+              value={formatHours(wu.totalClusterTime)}
+              prefix={<ClockCircleOutlined />}
+              valueStyle={{ fontSize: '1.2rem' }}
+            />
           </Card>
-          <Card size="small" className={styles.summaryCard}>
+          <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+            <Statistic title="Total Cost" value={formatCurrency(wu.totalCost)} valueStyle={{ fontSize: '1.2rem' }} />
+          </Card>
+          <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+            <Statistic
+              title="Total Runs"
+              value={statistics.totalRuns}
+              prefix={<LineChartOutlined />}
+              valueStyle={{ fontSize: '1.2rem' }}
+            />
+          </Card>
+          <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
             <Statistic
               title="Success Rate"
               value={statistics.successRate}
               precision={2}
               suffix="%"
               valueStyle={{
+                fontSize: '1.2rem',
                 color: statistics.successRate >= 95 ? '#52c41a' : statistics.successRate >= 80 ? '#faad14' : '#ff4d4f',
               }}
             />
           </Card>
-          <Card size="small" className={styles.summaryCard}>
+          <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
             <Statistic
               title="Avg Duration"
               value={formatDuration(statistics.avgDuration)}
               prefix={<ClockCircleOutlined />}
+              valueStyle={{ fontSize: '1.2rem' }}
             />
           </Card>
-          <Card size="small" className={styles.summaryCard}>
-            <Statistic title="Avg Cost" value={formatCurrency(statistics.avgCost)} />
+          <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+            <Statistic
+              title="Avg Cost"
+              value={formatCurrency(statistics.avgCost)}
+              valueStyle={{ fontSize: '1.2rem' }}
+            />
           </Card>
-          {/* </Row> */}
-          {/* <Row gutter={[16, 16]} style={{ marginTop: 16 }}> */}
-          <Card size="small" className={styles.summaryCard}>
+          <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
             <Statistic
               title="Fastest Run"
               value={formatDuration(statistics.minDuration)}
-              valueStyle={{ fontSize: 14 }}
+              valueStyle={{ fontSize: '1.2rem' }}
             />
           </Card>
-          <Card size="small" className={styles.summaryCard}>
+          <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
             <Statistic
               title="Slowest Run"
               value={formatDuration(statistics.maxDuration)}
-              valueStyle={{ fontSize: 14 }}
+              valueStyle={{ fontSize: '1.2rem' }}
             />
           </Card>
-          <Card size="small" className={styles.summaryCard}>
+          {/* <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
             <Statistic
               title="Duration Range"
               value={formatDuration(statistics.maxDuration - statistics.minDuration)}
-              valueStyle={{ fontSize: 14 }}
+              titleStyle={{ fontWeight: 600, color: '#1677ff' }}
+              valueStyle={{ fontSize: '1.2rem' }}
             />
-          </Card>
-          {/* </Row> */}
-        </div>
+          </Card> */}
+        </Space>
       </Card>
 
       {/* Performance trend chart */}

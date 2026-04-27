@@ -28,10 +28,19 @@ vi.mock('worker_threads', () => ({
 }));
 
 // Replace all calls of models to simulate database interactions
-vi.mock('../models/index.js', () => {
+vi.mock('@tombolo/db', () => {
   const commit = vi.fn();
   const rollback = vi.fn();
   const transaction = vi.fn(() => Promise.resolve({ commit, rollback }));
+  const sequelize = {
+    transaction,
+    query: vi.fn(),
+    literal: vi.fn(value => value),
+    fn: vi.fn((...args) => args),
+    col: vi.fn(col => col),
+    __commit: commit, // Expose for test access
+    __rollback: rollback, // Expose for test access
+  };
 
   return {
     TokenBlackList: {
@@ -108,11 +117,15 @@ vi.mock('../models/index.js', () => {
       create: vi.fn(),
       findOne: vi.fn(),
       findAll: vi.fn(),
+      update: vi.fn(),
+      destroy: vi.fn(),
     },
     SentNotification: {
       create: vi.fn(),
       findOne: vi.fn(),
       findAll: vi.fn(),
+      update: vi.fn(),
+      destroy: vi.fn(),
     },
     AccountVerificationCode: {
       create: vi.fn(),
@@ -244,17 +257,27 @@ vi.mock('../models/index.js', () => {
         __rollback: rollback,
       },
     },
+    WorkUnitFile: {
+      findAll: vi.fn(),
+      findOne: vi.fn(),
+      findByPk: vi.fn(),
+      create: vi.fn(),
+      save: vi.fn(),
+      bulkCreate: vi.fn(),
+      update: vi.fn(),
+      destroy: vi.fn(),
+      handleDelete: vi.fn(),
+      sequelize: {
+        transaction,
+        __commit: commit,
+        __rollback: rollback,
+      },
+    },
     UserArchive: {
       create: vi.fn(),
     },
-    sequelize: {
-      transaction,
-      literal: vi.fn(value => value),
-      fn: vi.fn((...args) => args),
-      col: vi.fn(col => col),
-      __commit: commit, // Expose for test access
-      __rollback: rollback, // Expose for test access
-    },
+    sequelize,
+    getReadOnlySequelize: vi.fn(() => sequelize),
   };
 });
 

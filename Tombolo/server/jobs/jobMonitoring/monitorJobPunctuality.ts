@@ -20,9 +20,11 @@ import {
   Cluster,
   NotificationQueue,
   MonitoringType,
-} from '../../models/index.js';
+} from '@tombolo/db';
 import { getClusterOptions } from '../../utils/getClusterOptions.js';
 import { APPROVAL_STATUS } from '../../config/constants.js';
+import type { ClusterWithPassword } from '../../types/cluster.js';
+import { enqueueNotification } from '../../services/notificationProducer.js';
 
 const monitoringTypeName = 'Job Monitoring';
 
@@ -67,30 +69,37 @@ const monitoringTypeName = 'Job Monitoring';
     });
 
     // Decrypt cluster passwords if they exist
-    clusters.forEach(clusterInfo => {
-      try {
-        const clusterExtended = clusterInfo as any;
-        if (clusterInfo.hash) {
-          clusterExtended.password = decryptString(
-            clusterInfo.hash,
-            process.env.ENCRYPTION_KEY
-          );
-        } else {
-          clusterExtended.password = null;
+    const clustersWithPassword: ClusterWithPassword[] = clusters.map(
+      clusterInfo => {
+        try {
+          return {
+            ...clusterInfo,
+            password: clusterInfo.hash
+              ? decryptString(clusterInfo.hash, process.env.ENCRYPTION_KEY)
+              : null,
+          };
+        } catch (error) {
+          logOrPostMessage({
+            level: 'error',
+            text: `Job Punctuality Monitoring: Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}`,
+          });
+
+          return {
+            ...clusterInfo,
+            password: null,
+          };
         }
-      } catch (error) {
-        logOrPostMessage({
-          level: 'error',
-          text: `Job Punctuality Monitoring: Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}`,
-        });
       }
-    });
+    );
 
     // Arrange clusters as object with id as key
-    const clustersObj = clusters.reduce((acc, cluster) => {
-      acc[cluster.id] = cluster;
-      return acc;
-    }, {});
+    const clustersObj = clustersWithPassword.reduce(
+      (acc, cluster) => {
+        acc[cluster.id] = cluster;
+        return acc;
+      },
+      {} as Record<string, ClusterWithPassword>
+    );
 
     // Get monitoring type ID for "Job Monitoring"
     const monitoringTypeDetails = await MonitoringType.findOne({
@@ -99,7 +108,7 @@ const monitoringTypeName = 'Job Monitoring';
     });
 
     // Iterate over the job monitorings
-    for (let jobMonitoring of jobMonitorings) {
+    for (const jobMonitoring of jobMonitorings) {
       try {
         const {
           id,
@@ -192,9 +201,9 @@ const monitoringTypeName = 'Job Monitoring';
           continue;
         }
 
-        let alertTimePassed = window.start < window.currentTime;
+        const alertTimePassed = window.start < window.currentTime;
 
-        let lateByInMinutes = Math.floor(
+        const lateByInMinutes = Math.floor(
           (window.currentTime.getTime() - window.start.getTime()) / 60000
         );
 
@@ -362,8 +371,13 @@ const monitoringTypeName = 'Job Monitoring';
             ).toLocaleString(),
           });
 
+          const queuePayload = {
+            ...notificationPayload,
+            deliveryType: 'immediate' as const,
+          };
+
           // Queue email notification
-          await NotificationQueue.create(notificationPayload as any);
+          await enqueueNotification(queuePayload);
           logOrPostMessage({
             level: 'verbose',
             text: `Job Punctuality Monitoring: Notification queued for ${monitoringName},  job not started on time`,
@@ -382,7 +396,11 @@ const monitoringTypeName = 'Job Monitoring';
                 timezoneOffset: offSet || 0,
               });
             delete notificationPayloadForNoc.metaData.cc;
-            await NotificationQueue.create(notificationPayloadForNoc as any);
+            const queuePayloadForNoc = {
+              ...notificationPayloadForNoc,
+              deliveryType: 'immediate' as const,
+            };
+            await enqueueNotification(queuePayloadForNoc);
             logOrPostMessage({
               level: 'verbose',
               text: `Job Punctuality Monitoring: NOC Notification queued for ${monitoringName},  job not started on time`,

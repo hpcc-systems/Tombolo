@@ -5,7 +5,7 @@ import {
   NotificationQueue,
   AsrProduct,
   AsrDomain,
-} from '../../models/index.js';
+} from '@tombolo/db';
 import { logOrPostMessage } from '../jobUtils.js';
 import { decryptString } from '@tombolo/shared';
 import { FileSprayService } from '@hpcc-js/comms';
@@ -16,6 +16,7 @@ import {
   findLocalDateTimeAtCluster,
 } from './lzFileMonitoringUtils.js';
 import { APPROVAL_STATUS } from '../../config/constants.js';
+import { enqueueNotification } from '../../services/notificationProducer.js';
 
 const monitoring_name = 'Landing Zone Monitoring';
 
@@ -250,7 +251,7 @@ const monitoring_name = 'Landing Zone Monitoring';
           }
         }
 
-        let notificationId = generateNotificationId({
+        const notificationId = generateNotificationId({
           notificationPrefix,
           timezoneOffset: uniqueClustersObj[clusterId].timezone_offset,
         });
@@ -280,7 +281,7 @@ const monitoring_name = 'Landing Zone Monitoring';
         };
 
         // Add to notification queue
-        await NotificationQueue.create({
+        await enqueueNotification({
           type: 'email',
           notificationOrigin: monitoring_name,
           originationId: monitoringTypeId,

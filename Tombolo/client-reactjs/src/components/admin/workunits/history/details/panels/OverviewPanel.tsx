@@ -1,27 +1,29 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Breadcrumb,
   Card,
   Col,
   Descriptions,
-  Divider,
   Empty,
   Row,
+  Segmented,
   Space,
   Statistic,
   Table,
   Tag,
   Typography,
+  Divider,
 } from 'antd';
 import {
-  DatabaseOutlined,
-  FieldTimeOutlined,
+  ApartmentOutlined,
   NodeIndexOutlined,
   ProfileOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
   SyncOutlined,
+  UnorderedListOutlined,
 } from '@ant-design/icons';
+import dayjs from 'dayjs';
 import {
   SCOPE_TYPE_COLORS,
   formatBytes,
@@ -29,43 +31,54 @@ import {
   formatNumber,
   formatSeconds,
   formatSecondsAsHours,
+  formatHours,
+  formatCurrency,
   renderAnyMetric as renderAnyMetricShared,
 } from '@tombolo/shared';
+import FlatScopesPanel from './FlatScopesPanel';
 import HierarchyExplorer, {
   HierarchyExplorerSelectPayload,
   buildScopeTree,
   findPathByKey,
   flattenTree,
 } from './HierarchyExplorer';
+import type { WorkUnit } from '@tombolo/shared';
 
 const { Text } = Typography;
+
+const SCOPE_VIEW_STORAGE_KEY = 'wuh.overview.scope-view-mode';
+
+type ScopeViewMode = 'hierarchical' | 'flat';
 
 function renderAnyMetric(key: string, value: any): React.ReactNode {
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   return renderAnyMetricShared(key, value);
 }
 
-// ── Types ────────────────────────────────────────────────────────────────────
-
 interface Props {
-  wu: {
-    jobName?: string;
-    wuId?: string;
-    state?: string;
-    engine?: string;
-    clusterId?: string;
-    owner?: string;
-    totalClusterTime?: number;
-  };
+  wu: WorkUnit;
   details: any[];
   clusterName?: string;
 }
 
-// ── Component ────────────────────────────────────────────────────────────────
-
 const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
   const [selectedNode, setSelectedNode] = useState<any>(null);
   const [breadcrumb, setBreadcrumb] = useState<{ title: string; key: any }[]>([]);
+  const [scopeViewMode, setScopeViewMode] = useState<ScopeViewMode>('hierarchical');
+  const isFlatView = scopeViewMode === 'flat';
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const saved = window.localStorage.getItem(SCOPE_VIEW_STORAGE_KEY);
+    if (saved === 'flat' || saved === 'hierarchical') {
+      setScopeViewMode(saved);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(SCOPE_VIEW_STORAGE_KEY, scopeViewMode);
+  }, [scopeViewMode]);
 
   const treeNodes = useMemo(() => buildScopeTree(details || []), [details]);
 
@@ -82,6 +95,8 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
     setSelectedNode(node);
     setBreadcrumb(bc);
   };
+
+  const flatScopes = useMemo(() => flattenTree(treeNodes), [treeNodes]);
 
   const summary = useMemo(() => {
     let rows = 0,
@@ -181,97 +196,146 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
     <Space direction="vertical" size={16} style={{ width: '100%' }}>
       {/* Summary Card */}
       <Card>
-        <Row gutter={[16, 16]}>
-          <Col xs={24} md={12}>
-            <Space direction="vertical" size={4}>
-              <Space size={12} align="center">
-                <ProfileOutlined style={{ fontSize: 20, color: '#1677ff' }} />
-                <Text strong style={{ fontSize: 16 }}>
-                  {wu.jobName || wu.wuId}
-                </Text>
-                <Tag color={stateColor} icon={stateIcon}>
-                  {(wu.state || '').toUpperCase()}
-                </Tag>
-              </Space>
-              <Text type="secondary" style={{ marginLeft: 32 }}>
-                {wu.wuId} • Engine: {wu.engine} • Cluster: {clusterName || wu.clusterId} • Owner: {wu.owner}
-              </Text>
-            </Space>
-          </Col>
-          <Col xs={24} md={12}>
-            <Row gutter={16}>
-              <Col span={8}>
-                <Statistic
-                  title="Total Elapsed"
-                  value={formatSecondsAsHours(summary.totalElapsed)}
-                  prefix={<FieldTimeOutlined />}
-                  valueStyle={{ fontSize: 20 }}
-                />
-              </Col>
-              <Col span={8}>
-                <Statistic
-                  title="Total Rows"
-                  value={formatNumber(summary.rows)}
-                  prefix={<DatabaseOutlined />}
-                  valueStyle={{ fontSize: 20 }}
-                />
-              </Col>
-              <Col span={8}>
-                <Statistic
-                  title="Max Memory"
-                  value={formatBytes(summary.maxMem)}
-                  prefix={<NodeIndexOutlined />}
-                  valueStyle={{ fontSize: 20 }}
-                />
-              </Col>
-            </Row>
-          </Col>
-        </Row>
-        <Divider style={{ margin: '16px 0' }} />
-        <Row gutter={[16, 16]}>
-          <Col xs={12} sm={4}>
-            <Statistic
-              title="Total Scopes"
-              value={summary.counts.total}
-              valueStyle={{ color: SCOPE_TYPE_COLORS.graph }}
-            />
-          </Col>
-          <Col xs={12} sm={5}>
-            <Statistic title="Graphs" value={summary.counts.graph} valueStyle={{ color: SCOPE_TYPE_COLORS.graph }} />
-          </Col>
-          <Col xs={12} sm={5}>
-            <Statistic
-              title="Subgraphs"
-              value={summary.counts.subgraph}
-              valueStyle={{ color: SCOPE_TYPE_COLORS.subgraph }}
-            />
-          </Col>
-          <Col xs={12} sm={5}>
-            <Statistic
-              title="Activities"
-              value={summary.counts.activity}
-              valueStyle={{ color: SCOPE_TYPE_COLORS.activity }}
-            />
-          </Col>
-          <Col xs={12} sm={5}>
-            <Statistic
-              title="Operations"
-              value={summary.counts.operation}
-              valueStyle={{ color: SCOPE_TYPE_COLORS.operation }}
-            />
-          </Col>
-        </Row>
+        <div>
+          <Space align="center">
+            <ProfileOutlined style={{ fontSize: 20, color: '#1677ff' }} />
+            <Text strong style={{ fontSize: 16 }}>
+              {wu.jobName || wu.wuId}
+            </Text>
+            <Tag color={stateColor} icon={stateIcon}>
+              {(wu.state || '').toUpperCase()}
+            </Tag>
+          </Space>
+          <div>
+            <Text type="secondary">
+              {wu.wuId} • Engine: {wu.engine} • Cluster: {clusterName || wu.clusterId} • Owner: {wu.owner} • Submitted:{' '}
+              {dayjs(wu.workUnitTimestamp).format('YYYY-MM-DD HH:mm:ss')}
+            </Text>
+          </div>
+          <Divider />
+          <Space wrap size="small" style={{ marginTop: '16px', width: '100%', justifyContent: 'space-between' }}>
+            <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+              <Statistic
+                title="Total Runtime"
+                value={formatHours(wu.totalClusterTime)}
+                valueStyle={{ fontSize: '1.2rem' }}
+              />
+            </Card>
+            <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+              <Statistic title="Total Cost" value={formatCurrency(wu.totalCost)} valueStyle={{ fontSize: '1.2rem' }} />
+            </Card>
+            <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+              <Statistic
+                title="Total Elapsed"
+                value={formatSecondsAsHours(summary.totalElapsed)}
+                valueStyle={{ fontSize: '1.2rem' }}
+              />
+            </Card>
+            <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+              <Statistic
+                title="Max Memory"
+                value={formatBytes(summary.maxMem)}
+                // prefix={<NodeIndexOutlined />}
+                valueStyle={{ fontSize: '1.2rem' }}
+              />
+            </Card>
+            <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+              <Statistic
+                title="Total Rows"
+                value={formatNumber(summary.rows)}
+                // prefix={<DatabaseOutlined />}
+                valueStyle={{ fontSize: '1.2rem' }}
+              />
+            </Card>
+            <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+              <Statistic
+                title="Total Scopes"
+                value={summary.counts.total}
+                valueStyle={{ fontSize: '1.2rem', color: SCOPE_TYPE_COLORS.graph }}
+              />
+            </Card>
+            <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+              <Statistic
+                title="Graphs"
+                value={summary.counts.graph}
+                valueStyle={{ fontSize: '1.2rem', color: SCOPE_TYPE_COLORS.graph }}
+              />
+            </Card>
+            <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+              <Statistic
+                title="Subgraphs"
+                value={summary.counts.subgraph}
+                valueStyle={{ fontSize: '1.2rem', color: SCOPE_TYPE_COLORS.subgraph }}
+              />
+            </Card>
+            <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+              <Statistic
+                title="Activities"
+                value={summary.counts.activity}
+                valueStyle={{ fontSize: '1.2rem', color: SCOPE_TYPE_COLORS.activity }}
+              />
+            </Card>
+            <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+              <Statistic
+                title="Operations"
+                value={summary.counts.operation}
+                valueStyle={{ fontSize: '1.2rem', color: SCOPE_TYPE_COLORS.operation }}
+              />
+            </Card>
+          </Space>
+        </div>
       </Card>
 
       {/* Main Content */}
       <Row gutter={[16, 16]}>
-        {/* Left: Hierarchy Explorer */}
-        <Col xs={24} lg={10} xl={9}>
-          <HierarchyExplorer details={details} storageKeyPrefix="wuh.overview" onSelect={handleExplorerSelect} />
+        {/* Left: Scope Browser */}
+        <Col xs={24} lg={isFlatView ? 14 : 10} xl={isFlatView ? 14 : 9}>
+          <Space direction="vertical" size={12} style={{ width: '100%' }}>
+            <Card size="small" styles={{ body: { padding: '8px 12px' } }}>
+              <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                <Space>
+                  <NodeIndexOutlined />
+                  <span>Scopes</span>
+                  <Tag style={{ marginLeft: 8, fontWeight: 'normal' }}>{flatScopes.length} items</Tag>
+                </Space>
+                <Segmented
+                  size="small"
+                  value={scopeViewMode}
+                  onChange={value => setScopeViewMode(value as ScopeViewMode)}
+                  options={[
+                    {
+                      label: (
+                        <Space size={4}>
+                          <ApartmentOutlined />
+                          <span>Hierarchical</span>
+                        </Space>
+                      ),
+                      value: 'hierarchical',
+                    },
+                    {
+                      label: (
+                        <Space size={4}>
+                          <UnorderedListOutlined />
+                          <span>Flat</span>
+                        </Space>
+                      ),
+                      value: 'flat',
+                    },
+                  ]}
+                />
+              </Space>
+            </Card>
+
+            {scopeViewMode === 'hierarchical' ? (
+              <HierarchyExplorer details={details} storageKeyPrefix="wuh.overview" onSelect={handleExplorerSelect} />
+            ) : (
+              <FlatScopesPanel items={flatScopes} selectedKey={selectedNode?.key} onSelectKey={selectNodeByKey} />
+            )}
+          </Space>
         </Col>
 
         {/* Right: Scope Details */}
-        <Col xs={24} lg={14} xl={15}>
+        <Col xs={24} lg={isFlatView ? 10 : 14} xl={isFlatView ? 10 : 15}>
           <Card
             title={
               <Space>
@@ -281,7 +345,10 @@ const OverviewPanel: React.FC<Props> = ({ wu, details, clusterName }) => {
             }
             styles={{ body: { padding: 0 } }}>
             {!selectedNode ? (
-              <Empty description="Select a scope from the tree to view details" style={{ padding: '48px 24px' }} />
+              <Empty
+                description="Select a scope from the list or tree to view details"
+                style={{ padding: '48px 24px' }}
+              />
             ) : (
               <div style={{ maxHeight: 540, overflowY: 'auto', padding: 16 }}>
                 <Breadcrumb

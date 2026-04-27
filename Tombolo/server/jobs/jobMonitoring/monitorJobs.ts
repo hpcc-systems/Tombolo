@@ -11,7 +11,7 @@ import {
   MonitoringLog,
   NotificationQueue,
   JobMonitoringData,
-} from '../../models/index.js';
+} from '@tombolo/db';
 import { decryptString } from '@tombolo/shared';
 import {
   matchJobName,
@@ -29,6 +29,12 @@ import {
 import shallowCopyWithOutNested from '../../utils/shallowCopyWithoutNested.js';
 import { getClusterOptions } from '../../utils/getClusterOptions.js';
 import { APPROVAL_STATUS } from '../../config/constants.js';
+import type { ClusterWithPassword } from '../../types/cluster.js';
+import { enqueueNotification } from '../../services/notificationProducer.js';
+
+type ClusterWithPasswordAndStartTime = ClusterWithPassword & {
+  startTime: Date;
+};
 
 // Variables
 const monitoring_name = 'Job Monitoring';
@@ -101,28 +107,6 @@ const monitoring_name = 'Job Monitoring';
       where: { id: clusterIds },
       raw: true,
     });
-    const clusterInfoObj = {}; // For easy access later
-
-    // Decrypt cluster passwords if they exist
-    clustersInfo.forEach(clusterInfo => {
-      try {
-        clusterInfoObj[clusterInfo.id] = clusterInfo;
-        const clusterExtended = clusterInfo as any;
-        if (clusterInfo.hash) {
-          clusterExtended.password = decryptString(
-            clusterInfo.hash,
-            process.env.ENCRYPTION_KEY
-          );
-        } else {
-          clusterExtended.password = null;
-        }
-      } catch (error) {
-        logOrPostMessage({
-          level: 'error',
-          text: `Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}`,
-        });
-      }
-    });
 
     // Get the last time the cluster was scanned for job monitoring purposes
     const lastClusterScanDetails = await MonitoringLog.findAll({
@@ -130,48 +114,74 @@ const monitoring_name = 'Job Monitoring';
       raw: true,
     });
 
-    // Cluster  last scan info (Scan logs)
-    clustersInfo.forEach(clusterInfo => {
-      const lastScanDetails = lastClusterScanDetails.find(
-        scanDetails => scanDetails.cluster_id === clusterInfo.id
-      );
+    // Build typed cluster details used for HPCC calls and scan windows
+    const clustersInfoWithDetails: ClusterWithPasswordAndStartTime[] =
+      clustersInfo.map(clusterInfo => {
+        const lastScanDetails = lastClusterScanDetails.find(
+          scanDetails => scanDetails.cluster_id === clusterInfo.id
+        );
 
-      const clusterExtended = clusterInfo as any;
-      if (lastScanDetails) {
-        clusterExtended.startTime = wuStartTimeWhenLastScanAvailable(
-          lastScanDetails.scan_time,
-          clusterInfo.timezone_offset
-        );
-      } else {
-        clusterExtended.startTime = wuStartTimeWhenLastScanUnavailable(
-          now,
-          clusterInfo.timezone_offset,
-          30
-        );
-      }
-    });
+        const startTime = lastScanDetails
+          ? wuStartTimeWhenLastScanAvailable(
+              lastScanDetails.scan_time,
+              clusterInfo.timezone_offset
+            )
+          : wuStartTimeWhenLastScanUnavailable(
+              now,
+              clusterInfo.timezone_offset,
+              30
+            );
+
+        try {
+          return {
+            ...clusterInfo,
+            password: clusterInfo.hash
+              ? decryptString(clusterInfo.hash, process.env.ENCRYPTION_KEY)
+              : null,
+            startTime,
+          };
+        } catch (error) {
+          logOrPostMessage({
+            level: 'error',
+            text: `Failed to decrypt hash for cluster ${clusterInfo.id}: ${error.message}`,
+          });
+
+          return {
+            ...clusterInfo,
+            password: null,
+            startTime,
+          };
+        }
+      });
+
+    const clusterInfoObj = clustersInfoWithDetails.reduce(
+      (acc, clusterInfo) => {
+        acc[clusterInfo.id] = clusterInfo;
+        return acc;
+      },
+      {} as Record<string, ClusterWithPasswordAndStartTime>
+    );
 
     /* Fetch basic information for all work units per cluster */
     const wuBasicInfoByCluster = {};
     const failedToReachClusters = [];
-    for (let clusterInfo of clustersInfo) {
+    for (const clusterInfo of clustersInfoWithDetails) {
       try {
         const wuService = new WorkunitsService(
           getClusterOptions(
             {
               baseUrl: `${clusterInfo.thor_host}:${clusterInfo.thor_port}/`,
               userID: clusterInfo.username || '',
-              password: (clusterInfo as any).password || '',
+              password: clusterInfo.password || '',
             },
             clusterInfo.allowSelfSigned
           )
         );
 
         // Date to string
-        const clusterExtended = clusterInfo as any;
-        const startTime = clusterExtended.startTime.toISOString();
+        const startTime = clusterInfo.startTime.toISOString();
 
-        let {
+        const {
           Workunits: { ECLWorkunit },
         } = await wuService.WUQuery({
           StartDate: startTime,
@@ -192,7 +202,7 @@ const monitoring_name = 'Job Monitoring';
 
     // If no new workunits are found for any clusters, exit
     let newWorkUnitsFound = false;
-    for (let keys in wuBasicInfoByCluster) {
+    for (const keys in wuBasicInfoByCluster) {
       if (wuBasicInfoByCluster[keys].length > 0) {
         newWorkUnitsFound = true;
       } else {
@@ -207,7 +217,7 @@ const monitoring_name = 'Job Monitoring';
         id => !failedToReachClusters.includes(id)
       );
 
-      for (let id of scanned_clusters) {
+      for (const id of scanned_clusters) {
         // grab existing metaData
         const log = await MonitoringLog.findOne({
           where: { monitoring_type_id: monitoringTypeId, cluster_id: id },
@@ -216,6 +226,7 @@ const monitoring_name = 'Job Monitoring';
 
         // Existing intermediate state jobs
         let existingIntermediateStateJobs = [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let existingMetaData: any = {};
 
         if (log) {
@@ -256,7 +267,7 @@ const monitoring_name = 'Job Monitoring';
     const historyStoringConditions = ['TimeSeriesAnalysis'];
     const jobMonitoringObj = {}; // For easy access late
 
-    for (let monitoring of jobMonitorings) {
+    for (const monitoring of jobMonitorings) {
       jobMonitoringObj[monitoring.id] = monitoring;
       const {
         monitoringName,
@@ -278,9 +289,11 @@ const monitoring_name = 'Job Monitoring';
       }
 
       try {
-        const cluster = clustersInfo.find(cluster => cluster.id === clusterId);
+        const cluster = clustersInfoWithDetails.find(
+          cluster => cluster.id === clusterId
+        );
 
-        let clusterWUs = wuBasicInfoByCluster[clusterId];
+        const clusterWUs = wuBasicInfoByCluster[clusterId];
 
         const matchedWus = clusterWUs.filter(wu => {
           return matchJobName({
@@ -304,13 +317,13 @@ const monitoring_name = 'Job Monitoring';
     const intermediateStateJobs = [];
 
     // Check if any jobs are in undesired state
-    for (let jmId in jmWithNewWUs) {
+    for (const jmId in jmWithNewWUs) {
       const notificationConditions =
         jobMonitoringObj[jmId]?.metaData?.notificationMetaData
           ?.notificationCondition || [];
       // Iterating over an object
       const wus = jmWithNewWUs[jmId];
-      for (let wu of wus) {
+      for (const wu of wus) {
         const isJobInIntermediateState = intermediateStates.includes(
           wu.State.toLowerCase()
         );
@@ -342,6 +355,7 @@ const monitoring_name = 'Job Monitoring';
               monitoringId: jmId,
               applicationId: jobMonitoringObj[jmId].applicationId,
               wuId: Wuid,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               wuState: (Workunit as any).State,
               wuTopLevelInfo: shallowCopyWithOutNested(Workunit),
               wuDetailInfo: { ...Workunit },
@@ -381,11 +395,11 @@ const monitoring_name = 'Job Monitoring';
     }
 
     // Create notifications for failed state jobs
-    for (let failedJob of failedStateJobs) {
+    for (const failedJob of failedStateJobs) {
       const { jmId, ...wu } = failedJob;
       const jobMonitoring = jobMonitoringObj[jmId];
       const {
-        monitoringName,
+        _monitoringName,
         jobName,
         clusterId,
         metaData: {
@@ -483,7 +497,7 @@ const monitoring_name = 'Job Monitoring';
       });
 
       //Create notification queue
-      await NotificationQueue.create(notificationPayload as any);
+      await enqueueNotification(notificationPayload);
 
       // If severity is above threshold, send out NOC notification
       if (severity >= severityThreshHold && severeEmailRecipients) {
@@ -498,7 +512,7 @@ const monitoring_name = 'Job Monitoring';
             timezoneOffset: clusterInfoObj[clusterId].timezone_offset || 0,
           });
         delete notificationPayloadForNoc.metaData.cc;
-        await NotificationQueue.create(notificationPayloadForNoc as any);
+        await enqueueNotification(notificationPayloadForNoc);
       }
     }
 
@@ -508,7 +522,7 @@ const monitoring_name = 'Job Monitoring';
     );
 
     // Update monitoring logs
-    for (let id of scannedClusters) {
+    for (const id of scannedClusters) {
       try {
         //Get existing metadata
         const log = await MonitoringLog.findOne({
@@ -521,7 +535,9 @@ const monitoring_name = 'Job Monitoring';
           job => job.clusterId === id
         );
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let existingIntermediateStateJobs: any = [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let existingMetaData: any = {};
 
         existingMetaData = log?.metaData || {};

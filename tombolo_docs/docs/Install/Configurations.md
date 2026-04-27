@@ -155,6 +155,15 @@ These configurations are required if you're using SSL/TLS. Ignore if not using S
   The host of the MySQL database, typically `localhost` for local setups. For Docker, use the service name `mysql_db`.
   _Example:_ `localhost`
 
+- **READONLY_DB_USERNAME**
+  Dedicated read-only database username used by analytics SQL controllers that execute read-only queries.
+  This user should only have `SELECT` access to the required analytics tables (for example, `work_unit*`).
+  _Example:_ `work_unit_readonly`
+
+- **READONLY_DB_PASS**
+  Password for the `READONLY_DB_USERNAME` account.
+  _Example:_ `your-readonly-db-password`
+
 ---
 
 ### 6. Authentication and Authorization Configuration

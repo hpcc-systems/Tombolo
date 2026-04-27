@@ -1,4 +1,4 @@
-import { NotificationQueue } from '../../models/index.js';
+import { NotificationQueue } from '@tombolo/db';
 import logger from '../../config/logger.js';
 
 import { retryOptions } from '../../config/emailConfig.js';
@@ -27,12 +27,10 @@ const calculateRetryAfter = ({
 async function updateNotificationQueueOnError({
   notificationId,
   attemptCount,
-  _notification,
   error,
 }: {
   notificationId: string;
   attemptCount: number;
-  _notification: any;
   error: Error;
 }): Promise<void> {
   try {

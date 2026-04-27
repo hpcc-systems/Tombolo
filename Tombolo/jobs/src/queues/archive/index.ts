@@ -3,6 +3,9 @@ import { redisConnectionOptions } from '@/config/redis.js';
 import logger from '@/config/logger.js';
 import type { ScheduledJob, ArchiveJobData } from '@/types/index.js';
 
+const NOTIFICATION_RETENTION_DAYS = 90;
+const NOTIFICATION_RETENTION_BATCH_SIZE = 1000;
+
 export const archiveQueue = new Queue<ArchiveJobData>('archive', {
   connection: redisConnectionOptions,
   defaultJobOptions: {
@@ -24,6 +27,18 @@ const scheduledJobs: ScheduledJob<ArchiveJobData>[] = [
     },
     schedule: '0 5 0 * * *', // Daily just after midnight (production)
     description: 'Archive cost monitoring data daily just after midnight',
+  },
+  {
+    name: 'archive:notifications',
+    jobId: 'archive-notifications-recurring',
+    data: {
+      type: 'notifications',
+      daysToKeep: NOTIFICATION_RETENTION_DAYS,
+      batchSize: NOTIFICATION_RETENTION_BATCH_SIZE,
+    },
+    schedule: '0 0 */12 * * *',
+    description:
+      'Hard-delete old sent notifications and clean old notification queue entries every 12 hours',
   },
 ];
 

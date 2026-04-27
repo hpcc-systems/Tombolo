@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useHistory } from 'react-router-dom';
 import {
   Layout,
@@ -52,6 +52,7 @@ import {
   CloseOutlined,
 } from '@ant-design/icons';
 import Editor from '@monaco-editor/react';
+import type { Monaco } from '@monaco-editor/react';
 import { format } from 'sql-formatter';
 import axios from 'axios';
 import { apiClient } from '@/services/api';
@@ -61,6 +62,7 @@ import analyticsFiltersService from '@/services/analyticsFilters.service';
 import { handleError, handleSuccess } from '@/components/common/handleResponse';
 import QUERY_TEMPLATES from './queryTemplates';
 import ChartModal from './ChartModal';
+import { disposeSqlAutocomplete, registerSqlAutocomplete } from '@/components/common/sqlAutocomplete';
 
 import type { editor as MonacoEditor } from 'monaco-editor';
 import {
@@ -84,6 +86,8 @@ import {
   formatTime,
 } from './utils';
 import type { WhereClauseRow } from './utils';
+import { compareQueryValues } from '@/components/common/sqlResultsSorting';
+import type { ColumnTypeMetadata } from '@/components/common/sqlResultsSorting';
 
 const { Sider, Content } = Layout;
 const { Panel } = Collapse;
@@ -94,6 +98,7 @@ interface QueryResult {
   rows: Record<string, unknown>[];
   executionTime: number;
   rowCount: number;
+  columnTypes?: Record<string, ColumnTypeMetadata>;
 }
 
 interface ExecutionStats {
@@ -135,13 +140,80 @@ interface SavedFilter {
   createdAt: string;
 }
 
+type ResultsSortState = {
+  columnKey: string | null;
+  order: 'ascend' | 'descend' | null;
+};
+
+const toNonEmptyStringArray = (value: unknown): string[] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter(item => typeof item === 'string')
+    .map(item => item.trim())
+    .filter(item => item.length > 0);
+};
+
+const getBackendErrorForToast = (
+  error: unknown,
+  fallbackMessage: string
+): string | string[] => {
+  if (typeof error === 'string' && error.trim().length > 0) {
+    return error.trim();
+  }
+
+  if (!error || typeof error !== 'object') {
+    return fallbackMessage;
+  }
+
+  const candidate = error as {
+    messages?: unknown;
+    message?: unknown;
+    raw?: { errors?: unknown; message?: unknown };
+    response?: { data?: { errors?: unknown; message?: unknown } };
+  };
+
+  const messageSources = [
+    candidate.messages,
+    candidate.raw?.errors,
+    candidate.response?.data?.errors,
+  ];
+
+  for (const source of messageSources) {
+    const messages = toNonEmptyStringArray(source);
+    if (messages.length > 0) {
+      return messages;
+    }
+  }
+
+  const singleMessageSources = [
+    candidate.raw?.message,
+    candidate.response?.data?.message,
+    candidate.message,
+  ];
+
+  for (const source of singleMessageSources) {
+    if (typeof source === 'string' && source.trim().length > 0) {
+      return source.trim();
+    }
+  }
+
+  return fallbackMessage;
+};
+
 const AnalyticsWorkspace = () => {
   const history = useHistory();
   const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
+  const completionProviderRef = useRef<{ dispose: () => void } | null>(null);
+  const schemaDataRef = useRef<SchemaData | null>(null);
+  const tableNamesRef = useRef<string[]>(['work_unit_details']);
+  const columnNamesRef = useRef<string[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // State management
-  const [sql, setSql] = useState(DEFAULT_SQL);
+  const currentSqlRef = useRef(DEFAULT_SQL);
   const [queryResults, setQueryResults] = useState<QueryResult | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const [queryHistory, setQueryHistory] = useState<HistoryEntry[]>([]);
@@ -165,8 +237,85 @@ const AnalyticsWorkspace = () => {
   const [sqlWhenBuilderOpened, setSqlWhenBuilderOpened] = useState('');
   const [appliedFilterId, setAppliedFilterId] = useState<string | null>(null);
   const [isQueryExecuted, setIsQueryExecuted] = useState(false);
+  const isQueryExecutedRef = useRef(false);
+  const [hasWhereClauseInEditor, setHasWhereClauseInEditor] = useState(() => hasWhere(DEFAULT_SQL));
+  const [querySqlToSave, setQuerySqlToSave] = useState('');
+  const [resultsSort, setResultsSort] = useState<ResultsSortState>({
+    columnKey: null,
+    order: null,
+  });
 
-  const hasWhereClause = useMemo(() => hasWhere(sql), [sql]);
+  const sortedResultsRows = useMemo(() => {
+    if (!queryResults) return [];
+
+    const rowsWithIndex = queryResults.rows.map((row, idx) => ({ row, idx }));
+
+    if (!resultsSort.columnKey || !resultsSort.order) {
+      return rowsWithIndex.map(({ row, idx }) => ({
+        ...row,
+        key: idx,
+      }));
+    }
+
+    const columnKey = resultsSort.columnKey;
+    const family = queryResults.columnTypes?.[columnKey]?.family ?? 'unknown';
+
+    const sorted = [...rowsWithIndex].sort((a, b) => {
+      const cmp = compareQueryValues(a.row[columnKey], b.row[columnKey], family, resultsSort.order);
+
+      if (cmp !== 0) return cmp;
+      return a.idx - b.idx;
+    });
+
+    return sorted.map(({ row, idx }) => ({
+      ...row,
+      key: idx,
+    }));
+  }, [queryResults, resultsSort]);
+
+  const getCurrentSql = useCallback(() => currentSqlRef.current, []);
+
+  const setQueryExecutedState = useCallback((executed: boolean) => {
+    isQueryExecutedRef.current = executed;
+    setIsQueryExecuted(executed);
+  }, []);
+
+  const setEditorSql = useCallback(
+    (nextSql: string, options?: { markUnexecuted?: boolean }) => {
+      const shouldMarkUnexecuted = options?.markUnexecuted ?? true;
+      currentSqlRef.current = nextSql;
+      setHasWhereClauseInEditor(hasWhere(nextSql));
+
+      if (editorRef.current && editorRef.current.getValue() !== nextSql) {
+        editorRef.current.setValue(nextSql);
+      }
+
+      if (shouldMarkUnexecuted) {
+        setQueryExecutedState(false);
+      }
+    },
+    [setQueryExecutedState]
+  );
+
+  useEffect(() => {
+    schemaDataRef.current = schemaData;
+    if (schemaData) {
+      const tableNames = Object.keys(schemaData);
+      tableNamesRef.current = tableNames.length ? tableNames : ['work_unit_details'];
+      columnNamesRef.current = Array.from(
+        new Set(Object.values(schemaData).flatMap(cols => cols.map(col => col.name)))
+      );
+    }
+  }, [schemaData]);
+
+  const registerSqlCompletionProvider = useCallback((monaco: Monaco) => {
+    registerSqlAutocomplete({
+      monaco,
+      completionProviderRef,
+      getTables: () => tableNamesRef.current,
+      getColumns: () => columnNamesRef.current,
+    });
+  }, []);
 
   // Persist sidebar preferences to localStorage
   useEffect(() => {
@@ -177,6 +326,12 @@ const AnalyticsWorkspace = () => {
     saveLocalStorage('analytics.rightCollapsed', rightCollapsed);
   }, [rightCollapsed]);
 
+  useEffect(() => {
+    return () => {
+      disposeSqlAutocomplete(completionProviderRef);
+    };
+  }, []);
+
   // Load schema from backend on mount
   useEffect(() => {
     const fetchSchema = async () => {
@@ -184,8 +339,8 @@ const AnalyticsWorkspace = () => {
         setIsLoadingSchema(true);
         const response = await apiClient.get('/workunitAnalytics/schema');
         setSchemaData(response.data);
-      } catch (_error) {
-        handleError('Failed to load database schema');
+      } catch (error) {
+        handleError(getBackendErrorForToast(error, 'Failed to load database schema'));
       } finally {
         setIsLoadingSchema(false);
       }
@@ -220,9 +375,9 @@ const AnalyticsWorkspace = () => {
         // Ensure filters is an array and filter out any invalid items
         const validFilters = Array.isArray(filters) ? filters.filter(f => f && f.id && f.conditions) : [];
         setSavedFilters(validFilters);
-      } catch (_error) {
-        console.error('Failed to load filters:', _error);
-        handleError('Failed to load saved filters');
+      } catch (error) {
+        console.error('Failed to load filters:', error);
+        handleError(getBackendErrorForToast(error, 'Failed to load saved filters'));
         setSavedFilters([]); // Ensure it's always an array
       }
     };
@@ -235,23 +390,23 @@ const AnalyticsWorkspace = () => {
 
     const newConditions = whereClauses.filter(row => row.column).map(row => buildConditionString(row));
 
-    const baseSql = sqlWhenBuilderOpened || sql;
+    const baseSql = sqlWhenBuilderOpened || getCurrentSql();
     const strippedSql = stripComments(baseSql);
     const whereMatch = strippedSql.match(/\bwhere\b(.+?)(?:\b(?:group\s+by|order\s+by|limit|;)\b|$)/is);
 
     if (newConditions.length === 0) {
       // No conditions from filter builder - keep original SQL if it had WHERE
       if (whereMatch) {
-        setSql(baseSql);
+        setEditorSql(baseSql, { markUnexecuted: false });
       } else {
         // Add empty WHERE clause
         const insertMatch = strippedSql.match(/\b(group\s+by|order\s+by|limit)\b/i);
         if (insertMatch && insertMatch.index !== undefined) {
           const beforeInsert = strippedSql.substring(0, insertMatch.index).trim();
           const afterInsert = strippedSql.substring(insertMatch.index);
-          setSql(`${beforeInsert}\nWHERE \n${afterInsert}`);
+          setEditorSql(`${beforeInsert}\nWHERE \n${afterInsert}`);
         } else {
-          setSql(`${strippedSql}\nWHERE `);
+          setEditorSql(`${strippedSql}\nWHERE `);
         }
       }
       return;
@@ -268,23 +423,25 @@ const AnalyticsWorkspace = () => {
 
       const spacedAfterWhere = ensureSpacing(afterWhere);
       const updatedSql = `${beforeWhere} ${existingWhere}\n  AND ${newWhereClause}${spacedAfterWhere}`;
-      setSql(updatedSql);
+      setEditorSql(updatedSql);
     } else {
       // No existing WHERE - add it before GROUP BY/ORDER BY/LIMIT or at end
       const insertMatch = strippedSql.match(/\b(group\s+by|order\s+by|limit)\b/i);
       if (insertMatch && insertMatch.index !== undefined) {
         const beforeInsert = strippedSql.substring(0, insertMatch.index).trim();
         const afterInsert = strippedSql.substring(insertMatch.index);
-        setSql(`${beforeInsert}\nWHERE ${newWhereClause}\n${afterInsert}`);
+        setEditorSql(`${beforeInsert}\nWHERE ${newWhereClause}\n${afterInsert}`);
       } else {
-        setSql(`${strippedSql}\nWHERE ${newWhereClause}`);
+        setEditorSql(`${strippedSql}\nWHERE ${newWhereClause}`);
       }
     }
-  }, [whereClauses, filterBuilderVisible, sqlWhenBuilderOpened]);
+  }, [whereClauses, filterBuilderVisible, sqlWhenBuilderOpened, getCurrentSql, setEditorSql]);
 
   // Execute SQL query
   const executeQuery = async () => {
-    if (!sql.trim()) {
+    const currentSql = getCurrentSql();
+
+    if (!currentSql.trim()) {
       handleError('Please enter a SQL query');
       return;
     }
@@ -300,7 +457,7 @@ const AnalyticsWorkspace = () => {
       const result = await apiClient.post(
         '/workunitAnalytics/query',
         {
-          sql,
+          sql: currentSql,
           options: {},
         },
         {
@@ -316,7 +473,9 @@ const AnalyticsWorkspace = () => {
         rows: result.data.rows,
         executionTime,
         rowCount: result.data.rows.length,
+        columnTypes: result.data.columnTypes,
       });
+      setResultsSort({ columnKey: null, order: null });
 
       setExecutionStats({
         executionTime,
@@ -327,7 +486,7 @@ const AnalyticsWorkspace = () => {
       // Add to query history
       const historyEntry: HistoryEntry = {
         id: Date.now(),
-        sql: sql.trim(),
+        sql: currentSql.trim(),
         timestamp: new Date().toISOString(),
         executionTime,
         rowCount: result.data.rows.length,
@@ -338,16 +497,14 @@ const AnalyticsWorkspace = () => {
       localStorage.setItem('analytics_query_history', JSON.stringify(newHistory));
 
       // Mark query as executed
-      setIsQueryExecuted(true);
+      setQueryExecutedState(true);
 
       handleSuccess(`Query executed successfully (${formatTime(executionTime)})`);
     } catch (error: unknown) {
       if (axios.isCancel(error)) {
         handleSuccess('Query cancelled');
       } else {
-        const err = error as { response?: { data?: { message?: string } }; message?: string };
-        console.log('---', err.response);
-        handleError(err.response?.data?.message || err.message || 'Failed to execute query');
+        handleError(getBackendErrorForToast(error, 'Failed to execute query'));
         console.error('Query execution error:', error);
       }
     } finally {
@@ -359,8 +516,8 @@ const AnalyticsWorkspace = () => {
   // Format SQL
   const formatSql = () => {
     try {
-      const formatted = format(sql, SQL_FORMATTER_OPTIONS);
-      setSql(formatted);
+      const formatted = format(getCurrentSql(), SQL_FORMATTER_OPTIONS);
+      setEditorSql(formatted);
       handleSuccess('SQL formatted successfully');
     } catch {
       handleError('Failed to format SQL');
@@ -369,11 +526,12 @@ const AnalyticsWorkspace = () => {
 
   // Clear editor
   const clearEditor = () => {
-    setSql('');
+    setEditorSql('');
     setQueryResults(null);
     setExecutionStats(null);
     setAppliedFilterId(null);
-    setIsQueryExecuted(false);
+    setResultsSort({ columnKey: null, order: null });
+    setQueryExecutedState(false);
   };
 
   // Save query
@@ -382,7 +540,7 @@ const AnalyticsWorkspace = () => {
       id: Date.now(),
       name: values.name,
       description: values.description || '',
-      sql: sql.trim(),
+      sql: querySqlToSave.trim(),
       createdAt: new Date().toISOString(),
       favorite: false,
     };
@@ -392,23 +550,32 @@ const AnalyticsWorkspace = () => {
     localStorage.setItem('analytics_saved_queries', JSON.stringify(updated));
 
     setSaveModalVisible(false);
+    setQuerySqlToSave('');
     handleSuccess('Query saved successfully');
   };
 
   // Handle save query button click with validation
   const handleSaveQueryClick = () => {
+    const currentSql = getCurrentSql();
+
+    if (!currentSql.trim()) {
+      handleError('Please enter a SQL query');
+      return;
+    }
+
     if (!isQueryExecuted) {
       handleError('Please execute the query to verify it works correctly before saving');
       return;
     }
+
+    setQuerySqlToSave(currentSql);
     setSaveModalVisible(true);
   };
 
   // Load saved query
   const loadSavedQuery = (query: SavedQuery) => {
-    setSql(query.sql);
+    setEditorSql(query.sql);
     setSelectedQuery(query.id);
-    setIsQueryExecuted(false);
     handleSuccess(`Loaded query: ${query.name}`);
   };
 
@@ -439,8 +606,7 @@ const AnalyticsWorkspace = () => {
       setTemplateVariables(variables.reduce((acc, v) => ({ ...acc, [v]: '' }), {} as Record<string, string>));
       setVariableModalVisible(true);
     } else {
-      setSql(template.sql);
-      setIsQueryExecuted(false);
+      setEditorSql(template.sql);
       handleSuccess(`Loaded template: ${template.name}`);
     }
   };
@@ -452,16 +618,14 @@ const AnalyticsWorkspace = () => {
     Object.entries(templateVariables).forEach(([key, value]) => {
       finalSql = finalSql.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
     });
-    setSql(finalSql);
-    setIsQueryExecuted(false);
+    setEditorSql(finalSql);
     setVariableModalVisible(false);
     handleSuccess(`Loaded template: ${currentTemplate.name}`);
   };
 
   // Load from history
   const loadFromHistory = (historyItem: HistoryEntry) => {
-    setSql(historyItem.sql);
-    setIsQueryExecuted(false);
+    setEditorSql(historyItem.sql);
     handleSuccess('Query loaded from history');
   };
 
@@ -527,10 +691,9 @@ const AnalyticsWorkspace = () => {
       const updated = (savedFilters || []).filter(f => f.id !== id);
       setSavedFilters(updated);
       handleSuccess('Filter deleted successfully');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to delete filter:', error);
-      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to delete filter';
-      handleError(errorMessage);
+      handleError(getBackendErrorForToast(error, 'Failed to delete filter'));
     }
   };
 
@@ -541,7 +704,7 @@ const AnalyticsWorkspace = () => {
       return;
     }
 
-    const conditions = extractWhereClause(sql);
+    const conditions = extractWhereClause(getCurrentSql());
 
     if (!conditions) {
       handleError('No WHERE clause found in the query');
@@ -571,10 +734,9 @@ const AnalyticsWorkspace = () => {
       setSaveFilterFromEditorModalVisible(false);
       setExtractedFilterConditions('');
       handleSuccess(`Filter "${newFilter.name}" saved successfully`);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to save filter:', error);
-      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to save filter';
-      handleError(errorMessage);
+      handleError(getBackendErrorForToast(error, 'Failed to save filter'));
     }
   };
 
@@ -586,7 +748,7 @@ const AnalyticsWorkspace = () => {
       return;
     }
 
-    const conditions = extractWhereClause(sql);
+    const conditions = extractWhereClause(getCurrentSql());
     if (!conditions) {
       handleError('No WHERE clause found in the query');
       return;
@@ -610,12 +772,11 @@ const AnalyticsWorkspace = () => {
       // Update local state - keep appliedFilterId set so recall button remains visible
       const updated = (savedFilters || []).map(f => (f.id === appliedFilterId ? updatedFilter : f));
       setSavedFilters(updated);
-      setIsQueryExecuted(false);
+      setQueryExecutedState(false);
       handleSuccess(`Updated "${appliedFilter.name}" successfully`);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to update filter:', error);
-      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to update filter';
-      handleError(errorMessage);
+      handleError(getBackendErrorForToast(error, 'Failed to update filter'));
     }
   };
 
@@ -632,7 +793,7 @@ const AnalyticsWorkspace = () => {
       return;
     }
 
-    const currentSql = sql.trim();
+    const currentSql = getCurrentSql().trim();
     const strippedSql = stripComments(currentSql);
 
     if (!/^select\b/i.test(strippedSql)) {
@@ -663,8 +824,7 @@ const AnalyticsWorkspace = () => {
       }
     }
 
-    setSql(newSql);
-    setIsQueryExecuted(false);
+    setEditorSql(newSql);
     setAppliedFilterId(filter.id);
     handleSuccess(`Applied "${filter.name}" to query`);
   };
@@ -676,7 +836,7 @@ const AnalyticsWorkspace = () => {
       return;
     }
 
-    const currentSql = sql.trim();
+    const currentSql = getCurrentSql().trim();
     const conditionsPattern = `(${conditions})`;
 
     if (!currentSql.includes(conditionsPattern)) {
@@ -687,8 +847,7 @@ const AnalyticsWorkspace = () => {
     let newSql = currentSql.replace(conditionsPattern, '');
     newSql = cleanUpSQLFormatting(newSql);
 
-    setSql(newSql);
-    setIsQueryExecuted(false);
+    setEditorSql(newSql);
     setAppliedFilterId(null);
     handleSuccess(`Recalled "${filter.name}" from query`);
   };
@@ -878,7 +1037,7 @@ const AnalyticsWorkspace = () => {
                     className={styles.panelAddBtn}
                     onClick={e => {
                       e.stopPropagation();
-                      setSqlWhenBuilderOpened(sql); // Save current SQL
+                      setSqlWhenBuilderOpened(getCurrentSql()); // Save current SQL
                       setWhereClauses([INITIAL_WHERE_ROW()]);
                       setFilterBuilderVisible(true);
                     }}
@@ -1175,14 +1334,9 @@ const AnalyticsWorkspace = () => {
       dataIndex: col,
       key: col,
       ellipsis: true,
-      sorter: (a: Record<string, unknown>, b: Record<string, unknown>) => {
-        const aVal = a[col];
-        const bVal = b[col];
-        if (typeof aVal === 'number' && typeof bVal === 'number') {
-          return aVal - bVal;
-        }
-        return String(aVal).localeCompare(String(bVal));
-      },
+      sorter: true,
+      sortOrder: resultsSort.columnKey === col ? resultsSort.order : null,
+      sortDirections: ['ascend', 'descend'] as ('ascend' | 'descend')[],
       render: (text: unknown, record: Record<string, unknown>) => {
         // If column is wuId, make it clickable
         if (col === 'wuId' && record.clusterId) {
@@ -1221,10 +1375,20 @@ const AnalyticsWorkspace = () => {
 
         <Table
           columns={columns}
-          dataSource={queryResults.rows.map((row, idx) => ({
-            ...row,
-            key: idx,
-          }))}
+          dataSource={sortedResultsRows}
+          onChange={(_pagination, _filters, sorter) => {
+            const normalizedSorter = Array.isArray(sorter) ? sorter[0] : sorter;
+
+            const columnKey =
+              normalizedSorter && typeof normalizedSorter.columnKey === 'string' ? normalizedSorter.columnKey : null;
+
+            const order =
+              normalizedSorter?.order === 'ascend' || normalizedSorter?.order === 'descend'
+                ? normalizedSorter.order
+                : null;
+
+            setResultsSort({ columnKey, order });
+          }}
           pagination={{
             pageSize: 50,
             showSizeChanger: true,
@@ -1299,9 +1463,8 @@ const AnalyticsWorkspace = () => {
                         setFilterBuilderVisible(false);
                         setWhereClauses([INITIAL_WHERE_ROW()]);
                         setSqlWhenBuilderOpened(''); // Clear saved SQL
-                        setSql(DEFAULT_SQL);
+                        setEditorSql(DEFAULT_SQL);
                         setAppliedFilterId(null);
-                        setIsQueryExecuted(false);
                       }}></Button>
                   }
                   size="small">
@@ -1403,10 +1566,9 @@ const AnalyticsWorkspace = () => {
                       size="small"
                       icon={<ReloadOutlined />}
                       onClick={() => {
-                        setSql(DEFAULT_SQL);
+                        setEditorSql(DEFAULT_SQL);
                         setQueryResults(null);
                         setAppliedFilterId(null);
-                        setIsQueryExecuted(false);
                       }}
                       className={styles.editorActionBtn}
                     />
@@ -1435,13 +1597,19 @@ const AnalyticsWorkspace = () => {
                   <Editor
                     height="400px"
                     defaultLanguage="sql"
-                    value={sql}
-                    onChange={value => {
-                      setSql(value || '');
-                      setIsQueryExecuted(false);
-                    }}
+                    beforeMount={registerSqlCompletionProvider}
+                    defaultValue={DEFAULT_SQL}
                     onMount={(editor, monaco) => {
                       editorRef.current = editor;
+                      currentSqlRef.current = editor.getValue();
+                      editor.onDidChangeModelContent(() => {
+                        const nextValue = editor.getValue();
+                        currentSqlRef.current = nextValue;
+                        setHasWhereClauseInEditor(hasWhere(nextValue));
+                        if (isQueryExecutedRef.current) {
+                          setQueryExecutedState(false);
+                        }
+                      });
                       // Add keybinding for execute
                       editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, executeQuery);
                       // Add keybinding for save
@@ -1458,6 +1626,13 @@ const AnalyticsWorkspace = () => {
                       automaticLayout: true,
                       tabSize: 2,
                       wordWrap: 'on',
+                      quickSuggestions: {
+                        other: true,
+                        comments: false,
+                        strings: false,
+                      },
+                      quickSuggestionsDelay: 0,
+                      suggestOnTriggerCharacters: true,
                       padding: { top: 16 },
                     }}
                   />
@@ -1465,7 +1640,7 @@ const AnalyticsWorkspace = () => {
 
                 {/* Bottom-right floating actions: Save, Execute */}
                 <div className={styles.editorBottomActions}>
-                  {hasWhereClause &&
+                  {hasWhereClauseInEditor &&
                     (appliedFilterId ? (
                       <Space.Compact className={styles.editorActionBtn}>
                         <Button className={styles.editorActionBtn} onClick={() => updateExistingFilter()}>
@@ -1508,6 +1683,7 @@ const AnalyticsWorkspace = () => {
                     type="primary"
                     icon={isExecuting ? <LoadingOutlined spin /> : <PlayCircleOutlined />}
                     onClick={executeQuery}
+                    className={isExecuting ? styles.executingQueryBtn : undefined}
                     disabled={isExecuting}>
                     {isExecuting ? 'Executing...' : 'Execute'}
                   </Button>
@@ -1552,7 +1728,13 @@ const AnalyticsWorkspace = () => {
                 <Button type="primary" htmlType="submit">
                   Save
                 </Button>
-                <Button onClick={() => setSaveModalVisible(false)}>Cancel</Button>
+                <Button
+                  onClick={() => {
+                    setSaveModalVisible(false);
+                    setQuerySqlToSave('');
+                  }}>
+                  Cancel
+                </Button>
               </Space>
             </Form.Item>
           </Form>

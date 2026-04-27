@@ -6,7 +6,7 @@ import {
   NotificationQueue,
   JobMonitoringData,
   JobMonitoring,
-} from '../../models/index.js';
+} from '@tombolo/db';
 import {
   WUAlertDataPoints,
   convertTotalClusterTimeToSeconds,
@@ -15,6 +15,7 @@ import {
 } from './monitorJobsUtil.js';
 
 import { trimURL } from '../../utils/authUtil.js';
+import { enqueueNotification } from '../../services/notificationProducer.js';
 
 // Models
 
@@ -76,7 +77,7 @@ import { trimURL } from '../../utils/authUtil.js';
       //get the alert data points inside an array of named objects
       const alertDataPoints = WUAlertDataPoints();
 
-      let data = [];
+      const data = [];
 
       alertDataPoints.forEach(point => {
         data.push({
@@ -115,9 +116,9 @@ import { trimURL } from '../../utils/authUtil.js';
         i++;
       });
 
-      let standardDev = 3;
+      const standardDev = 3;
       //push any values outside of the range to an array of alerts
-      let alertPoints = [];
+      const alertPoints = [];
       data.forEach(point => {
         //don't need to analyze wuid
         if (point.name === 'Wuid') {
@@ -134,7 +135,7 @@ import { trimURL } from '../../utils/authUtil.js';
         }
 
         //get standard deviation
-        let mean = total / lastRuns.length;
+        const mean = total / lastRuns.length;
         let sum = 0;
         for (let i = 1; i <= lastRuns.length; i++) {
           sum += Math.pow(point['run' + i] - mean, 2);
@@ -216,7 +217,7 @@ import { trimURL } from '../../utils/authUtil.js';
         const notificationId = uuidv4();
         alertPoints.forEach(point => {
           //if the key is like run1, run2, move it into "historical" object
-          let historical = [];
+          const historical = [];
 
           //limit it to 3 historical runs
           let i = 1;
@@ -279,7 +280,7 @@ import { trimURL } from '../../utils/authUtil.js';
           notifyContacts = [],
         } = monitoring.metaData?.notificationMetaData;
 
-        await NotificationQueue.create({
+        await enqueueNotification({
           type: 'email',
           templateName: 'timeSeriesAnalysisAlert',
           notificationOrigin: 'Job Monitoring - Time Series Analysis',

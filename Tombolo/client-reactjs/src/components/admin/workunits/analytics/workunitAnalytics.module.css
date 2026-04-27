@@ -678,6 +678,17 @@
   transform: translateY(-1px);
 }
 
+.executingQueryBtn,
+.executingQueryBtn.ant-btn-primary,
+.executingQueryBtn.ant-btn-primary:disabled,
+.executingQueryBtn.ant-btn-primary[disabled] {
+  color: #ffffff !important;
+}
+
+.executingQueryBtn .anticon {
+  color: #ffffff !important;
+}
+
 .analytics-workspace .ant-btn-default {
   background: var(--aw-bg-tertiary);
   border-color: var(--aw-border);

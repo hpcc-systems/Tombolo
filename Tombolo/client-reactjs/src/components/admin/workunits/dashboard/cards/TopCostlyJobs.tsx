@@ -1,26 +1,114 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Card, Table, Space, Tag, Button, Tooltip } from 'antd';
 import { EyeOutlined } from '@ant-design/icons';
 import { useHistory } from 'react-router-dom';
 import { formatCurrency } from '@tombolo/shared';
 import { groupWorkunitsByName } from '@/components/admin/workunits/history/common/fuzzyMatch';
 import type { ExpensiveWorkunit } from '@/services/workunitDashboard.service';
+import clustersService from '@/services/clusters.service';
+import { handleError } from '@/components/common/handleResponse';
+import WorkunitOpenOptionsModal from '@/components/admin/workunits/history/common/WorkunitOpenOptionsModal';
+import { getDashboardFailedRowClass } from './workunitRowStyles';
 import styles from './TopCostlyJobs.module.css';
 
 interface TopCostlyJobsProps {
   workunits: ExpensiveWorkunit[];
 }
 
-interface JobGroup {
+export interface JobGroup {
   key: string;
   groupName: string;
   count: number;
+  isNoJobNameSingleton: boolean;
+  stateLabel: string;
   totalCost: number;
   executeCost: number;
   fileAccessCost: number;
   compileCost: number;
   workunits: ExpensiveWorkunit[];
 }
+
+const stateColors: Record<string, string> = {
+  completed: 'green',
+  failed: 'red',
+  running: 'blue',
+  blocked: 'orange',
+  waiting: 'default',
+  mixed: 'default',
+  unknown: 'default',
+};
+
+export const formatStateLabel = (state?: string): string => {
+  if (!state) return 'Unknown';
+  if (state === 'mixed') return 'Mixed';
+  return state.charAt(0).toUpperCase() + state.slice(1);
+};
+
+export const getGroupStateLabel = (workunits: ExpensiveWorkunit[]): string => {
+  const states = workunits
+    .map(wu => wu.state?.toLowerCase())
+    .filter((state): state is string => Boolean(state && state.trim()));
+
+  if (states.length === 0) {
+    return 'unknown';
+  }
+
+  const uniqueStates = new Set(states);
+  if (uniqueStates.size === 1) {
+    return states[0];
+  }
+
+  return 'mixed';
+};
+
+const buildJobGroup = (
+  groupName: string,
+  workunitArray: ExpensiveWorkunit[],
+  key: string,
+  isNoJobNameSingleton = false
+): JobGroup => {
+  const totalCost = workunitArray.reduce((sum, wu) => sum + (wu.totalCost || 0), 0);
+  const executeCost = workunitArray.reduce((sum, wu) => sum + (wu.executeCost || 0), 0);
+  const fileAccessCost = workunitArray.reduce((sum, wu) => sum + (wu.fileAccessCost || 0), 0);
+  const compileCost = workunitArray.reduce((sum, wu) => sum + (wu.compileCost || 0), 0);
+
+  return {
+    key,
+    groupName,
+    count: workunitArray.length,
+    isNoJobNameSingleton,
+    stateLabel: getGroupStateLabel(workunitArray),
+    totalCost,
+    executeCost,
+    fileAccessCost,
+    compileCost,
+    workunits: [...workunitArray].sort(
+      (a, b) => new Date(b.workUnitTimestamp).getTime() - new Date(a.workUnitTimestamp).getTime()
+    ),
+  };
+};
+
+export const buildJobGroupsForTopCostlyJobs = (workunits: ExpensiveWorkunit[]): JobGroup[] => {
+  if (!workunits || workunits.length === 0) {
+    return [];
+  }
+
+  const namedWorkunits = workunits.filter(wu => typeof wu.jobName === 'string' && wu.jobName.trim().length > 0);
+  const unnamedWorkunits = workunits.filter(wu => typeof wu.jobName !== 'string' || wu.jobName.trim().length === 0);
+
+  const groupedNamedWorkunits = groupWorkunitsByName(namedWorkunits, 0.8);
+
+  const namedGroups: JobGroup[] = Object.entries(groupedNamedWorkunits).map(([groupName, wus]) => {
+    const workunitArray = wus as ExpensiveWorkunit[];
+    return buildJobGroup(groupName || 'Unnamed', workunitArray, groupName || 'unnamed-group');
+  });
+
+  const unnamedGroups: JobGroup[] = unnamedWorkunits.map((wu, index) =>
+    buildJobGroup(wu.wuId || `Workunit-${index + 1}`, [wu], `unnamed-${wu.wuId || index}`, true)
+  );
+
+  return [...namedGroups, ...unnamedGroups].sort((a, b) => b.totalCost - a.totalCost);
+};
 
 // Cost breakdown bar component
 const CostBreakdownBar = ({
@@ -60,38 +148,43 @@ const CostBreakdownBar = ({
 export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
   const history = useHistory();
   const [visibleCount, setVisibleCount] = useState(5);
+  const [clusters, setClusters] = useState<any[]>([]);
+  const suppressNextRowClick = useRef(false);
+
+  useEffect(() => {
+    clustersService
+      .getAll()
+      .then((data: any[]) => setClusters(data || []))
+      .catch(() => {});
+  }, []);
+
+  const getClusterById = (clusterId?: string) => clusters.find((c: any) => c.id === clusterId);
+
+  const buildEclWatchUrl = (record: ExpensiveWorkunit): string | null => {
+    const cluster = getClusterById(record?.clusterId);
+    const thorHost = typeof cluster?.thor_host === 'string' ? cluster.thor_host.trim() : '';
+    const thorPort = typeof cluster?.thor_port === 'string' ? cluster.thor_port.trim() : '';
+    const wuId = typeof record?.wuId === 'string' ? record.wuId.trim() : '';
+    if (!thorHost || !thorPort || !wuId) return null;
+    return `${thorHost}:${thorPort}/esp/files/index.html#/workunits/${encodeURIComponent(wuId)}`;
+  };
+
+  const handleOpenInEclWatch = (record: ExpensiveWorkunit) => {
+    const url = buildEclWatchUrl(record);
+    if (!url) {
+      handleError('Cluster thor host/port not available for this workunit');
+      return;
+    }
+    suppressNextRowClick.current = true;
+    setTimeout(() => {
+      suppressNextRowClick.current = false;
+    }, 300);
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
 
   // Group workunits using fuzzy matching and aggregate costs
   const jobGroups = useMemo(() => {
-    if (!workunits || workunits.length === 0) return [];
-
-    // Use fuzzy matching to group similar job names (client-side)
-    const grouped = groupWorkunitsByName(workunits, 0.8);
-
-    // Convert to array format and aggregate costs
-    const groups: JobGroup[] = Object.entries(grouped).map(([groupName, wus]) => {
-      const workunitArray = wus as ExpensiveWorkunit[];
-      const totalCost = workunitArray.reduce((sum, wu) => sum + (wu.totalCost || 0), 0);
-      const executeCost = workunitArray.reduce((sum, wu) => sum + (wu.executeCost || 0), 0);
-      const fileAccessCost = workunitArray.reduce((sum, wu) => sum + (wu.fileAccessCost || 0), 0);
-      const compileCost = workunitArray.reduce((sum, wu) => sum + (wu.compileCost || 0), 0);
-
-      return {
-        key: groupName,
-        groupName: groupName || 'Unnamed',
-        count: workunitArray.length,
-        totalCost,
-        executeCost,
-        fileAccessCost,
-        compileCost,
-        workunits: workunitArray.sort(
-          (a, b) => new Date(b.workUnitTimestamp).getTime() - new Date(a.workUnitTimestamp).getTime()
-        ),
-      };
-    });
-
-    // Sort by total cost descending
-    return groups.sort((a, b) => b.totalCost - a.totalCost);
+    return buildJobGroupsForTopCostlyJobs(workunits);
   }, [workunits]);
 
   const displayedGroups = jobGroups.slice(0, visibleCount);
@@ -118,8 +211,18 @@ export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
       render: (text: string, record: JobGroup) => (
         <Space size={4} align="center">
           <span className={styles.jobNameGroup}>{text}</span>
+          {record.isNoJobNameSingleton && <Tag>No Job Name</Tag>}
           <Tag color="blue">{record.count}</Tag>
         </Space>
+      ),
+    },
+    {
+      title: 'State',
+      dataIndex: 'stateLabel',
+      key: 'stateLabel',
+      width: 110,
+      render: (stateLabel: string) => (
+        <Tag color={stateColors[stateLabel] || 'default'}>{formatStateLabel(stateLabel)}</Tag>
       ),
     },
     {
@@ -166,7 +269,17 @@ export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
       key: 'wuId',
       width: 140,
       ellipsis: true,
-      render: (text: string) => <span className={styles.wuIdText}>{text}</span>,
+      render: (text: string, record: ExpensiveWorkunit) => (
+        <WorkunitOpenOptionsModal
+          wuId={record.wuId}
+          hasEclWatchLink={Boolean(buildEclWatchUrl(record))}
+          onOpenTombolo={() => handleView(record)}
+          onOpenEclWatch={() => handleOpenInEclWatch(record)}>
+          <Button type="link" size="small" className={styles.wuIdText}>
+            {text}
+          </Button>
+        </WorkunitOpenOptionsModal>
+      ),
     },
     {
       title: 'Owner',
@@ -174,6 +287,13 @@ export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
       key: 'owner',
       width: 100,
       ellipsis: true,
+    },
+    {
+      title: 'State',
+      dataIndex: 'state',
+      key: 'state',
+      width: 100,
+      render: (state: string) => <Tag color={stateColors[state] || 'default'}>{formatStateLabel(state)}</Tag>,
     },
     {
       title: 'Cost',
@@ -262,6 +382,7 @@ export default function TopCostlyJobs({ workunits }: TopCostlyJobsProps) {
               size="small"
               rowKey="wuId"
               className={styles.nestedTable}
+              rowClassName={nestedRecord => getDashboardFailedRowClass(nestedRecord.state)}
             />
           ),
           rowExpandable: () => true,

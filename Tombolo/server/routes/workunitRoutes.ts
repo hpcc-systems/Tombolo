@@ -3,6 +3,7 @@ import {
   getWorkunits,
   getWorkunit,
   getWorkunitDetails,
+  getWorkunitFiles,
   getWorkunitHotspots,
   getWorkunitTimeline,
   getJobHistoryByJobName,
@@ -17,6 +18,7 @@ import {
   validateGetWorkunits,
   validateGetWorkunit,
   validateGetWorkunitDetails,
+  validateGetWorkunitFiles,
   validateGetWorkunitHotspots,
   validateGetWorkunitTimeline,
   validateGetJobHistoryByJobName,
@@ -42,6 +44,13 @@ router.get(
   '/:clusterId/:wuid/details',
   validate(validateGetWorkunitDetails),
   getWorkunitDetails
+);
+
+// GET /api/workunits/:clusterId/:wuid/files - Input/output files for a workunit
+router.get(
+  '/:clusterId/:wuid/files',
+  validate(validateGetWorkunitFiles),
+  getWorkunitFiles
 );
 
 // GET /api/workunits/:clusterId/:wuid/hotspots - Top performance issues

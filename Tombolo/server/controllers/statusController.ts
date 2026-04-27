@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import logger from '../config/logger.js';
-import { UserRole, RoleType, sequelize } from '../models/index.js';
+import { UserRole, RoleType, sequelize } from '@tombolo/db';
 import { sendSuccess, sendError } from '../utils/response.js';
 
 // Lightweight healthcheck for Docker - no auth required

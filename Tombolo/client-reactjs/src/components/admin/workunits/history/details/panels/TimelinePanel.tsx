@@ -18,6 +18,7 @@ import {
   Collapse,
   Checkbox,
   InputNumber,
+  Divider,
 } from 'antd';
 import {
   SearchOutlined,
@@ -30,7 +31,8 @@ import {
   ThunderboltOutlined,
   HddOutlined,
 } from '@ant-design/icons';
-import { formatSeconds, formatNumber, formatBytes } from '@tombolo/shared';
+import dayjs from 'dayjs';
+import { formatSeconds, formatNumber, formatBytes, formatHours, formatCurrency } from '@tombolo/shared';
 
 const { Text } = Typography;
 
@@ -304,9 +306,10 @@ const TimelineRow = ({
 interface Props {
   wu?: any;
   details: any[];
+  clusterName?: string;
 }
 
-const TimelinePanel: React.FC<Props> = ({ wu, details }) => {
+const TimelinePanel: React.FC<Props> = ({ wu, details, clusterName }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<Filters>(defaultFilters);
   const [filtersExpanded, setFiltersExpanded] = useState(false);
@@ -487,54 +490,98 @@ const TimelinePanel: React.FC<Props> = ({ wu, details }) => {
 
   return (
     <Space direction="vertical" size={16} style={{ width: '100%' }}>
-      {/* Summary Statistics */}
-      <Card size="small">
-        <Row gutter={[16, 16]}>
-          <Col xs={12} sm={6}>
-            <Statistic
-              title="Total Scopes"
-              value={statistics.count}
-              prefix={<BarChartOutlined />}
-              valueStyle={{ fontSize: 20 }}
-            />
-          </Col>
-          <Col xs={12} sm={6}>
-            <Statistic
-              title="Execution Time"
-              value={formatSeconds(timelineBounds.duration)}
-              prefix={<ClockCircleOutlined />}
-              valueStyle={{ fontSize: 20 }}
-            />
-          </Col>
-          <Col xs={12} sm={6}>
-            <Statistic
-              title="Rows Processed"
-              value={formatNumber(statistics.totalRows)}
-              prefix={<DatabaseOutlined />}
-              valueStyle={{ fontSize: 20 }}
-            />
-          </Col>
-          <Col xs={12} sm={6}>
-            <Statistic title="Peak Memory" value={formatBytes(statistics.maxMemory)} valueStyle={{ fontSize: 20 }} />
-          </Col>
-        </Row>
-        {statistics.slowestItem && (
-          <Alert
-            style={{ marginTop: 16 }}
-            message={
-              <Space>
-                <WarningOutlined />
-                <Text>
-                  Slowest scope: <Text strong>{statistics.slowestItem.name}</Text> (
-                  {formatSeconds(statistics.slowestItem.elapsed)})
-                </Text>
-              </Space>
-            }
-            type="info"
-            showIcon={false}
-          />
-        )}
+      {/* Job Header */}
+      <Card>
+        <div>
+          <Space direction="vertical" size={4}>
+            <Space size={12} align="center">
+              <Typography.Title level={4} style={{ margin: 0 }}>
+                {wu?.jobName || wu?.wuId}
+              </Typography.Title>
+              <Tag color={wu?.state === 'completed' ? 'success' : wu?.state === 'failed' ? 'error' : 'processing'}>
+                {wu?.state?.toUpperCase()}
+              </Tag>
+            </Space>
+            <Typography.Text type="secondary">
+              {wu?.wuId} • {clusterName || wu?.clusterId} • Submitted{' '}
+              {dayjs(wu?.workUnitTimestamp).format('YYYY-MM-DD HH:mm:ss')}
+            </Typography.Text>
+          </Space>
+
+          <Divider size="small" />
+
+          <Space
+            wrap
+            size="small"
+            style={{
+              marginTop: '16px',
+              width: '100%',
+              justifyContent: 'space-between',
+            }}>
+            <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+              <Statistic
+                title="Total Runtime"
+                value={formatHours(wu?.totalClusterTime)}
+                prefix={<ClockCircleOutlined />}
+                valueStyle={{ fontSize: '1.2rem' }}
+              />
+            </Card>
+            <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+              <Statistic title="Total Cost" value={formatCurrency(wu?.totalCost)} valueStyle={{ fontSize: '1.2rem' }} />
+            </Card>
+            <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+              <Statistic
+                title="Total Scopes"
+                value={statistics.count}
+                prefix={<BarChartOutlined />}
+                valueStyle={{ fontSize: '1.2rem' }}
+              />
+            </Card>
+            <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+              <Statistic
+                title="Execution Time"
+                value={formatSeconds(timelineBounds.duration)}
+                prefix={<ThunderboltOutlined />}
+                valueStyle={{ fontSize: '1.2rem' }}
+              />
+            </Card>
+            <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+              <Statistic
+                title="Rows Processed"
+                value={formatNumber(statistics.totalRows)}
+                prefix={<DatabaseOutlined />}
+                valueStyle={{ fontSize: '1.2rem' }}
+              />
+            </Card>
+            <Card size="small" styles={{ body: { textAlign: 'center', minWidth: '120px' } }}>
+              <Statistic
+                title="Peak Memory"
+                value={formatBytes(statistics.maxMemory)}
+                prefix={<HddOutlined />}
+                valueStyle={{ fontSize: '1.2rem' }}
+              />
+            </Card>
+          </Space>
+        </div>
       </Card>
+
+      {/* Performance Alert */}
+      {statistics.slowestItem && (
+        <Alert
+          style={{ marginTop: 16 }}
+          message={
+            <Space>
+              <WarningOutlined />
+              <Text>
+                Slowest scope: <Text strong>{statistics.slowestItem.name}</Text> (
+                {formatSeconds(statistics.slowestItem.elapsed)})
+              </Text>
+            </Space>
+          }
+          type="warning"
+          showIcon={false}
+        />
+      )}
 
       {/* Timeline Visualization */}
       <Card

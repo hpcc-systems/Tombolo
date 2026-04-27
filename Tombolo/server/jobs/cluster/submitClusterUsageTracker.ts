@@ -1,8 +1,8 @@
 import { MachineService } from '@hpcc-js/comms';
+import { getCluster } from '@tombolo/core';
 import { logOrPostMessage } from '../jobUtils.js';
 
-import { Cluster } from '../../models/index.js';
-import { getCluster } from '../../utils/hpcc-util.js';
+import { Cluster } from '@tombolo/db';
 import { getClusterOptions } from '../../utils/getClusterOptions.js';
 
 (async () => {
@@ -23,7 +23,7 @@ import { getClusterOptions } from '../../utils/getClusterOptions.js';
     const allClusterDetails = [];
     for (const cl of allClusters) {
       try {
-        let cluster = await getCluster(cl.id);
+        const cluster = await getCluster(cl.id);
         const { name, thor_host, thor_port, username, hash, allowSelfSigned } =
           cluster;
         const clusterDetails = {

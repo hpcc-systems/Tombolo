@@ -4,7 +4,7 @@ import Sequelize from 'sequelize';
 //Local imports
 import logger from '../config/logger.js';
 import { sendError, sendSuccess } from '../utils/response.js';
-import { JobMonitoring, JobMonitoringData, Cluster } from '../models/index.js';
+import { JobMonitoring, JobMonitoringData, Cluster } from '@tombolo/db';
 import JobScheduler from '../jobSchedular/job-scheduler.js';
 import { getUserFkIncludes } from '../utils/getUserFkIncludes.js';
 import { APPROVAL_STATUS } from '../config/constants.js';
@@ -29,7 +29,7 @@ async function createJobMonitoring(req: Request, res: Response) {
       {
         ...req.body,
         approvalStatus: APPROVAL_STATUS.PENDING,
-        createdBy: (req as any).user.id,
+        createdBy: req.user.id,
       },
       { raw: true }
     );
@@ -130,7 +130,7 @@ async function patchJobMonitoring(req: Request, res: Response) {
     payload.approvedBy = null;
     payload.approvedAt = null;
     payload.isActive = false;
-    payload.lastUpdatedBy = (req as any).user.id;
+    payload.lastUpdatedBy = req.user.id;
 
     //Update the job monitoring
     const updatedRows = await JobMonitoring.update(payload, {
@@ -184,7 +184,7 @@ async function evaluateJobMonitoring(req: Request, res: Response) {
       {
         approvalStatus,
         approverComment,
-        approvedBy: (req as any).user.id,
+        approvedBy: req.user.id,
         approvedAt: new Date(),
         isActive,
       },
@@ -201,7 +201,7 @@ async function bulkDeleteJobMonitoring(req: Request, res: Response) {
   try {
     const response = await JobMonitoring.handleDelete({
       id: req.body.ids,
-      deletedByUserId: (req as any).user.id,
+      deletedByUserId: req.user.id,
     });
     return sendSuccess(res, response);
   } catch (err) {
@@ -214,7 +214,7 @@ async function deleteJobMonitoring(req: Request, res: Response) {
   try {
     await JobMonitoring.handleDelete({
       id: req.params.id as string,
-      deletedByUserId: (req as any).user.id,
+      deletedByUserId: req.user.id,
     });
     return sendSuccess(res, 'success');
   } catch (err) {
@@ -258,7 +258,7 @@ async function toggleJobMonitoring(req: Request, res: Response) {
     if (action) {
       // If action is start or pause change isActive to true or false respectively
       await JobMonitoring.update(
-        { isActive: action === 'start', lastUpdatedBy: (req as any).user.id },
+        { isActive: action === 'start', lastUpdatedBy: req.user.id },
         {
           where: { id: { [Op.in]: approvedIds } },
           transaction,
@@ -269,7 +269,7 @@ async function toggleJobMonitoring(req: Request, res: Response) {
       await JobMonitoring.update(
         {
           isActive: Sequelize.literal('NOT isActive'),
-          lastUpdatedBy: (req as any).user.id,
+          lastUpdatedBy: req.user.id,
         },
         {
           where: { id: { [Op.in]: approvedIds } },
@@ -314,7 +314,7 @@ async function bulkUpdateJobMonitoring(req: Request, res: Response) {
           metaData: data.metaData,
           isActive: false,
           approvalStatus: APPROVAL_STATUS.PENDING,
-          lastUpdatedBy: (req as any).user.id,
+          lastUpdatedBy: req.user.id,
         },
         {
           where: { id: data.id },

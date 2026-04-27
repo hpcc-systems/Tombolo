@@ -1,7 +1,7 @@
 import { logOrPostMessage } from '../jobUtils.js';
 
-import { getClusterTimezoneOffset as utilGetClusterTzOffset } from '../../utils/hpcc-util.js';
-import { Cluster } from '../../models/index.js';
+import { getClusterTimezoneOffset as utilGetClusterTzOffset } from '@tombolo/core';
+import { Cluster } from '@tombolo/db';
 
 async function getClusterTimezoneOffset() {
   const startTime = new Date();
@@ -34,7 +34,7 @@ async function getClusterTimezoneOffset() {
       const offset = await utilGetClusterTzOffset(c.id);
 
       //get cluster
-      let newCluster = await Cluster.findOne({
+      const newCluster = await Cluster.findOne({
         where: { id: c.id },
         raw: true,
       });

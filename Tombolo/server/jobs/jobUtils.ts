@@ -1,13 +1,24 @@
 import logger from '../config/logger.js';
 import { parentPort } from 'worker_threads';
 
-function logOrPostMessage(input: any): void {
+type LogOrWorkerMessage =
+  | string
+  | {
+      level?: string;
+      [key: string]: unknown;
+    };
+
+function logOrPostMessage(input: LogOrWorkerMessage): void {
   try {
     if (parentPort) {
       parentPort.postMessage(input);
       return;
     }
-    switch (input.level) {
+
+    const level =
+      typeof input === 'object' && input !== null ? input.level : undefined;
+
+    switch (level) {
       case 'error':
         logger.error(input);
         break;

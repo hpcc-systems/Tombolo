@@ -6,7 +6,7 @@ import moment from 'moment';
 import { v4 as uuidv4 } from 'uuid';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { sequelize } from '../models/index.js';
+import { sequelize } from '@tombolo/db';
 import { Op } from 'sequelize';
 
 // Local imports
@@ -16,18 +16,17 @@ import {
   User,
   UserRole,
   UserApplication,
-  NotificationQueue,
   AccountVerificationCode,
   PasswordResetLink,
   RefreshToken,
-} from '../models/index.js';
+} from '@tombolo/db';
+import { enqueueNotification } from '../services/notificationProducer.js';
 import {
   setPasswordExpiry,
   trimURL,
   checkPasswordSecurityViolations,
   setPreviousPasswords,
   generatePassword,
-  sendAccountUnlockedEmail,
   deleteUser as deleteUserUtil,
   checkIfSystemUser,
   generateAccessToken,
@@ -116,29 +115,26 @@ const updateBasicUserInfo = async (req: Request, res: Response) => {
     // Save user with updated details within the transaction
     const updatedUser = await existingUser.save({ transaction: t });
 
-    // Queue notification within the same transaction
+    // Queue notification
     const readable_notification = `ACC_CNG_${moment().format(
       'YYYYMMDD_HHmmss_SSS'
     )}`;
-    await NotificationQueue.create(
-      {
-        type: 'email',
-        templateName: 'accountChange',
+    await enqueueNotification({
+      type: 'email',
+      deliveryType: 'immediate',
+      templateName: 'accountChange',
+      notificationOrigin: 'User Management',
+      createdBy: req.user.id,
+      metaData: {
+        notificationId: readable_notification,
+        recipientName: `${updatedUser.firstName} ${updatedUser.lastName}`,
         notificationOrigin: 'User Management',
-        deliveryType: 'immediate',
-        metaData: {
-          notificationId: readable_notification,
-          recipientName: `${updatedUser.firstName} ${updatedUser.lastName}`,
-          notificationOrigin: 'User Management',
-          subject: 'Account Change',
-          mainRecipients: [updatedUser.email],
-          notificationDescription: 'Account Change',
-          changedInfo,
-        },
-        createdBy: (req as any).user.id,
+        subject: 'Account Change',
+        mainRecipients: [updatedUser.email],
+        notificationDescription: 'Account Change',
+        changedInfo,
       },
-      { transaction: t }
-    );
+    });
 
     // Commit the transaction
     await t.commit();
@@ -246,26 +242,22 @@ const changePassword = async (req: Request, res: Response) => {
       'YYYYMMDD_HHmmss_SSS'
     )}`;
 
-    // TODO - send notification only after successful commit
-    await NotificationQueue.create(
-      {
-        type: 'email',
-        templateName: 'accountChange',
+    await enqueueNotification({
+      type: 'email',
+      deliveryType: 'immediate',
+      templateName: 'accountChange',
+      notificationOrigin: 'User Management',
+      createdBy: id as string,
+      metaData: {
+        notificationId: readable_notification,
+        recipientName: `${existingUser.firstName} ${existingUser.lastName}`,
         notificationOrigin: 'User Management',
-        deliveryType: 'immediate',
-        metaData: {
-          notificationId: readable_notification,
-          recipientName: `${existingUser.firstName} ${existingUser.lastName}`,
-          notificationOrigin: 'User Management',
-          subject: 'Account Change',
-          mainRecipients: [existingUser.email],
-          notificationDescription: 'Account Change',
-          changedInfo: ['password'],
-        },
-        createdBy: id as string,
+        subject: 'Account Change',
+        mainRecipients: [existingUser.email],
+        notificationDescription: 'Account Change',
+        changedInfo: ['password'],
       },
-      { transaction: t }
-    );
+    });
 
     // Invalidate all existing sessions for security
     await RefreshToken.destroy({ where: { userId: id }, transaction: t });
@@ -278,11 +270,21 @@ const changePassword = async (req: Request, res: Response) => {
     });
     const refreshToken = generateRefreshToken({ tokenId });
 
-    // Decode refresh token to get iat and exp
-    const { iat, exp } = jwt.verify(
-      refreshToken,
-      process.env.JWT_REFRESH_SECRET
-    ) as any;
+    const refreshSecret = process.env.JWT_REFRESH_SECRET;
+    if (!refreshSecret) {
+      throw new Error('JWT_REFRESH_SECRET is not configured');
+    }
+
+    // Decode refresh token and ensure it contains numeric iat/exp claims
+    const decodedRefreshToken = jwt.verify(refreshToken, refreshSecret);
+    if (
+      typeof decodedRefreshToken === 'string' ||
+      typeof decodedRefreshToken.iat !== 'number' ||
+      typeof decodedRefreshToken.exp !== 'number'
+    ) {
+      throw new Error('Invalid refresh token payload');
+    }
+    const { iat, exp } = decodedRefreshToken;
 
     // Create new refresh token in database
     await RefreshToken.create(
@@ -320,9 +322,9 @@ const bulkDeleteUsers = async (req: Request, res: Response) => {
     const { ids } = req.body;
 
     let deletedCount = 0;
-    let idsCount = ids.length;
+    const idsCount = ids.length;
     // Loop through each user and delete
-    for (let id of ids) {
+    for (const id of ids) {
       const deleted = await deleteUserUtil(id, 'Admin Removal');
       if (deleted) {
         deletedCount++;
@@ -347,7 +349,7 @@ const bulkUpdateUsers = async (req: Request, res: Response) => {
     const errors = [];
 
     // Loop through each user and update the fields provided
-    for (let user of users) {
+    for (const user of users) {
       const { id } = user;
       try {
         const existing = await User.findOne({ where: { id } });
@@ -358,7 +360,7 @@ const bulkUpdateUsers = async (req: Request, res: Response) => {
         }
 
         // Update fields provided
-        for (let key in user) {
+        for (const key in user) {
           if (key !== 'id') {
             existing[key] = user[key];
           }
@@ -390,7 +392,7 @@ const updateUserRoles = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { roles } = req.body;
-    const creator = (req as any).user.id;
+    const creator = req.user.id;
 
     // Find existing user details
     const existingUser = await User.findOne({ where: { id }, transaction: t });
@@ -453,7 +455,7 @@ const updateUserApplications = async (req: Request, res: Response) => {
 
   try {
     // Get user applications by id
-    const { user } = req as any;
+    const { user } = req;
     const { id: user_id } = req.params;
     const { applications } = req.body;
 
@@ -583,7 +585,7 @@ const createUser = async (req: Request, res: Response) => {
     const userRoles = roles.map(role => ({
       userId: newUser.id,
       roleId: role,
-      createdBy: (req as any).user.id,
+      createdBy: req.user.id,
     }));
     await UserRole.bulkCreate(userRoles);
 
@@ -591,7 +593,7 @@ const createUser = async (req: Request, res: Response) => {
     const userApplications = applications.map(application => ({
       user_id: newUser.id,
       application_id: application,
-      createdBy: (req as any).user.id,
+      createdBy: req.user.id,
     }));
     await UserApplication.bulkCreate(userApplications);
 
@@ -618,11 +620,12 @@ const createUser = async (req: Request, res: Response) => {
     });
 
     // Add to notification queue
-    await NotificationQueue.create({
+    await enqueueNotification({
       type: 'email',
+      deliveryType: 'immediate',
       templateName: 'completeRegistration',
       notificationOrigin: 'User Management',
-      deliveryType: 'immediate',
+      createdBy: req.user.id,
       metaData: {
         notificationId: searchableNotificationId,
         recipientName: `${newUserData.firstName}`,
@@ -636,7 +639,6 @@ const createUser = async (req: Request, res: Response) => {
         notificationDescription: 'Complete your Registration',
         validForHours: 24,
       },
-      createdBy: (req as any).user.id,
     });
 
     // Remove hash
@@ -677,27 +679,23 @@ const resetPasswordForUser = async (req: Request, res: Response) => {
     )}`;
 
     // Queue notification
-    await NotificationQueue.create(
-      {
-        type: 'email',
-        templateName: 'resetPasswordLink',
+    await enqueueNotification({
+      type: 'email',
+      deliveryType: 'immediate',
+      templateName: 'resetPasswordLink',
+      notificationOrigin: 'Reset Password',
+      createdBy: 'System',
+      metaData: {
+        notificationId: searchableNotificationId,
+        recipientName: `${user.firstName}`,
         notificationOrigin: 'Reset Password',
-        deliveryType: 'immediate',
-        createdBy: 'System',
-        updatedBy: 'System',
-        metaData: {
-          notificationId: searchableNotificationId,
-          recipientName: `${user.firstName}`,
-          notificationOrigin: 'Reset Password',
-          subject: 'Password Reset Link',
-          mainRecipients: [user.email],
-          notificationDescription: 'Password Reset Link',
-          validForHours: 24,
-          passwordRestLink,
-        },
+        subject: 'Password Reset Link',
+        mainRecipients: [user.email],
+        notificationDescription: 'Password Reset Link',
+        validForHours: 24,
+        passwordRestLink,
       },
-      { transaction }
-    );
+    });
 
     // Save the password reset token to the user object in the database
     await PasswordResetLink.create(
@@ -754,11 +752,12 @@ const unlockAccount = async (req: Request, res: Response) => {
     // Queue notification to inform user account has been unlocked
     try {
       const notificationId = `USR_UNLCK_${moment().format('YYYYMMDD_HHmmss_SSS')}`;
-      await NotificationQueue.create({
+      await enqueueNotification({
         type: 'email',
+        deliveryType: 'immediate',
         templateName: 'accountUnlocked',
         notificationOrigin: 'Account Management',
-        deliveryType: 'immediate',
+        createdBy: req.user?.id || 'System',
         metaData: {
           notificationId,
           recipientName: `${user.firstName} ${user.lastName}`,
@@ -768,7 +767,6 @@ const unlockAccount = async (req: Request, res: Response) => {
           notificationDescription: 'Account Unlocked',
           loginLink: `${trimURL(process.env.WEB_URL)}/login`,
         },
-        createdBy: (req as any).user?.id || 'System',
       });
     } catch (notificationErr) {
       logger.error(

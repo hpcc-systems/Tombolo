@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import sql from 'mssql';
 import mysql from 'mysql2/promise';
 import logger from '../config/logger.js';

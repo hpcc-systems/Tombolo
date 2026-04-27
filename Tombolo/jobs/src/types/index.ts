@@ -21,11 +21,12 @@ export interface WorkunitHistoryJobData {
   [key: string]: unknown;
 }
 
-export type ArchiveJobType = 'cost-monitoring';
+export type ArchiveJobType = 'cost-monitoring' | 'notifications';
 
 export interface ArchiveJobData {
   type: ArchiveJobType;
   daysToKeep?: number;
   retentionDays?: number;
+  batchSize?: number;
   [key: string]: unknown;
 }

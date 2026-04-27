@@ -3,13 +3,10 @@ import axios from 'axios';
 // import { notify } from '../routes/notifications/email-notification.js';
 import { parentPort, workerData } from 'worker_threads';
 import logger from '../config/logger.js';
-import { FileMonitoring, MonitoringNotification } from '../models/index.js';
+import { FileMonitoring, MonitoringNotification } from '@tombolo/db';
 import { logicalFileDetails } from '../utils/hpcc-util.js';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  emailBody,
-  messageCardBody,
-} from './messageCards/notificationTemplate.js';
+import { messageCardBody } from './messageCards/notificationTemplate.js';
 
 (async () => {
   try {
@@ -93,7 +90,7 @@ import {
         // const notificationDetails = { details: { "File Name": Name } };
 
         if (newFileSize > maximumFileSize || newFileSize < minimumFileSize) {
-          let allDetails: any = { ...notificationDetails.details };
+          const allDetails: any = { ...notificationDetails.details };
           allDetails.Warning = 'File size not in range';
           allDetails['Expected Max Size'] = `${maximumFileSize} KB`;
           allDetails['Expected Min Size'] = `${minimumFileSize} KB`;
@@ -147,7 +144,7 @@ import {
     let emailNotificationDetails;
     let teamsNotificationDetails;
 
-    for (let notification of notifications) {
+    for (const notification of notifications) {
       if (notification.channel === 'eMail') {
         emailNotificationDetails = notification;
       }
@@ -168,7 +165,7 @@ import {
     // E-mail notification
     if (emailNotificationDetails && notificationDetails.text) {
       try {
-        const body = emailBody(notificationDetails, metaDifference);
+        // const body = emailBody(notificationDetails, metaDifference);
         // TODO: Implement notify function
         const notificationResponse: any = { accepted: [] };
         /* await notify({
@@ -201,10 +198,10 @@ import {
     // Teams notification
     if (teamsNotificationDetails && notificationDetails.text) {
       const { recipients } = teamsNotificationDetails;
-      for (let recipient of recipients) {
+      for (const recipient of recipients) {
         try {
           const notification_id = uuidv4();
-          let body = messageCardBody({
+          const body = messageCardBody({
             notificationDetails: notificationDetails,
             notification_id,
             filemonitoring_id,
@@ -248,6 +245,10 @@ import {
   } catch (err) {
     logger.error('submitLogicalFileMonitoring: ', err);
   } finally {
-    parentPort ? parentPort.postMessage('done') : process.exit(0);
+    if (parentPort) {
+      parentPort.postMessage('done');
+    } else {
+      process.exit(0);
+    }
   }
 })();

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { RefreshToken } from '../models/index.js';
+import { RefreshToken } from '@tombolo/db';
 import { blacklistToken } from '../utils/tokenBlackListing.js';
 import logger from '../config/logger.js';
 import { verifyToken } from '../utils/authUtil.js';
@@ -22,18 +22,19 @@ const activeSessionsByUserId = async (req: Request, res: Response) => {
         const token = session.token;
         jwt.verify(token, process.env.JWT_REFRESH_SECRET);
         return true;
-      } catch (err) {
+      } catch (_err) {
         return false;
       }
     });
 
     //grab current session token id from the request
-    const token = (req as any).cookies.token;
-    let decoded = await verifyToken(token);
+    const token = req.cookies.token;
+    const decoded = await verifyToken(token);
     const currentTokenId = decoded.tokenId;
 
     // Mark the current token
     activeSessions.forEach(session => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (session.dataValues as any).current = session.id === currentTokenId;
     });
 

@@ -1,12 +1,21 @@
 import { Request, Response } from 'express';
 import { Op, WhereOptions, InferAttributes } from 'sequelize';
 import { Workunit } from '@hpcc-js/comms';
-import { WorkUnit, WorkUnitDetails, sequelize } from '../models/index.js';
+import { getCluster } from '@tombolo/core';
+import {
+  WorkUnit,
+  WorkUnitDetails,
+  WorkUnitFile,
+  sequelize,
+} from '@tombolo/db';
 import { sendSuccess, sendError } from '../utils/response.js';
 import logger from '../config/logger.js';
-import { getCluster } from '../utils/hpcc-util.js';
 import { getClusterOptions } from '../utils/getClusterOptions.js';
 import { findFuzzyMatches } from '@tombolo/shared';
+import type {
+  WorkUnitDetailsResponse,
+  WorkUnitFilesResponse,
+} from '@tombolo/shared';
 
 type ScopeNode = InferAttributes<WorkUnitDetails> & { children: ScopeNode[] };
 
@@ -187,15 +196,73 @@ async function getWorkunitDetails(req: Request, res: Response) {
 
     const graphs = buildScopeHierarchy(details);
 
+    const rawCreatedAt = details[0].createdAt;
+    const normalizedCreatedAt =
+      rawCreatedAt instanceof Date
+        ? rawCreatedAt
+        : new Date(rawCreatedAt ?? Date.now());
+    const fetchedAt = Number.isNaN(normalizedCreatedAt.getTime())
+      ? new Date().toISOString()
+      : normalizedCreatedAt.toISOString();
+
     return sendSuccess(res, {
       wuId: wuid,
       clusterId,
-      fetchedAt: details[0].createdAt || new Date(),
+      fetchedAt,
       graphs,
-    });
+    } satisfies WorkUnitDetailsResponse);
   } catch (err) {
     logger.error('Get workunit details error: ', err);
     return sendError(res, 'Failed to fetch details', 500);
+  }
+}
+
+async function getWorkunitFiles(req: Request, res: Response) {
+  try {
+    const { wuid, clusterId } = req.params as {
+      wuid: string;
+      clusterId: string;
+    };
+
+    const files = await WorkUnitFile.findAll({
+      where: { wuId: wuid, clusterId },
+      attributes: ['fileName', 'fileType', 'isSuperFile'],
+      order: [
+        ['fileType', 'ASC'],
+        ['isSuperFile', 'DESC'],
+        ['fileName', 'ASC'],
+      ],
+      raw: true,
+    });
+
+    const response: WorkUnitFilesResponse = {
+      wuId: wuid,
+      clusterId,
+      inputFiles: [],
+      outputFiles: [],
+    };
+
+    for (const file of files as unknown as Array<{
+      fileName: string;
+      fileType: 'input' | 'output';
+      isSuperFile: boolean;
+    }>) {
+      const entry = {
+        fileName: file.fileName,
+        isSuperFile: Boolean(file.isSuperFile),
+      };
+
+      if (file.fileType === 'input') {
+        response.inputFiles.push(entry);
+      } else {
+        response.outputFiles.push(entry);
+      }
+    }
+
+    return sendSuccess(res, response);
+  } catch (err) {
+    logger.error('Get workunit files error: ', err);
+    return sendError(res, 'Failed to fetch workunit files', 500);
   }
 }
 
@@ -613,6 +680,7 @@ export {
   getWorkunits,
   getWorkunit,
   getWorkunitDetails,
+  getWorkunitFiles,
   getWorkunitHotspots,
   getWorkunitTimeline,
   getJobHistoryByJobName,

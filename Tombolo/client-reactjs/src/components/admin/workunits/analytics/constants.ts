@@ -17,7 +17,7 @@ export const SQL_FORMATTER_OPTIONS = {
   keywordCase: 'upper' as const,
 };
 
-export const QUERY_TIMEOUT_MS = 120000;
+export const QUERY_TIMEOUT_MS = 300_000;
 export const MAX_HISTORY_ITEMS = 20;
 
 export const KEYBOARD_SHORTCUTS = [

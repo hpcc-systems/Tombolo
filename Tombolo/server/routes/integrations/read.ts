@@ -13,7 +13,7 @@ import {
 import role from '../../config/roleTypes.js';
 import logger from '../../config/logger.js';
 import { sendError, sendSuccess } from '../../utils/response.js';
-import { Integration, IntegrationMapping } from '../../models/index.js';
+import { Integration, IntegrationMapping } from '@tombolo/db';
 
 const router = express.Router();
 

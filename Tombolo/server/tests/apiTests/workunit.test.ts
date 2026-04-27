@@ -4,7 +4,7 @@ import request from 'supertest';
 import { app } from '../test_server.js';
 import { v4 as uuidv4 } from 'uuid';
 import { mockedModels } from '../mockedModels.js';
-const { WorkUnit, WorkUnitDetails } = mockedModels;
+const { WorkUnit, WorkUnitDetails, WorkUnitFile } = mockedModels;
 import { getWorkUnit, getWorkUnitDetails } from '../helpers.js';
 
 describe('Workunit Routes', () => {
@@ -325,6 +325,73 @@ describe('Workunit Routes', () => {
       expect(res.status).toBe(404);
       expect(res.body.success).toBe(false);
       expect(res.body.message).toBe('No details found for this workunit');
+    });
+  });
+
+  describe('GET /api/workunits/:clusterId/:wuid/files', () => {
+    it('should return grouped input and output files', async () => {
+      const clusterId = uuidv4();
+      const wuId = 'W20241203-123456';
+
+      WorkUnitFile.findAll.mockResolvedValue([
+        {
+          fileName: '~thor::in::dataset1',
+          fileType: 'input',
+          isSuperFile: false,
+        },
+        {
+          fileName: '~thor::in::superset',
+          fileType: 'input',
+          isSuperFile: true,
+        },
+        {
+          fileName: '~thor::out::result1',
+          fileType: 'output',
+          isSuperFile: false,
+        },
+      ]);
+
+      const res = await request(app).get(
+        `/api/workunits/${clusterId}/${wuId}/files`
+      );
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.wuId).toBe(wuId);
+      expect(res.body.data.clusterId).toBe(clusterId);
+      expect(res.body.data.inputFiles).toEqual([
+        { fileName: '~thor::in::dataset1', isSuperFile: false },
+        { fileName: '~thor::in::superset', isSuperFile: true },
+      ]);
+      expect(res.body.data.outputFiles).toEqual([
+        { fileName: '~thor::out::result1', isSuperFile: false },
+      ]);
+      expect(WorkUnitFile.findAll).toHaveBeenCalledWith({
+        where: { wuId, clusterId },
+        attributes: ['fileName', 'fileType', 'isSuperFile'],
+        order: [
+          ['fileType', 'ASC'],
+          ['isSuperFile', 'DESC'],
+          ['fileName', 'ASC'],
+        ],
+        raw: true,
+      });
+    });
+
+    it('should return empty arrays when no files exist', async () => {
+      const clusterId = uuidv4();
+      const wuId = 'W20241203-999999';
+
+      WorkUnitFile.findAll.mockResolvedValue([]);
+
+      const res = await request(app).get(
+        `/api/workunits/${clusterId}/${wuId}/files`
+      );
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.inputFiles).toEqual([]);
+      expect(res.body.data.outputFiles).toEqual([]);
     });
   });
 

@@ -4,7 +4,6 @@ import dotenv from 'dotenv';
 dotenv.config({ path: pathToEnv });
 import express from 'express';
 import type { RequestHandler } from 'express';
-// import db from '../models/index.js';
 import logger from '../config/logger.js';
 import cookieParser from 'cookie-parser';
 import { fakeValidateTokenMiddleware, fakeCsrfProtection } from './helpers.js';

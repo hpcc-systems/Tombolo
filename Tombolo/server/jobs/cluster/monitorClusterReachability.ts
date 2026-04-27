@@ -3,9 +3,11 @@ import { AccountService } from '@hpcc-js/comms';
 
 import { passwordExpiryAlertDaysForCluster } from '../../config/monitorings.js';
 import { passwordExpiryInProximityNotificationPayload } from './clusterReachabilityMonitoringUtils.js';
+import type { ClusterWithPassword } from '../../types/cluster.js';
 import { decryptString } from '@tombolo/shared';
-import { Cluster, NotificationQueue } from '../../models/index.js';
+import { Cluster, NotificationQueue } from '@tombolo/db';
 import { getClusterOptions } from '../../utils/getClusterOptions.js';
+import { enqueueNotification } from '../../services/notificationProducer.js';
 
 async function monitorClusterReachability() {
   // UTC time
@@ -17,22 +19,20 @@ async function monitorClusterReachability() {
 
   try {
     // Get clusters and decrypt passwords
-    const allClusters = await Cluster.findAll({ raw: true });
-    allClusters.forEach(cluster => {
-      const clusterExtended = cluster as any;
-      if (cluster.hash) {
-        const password = decryptString(
-          cluster.hash,
-          process.env.ENCRYPTION_KEY
-        );
-        clusterExtended.password = password;
-      } else {
-        clusterExtended.password = null;
-      }
+    const allClusters = await Cluster.findAll({
+      raw: true,
     });
+    const allClustersWithPassword: ClusterWithPassword[] = allClusters.map(
+      cluster => ({
+        ...cluster,
+        password: cluster.hash
+          ? decryptString(cluster.hash, process.env.ENCRYPTION_KEY)
+          : null,
+      })
+    );
 
     //Loop through all clusters and check reachability
-    for (let cluster of allClusters) {
+    for (const cluster of allClustersWithPassword) {
       // Destructure cluster
       const {
         accountMetaData,
@@ -43,6 +43,7 @@ async function monitorClusterReachability() {
 
       try {
         // Cluster payload
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const newAccountMetaData: any = {
           ...accountMetaData,
           lastMonitored: now,
@@ -54,7 +55,7 @@ async function monitorClusterReachability() {
             {
               baseUrl: `${cluster.thor_host}:${cluster.thor_port}`,
               userID: cluster.username,
-              password: (cluster as any).password,
+              password: cluster.password,
             },
             cluster.allowSelfSigned
           )
@@ -65,12 +66,7 @@ async function monitorClusterReachability() {
         const { passwordDaysRemaining } = myAccount;
 
         // If passwordDaysRemaining not in the alert range, update the accountMetaData and continue
-        if (
-          passwordDaysRemaining &&
-          (passwordExpiryAlertDaysForCluster as any).includes(
-            passwordDaysRemaining
-          )
-        ) {
+        if (passwordExpiryAlertDaysForCluster.includes(passwordDaysRemaining)) {
           // Check if alert was sent for the day
           const passwordExpiryAlertSentForDay =
             accountMetaData?.passwordExpiryAlertSentForDay;
@@ -88,7 +84,7 @@ async function monitorClusterReachability() {
                 notificationId: `PWD_EXPIRY_${now.getTime()}`,
               });
 
-              await NotificationQueue.create(payload as any);
+              await enqueueNotification(payload);
 
               //Update accountMetaData
               newAccountMetaData.passwordExpiryAlertSentForDay =
@@ -127,7 +123,7 @@ async function monitorClusterReachability() {
           text: `Cluster reachability:  ${cluster.name} is not reachable -  ${err.message}`,
         });
         const newMetaData = { ...metaData };
-        let lastReachabilityInfo = { ...newMetaData.reachabilityInfo };
+        const lastReachabilityInfo = { ...newMetaData.reachabilityInfo };
         lastReachabilityInfo.reachable = false;
         lastReachabilityInfo.unReachableMessage = err.message;
         newMetaData.reachabilityInfo = lastReachabilityInfo;

@@ -1,0 +1,45 @@
+<%- include('theme') %>
+<!DOCTYPE html>
+<html>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background: <%= theme.bg %>;
+      font-family: Arial, Helvetica, sans-serif;
+      color: <%= theme.text %>;
+    "
+  >
+    <table
+      role="presentation"
+      width="100%"
+      cellspacing="0"
+      cellpadding="0"
+      border="0"
+      style="width: 100%; background: <%= theme.bg %>; padding: 24px 0"
+    >
+      <tr>
+        <td align="center" style="padding: 0 12px">
+          <table
+            role="presentation"
+            width="<%= contentWidth %>"
+            cellspacing="0"
+            cellpadding="0"
+            border="0"
+            style="
+              width: 100%;
+              max-width: <%= contentWidth %>px;
+              background: <%= theme.cardBg %>;
+              border: 1px solid <%= theme.border %>;
+              border-radius: 8px;
+            "
+          >
+            <tr>
+              <td style="padding: 32px"></td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

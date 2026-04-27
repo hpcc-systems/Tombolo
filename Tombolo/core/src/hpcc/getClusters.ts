@@ -2,11 +2,22 @@ import { Cluster } from '@tombolo/db';
 import { decryptString } from '@tombolo/shared';
 import { isClusterReachable } from './isClusterReachable.js';
 import { getEncryptionKey } from '../config/config.js';
+import type {
+  ClusterWithError,
+  GetClustersResult,
+  ResolvedCluster,
+} from '../types/cluster.js';
 
-interface ClusterWithError {
-  error?: string;
-  [key: string]: any;
-}
+type ClusterRecordWithGet = {
+  get?: (options: { plain: true }) => ResolvedCluster;
+};
+
+const toPlainClusterData = (cluster: Cluster): ResolvedCluster => {
+  const clusterRecord = cluster as unknown as ClusterRecordWithGet;
+  return typeof clusterRecord.get === 'function'
+    ? clusterRecord.get({ plain: true })
+    : (cluster as unknown as ResolvedCluster);
+};
 
 /**
  * Retrieves cluster details and ensures the cluster is reachable
@@ -15,13 +26,13 @@ interface ClusterWithError {
  */
 export async function getClusters(
   clusterIds: string[] | null
-): Promise<ClusterWithError[]> {
+): Promise<GetClustersResult[]> {
   const whereClause = clusterIds === null ? {} : { where: { id: clusterIds } };
   const clusters: Cluster[] = await Cluster.findAll(whereClause);
 
   const clusterPromises = clusters.map(async cluster => {
     try {
-      const clusterData = cluster.get({ plain: true }) as any;
+      const clusterData = toPlainClusterData(cluster);
 
       if (clusterData.hash) {
         clusterData.hash = decryptString(clusterData.hash, getEncryptionKey());
@@ -41,19 +52,20 @@ export async function getClusters(
         return {
           error: 'Invalid cluster credentials',
           ...clusterData,
-        };
+        } as ClusterWithError;
       } else {
         return {
           error: `${clusterData.name} is not reachable...`,
           ...clusterData,
-        };
+        } as ClusterWithError;
       }
-    } catch (err: any) {
-      const clusterData = cluster.get({ plain: true }) as any;
+    } catch (err: unknown) {
+      const clusterData = toPlainClusterData(cluster);
+      const errorMessage = err instanceof Error ? err.message : String(err);
       return {
-        error: `Error with cluster ${clusterData.name}: ${err.message}`,
+        error: `Error with cluster ${clusterData.name}: ${errorMessage}`,
         ...clusterData,
-      };
+      } as ClusterWithError;
     }
   });
 

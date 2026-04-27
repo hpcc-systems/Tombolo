@@ -6,16 +6,20 @@ import {
   CostMonitoringData,
   MonitoringLog,
   MonitoringType,
-} from '../../models/index.js';
+} from '@tombolo/db';
 import { Workunit } from '@hpcc-js/comms';
-import { getClusters } from '../../utils/hpcc-util.js';
+import { getClusters } from '@tombolo/core';
 import { getClusterOptions } from '../../utils/getClusterOptions.js';
 
-function dateAtOffset(date, offsetMinutes) {
+function getErrorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
+
+function dateAtOffset(date: Date, offsetMinutes: number) {
   return new Date(date.getTime() + offsetMinutes * 60 * 1000);
 }
 
-function toLocalDay(date, offsetMinutes) {
+function toLocalDay(date: Date, offsetMinutes: number) {
   const d = dateAtOffset(date, offsetMinutes);
   return new Date(
     Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
@@ -24,17 +28,16 @@ function toLocalDay(date, offsetMinutes) {
 
 /**
  * Gets the current time and time from lastScanTime in UTC without applying any timezone conversions.
- * The input and output are treated strictly as UTC.
- * @param {?string} lastScanTime - An ISO timestamp string in UTC or null.
- * @param {number} [offset=0] - Deprecated. Ignored to ensure UTC-in/UTC-out behavior.
- * @param {boolean} [toIso=false] - Whether to return dates as ISO strings.
- * @returns {{endTime: (Date|string), startTime: (Date|string), isNewDay: (boolean)}}
  */
-function getStartAndEndTime(lastScanTime, _offset = 0, toIso = false) {
+function getStartAndEndTime(
+  lastScanTime: string | null,
+  _offset = 0,
+  toIso: boolean = false
+): { endTime: Date | string; startTime: Date | string; isNewDay: boolean } {
   // Always operate in UTC; do not apply any timezone offset.
   const nowUtc = new Date();
 
-  let startUtc;
+  let startUtc: Date;
   let isNewDay = false;
 
   if (lastScanTime) {
@@ -95,20 +98,15 @@ function getStartAndEndTime(lastScanTime, _offset = 0, toIso = false) {
 
 /**
  * Handles the monitoring logs by either creating a new log entry or updating an existing one
- * @param {?import('../../models').MonitoringLog} inputMonitoringLog - The existing monitoring log entry or null if none exists
- * @param {number} clusterId - The ID of the cluster being monitored
- * @param {number} monitoringTypeId - The ID of the monitoring type
- * @param {Date} scanTime - The time when the work units were fetched
- * @returns {Promise<void>}
  */
 async function handleMonitorLogs(
-  inputMonitoringLog,
-  clusterId,
-  monitoringTypeId,
-  scanTime
+  inputMonitoringLog: MonitoringLog | null,
+  clusterId: string,
+  monitoringTypeId: string,
+  scanTime: Date
 ) {
   try {
-    let monitoringLog = inputMonitoringLog;
+    const monitoringLog = inputMonitoringLog;
 
     if (!monitoringLog) {
       await MonitoringLog.create({
@@ -121,7 +119,7 @@ async function handleMonitorLogs(
       monitoringLog.scan_time = scanTime;
       await monitoringLog.save();
     }
-  } catch (err) {
+  } catch (err: unknown) {
     logger.error(
       `handleMonitorLogs, failed to find/create monitoring log for costMonitoring, cluster ID: ${clusterId}, `,
       err
@@ -167,7 +165,7 @@ async function monitorCost() {
     }
 
     // 1. Gather all unique cluster IDs referenced by any cost monitoring (or all clusters if any monitoring has clusterIds null/empty)
-    let allClusterIds = new Set<string>();
+    const allClusterIds = new Set<string>();
     for (const costMonitor of costMonitorings) {
       costMonitor.clusterIds.forEach(id => allClusterIds.add(id));
     }
@@ -205,7 +203,7 @@ async function monitorCost() {
 
         // Get start and end date
         const { endTime: endDate, startTime: startDate } = getStartAndEndTime(
-          monitoringLog ? monitoringLog.scan_time : null,
+          monitoringLog ? monitoringLog.scan_time.toISOString() : null,
           timezoneOffset,
           true
         );
@@ -317,11 +315,11 @@ async function monitorCost() {
           monitoringType.id,
           newScanTime
         );
-      } catch (perClusterError) {
+      } catch (perClusterError: unknown) {
         logger.error('>>> monitorCost: Error in cluster ', perClusterError);
         logOrPostMessage({
           level: 'error',
-          text: `monitorCost: Failed in cluster ${clusterId}: ${perClusterError.message}, ...skipping`,
+          text: `monitorCost: Failed in cluster ${clusterId}: ${getErrorMessage(perClusterError)}, ...skipping`,
         });
       }
     }
@@ -342,10 +340,10 @@ async function monitorCost() {
         text: 'Failed to trigger monitor cost, parentPort is nullish',
       });
     }
-  } catch (err) {
+  } catch (err: unknown) {
     logOrPostMessage({
       level: 'error',
-      text: `Cost Monitor Per user: ${err.message}`,
+      text: `Cost Monitor Per user: ${getErrorMessage(err)}`,
     });
   }
 }

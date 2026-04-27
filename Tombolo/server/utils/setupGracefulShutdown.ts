@@ -5,13 +5,28 @@ import { Socket } from 'net';
 interface SetupOptions {
   server: Server;
   sockets: Set<Socket>;
-  dbConnection: any;
-  JobScheduler?: any;
+  dbConnection: ClosableConnection;
+  JobScheduler?: JobSchedulerLike;
 }
 
 interface ShutdownOptions {
   timeoutMs?: number;
 }
+
+interface ClosableConnection {
+  close: () => Promise<void>;
+}
+
+interface JobSchedulerLike {
+  stopAllJobs?: () => Promise<unknown>;
+}
+
+interface FlushableTransport {
+  flush?: () => void;
+}
+
+const isFlushableTransport = (value: unknown): value is FlushableTransport =>
+  typeof value === 'object' && value !== null;
 
 export default function setupGracefulShutdown({
   server,
@@ -29,7 +44,7 @@ export default function setupGracefulShutdown({
     shuttingDown = true;
     logger.info(`Graceful shutdown initiated: ${reason}`);
 
-    const tasks: Promise<any>[] = [];
+    const tasks: Promise<unknown>[] = [];
 
     // 1) Stop accepting new HTTP connections
     tasks.push(
@@ -49,7 +64,9 @@ export default function setupGracefulShutdown({
           for (const socket of sockets) {
             try {
               socket.destroy();
-            } catch (_) {}
+            } catch (_) {
+              continue;
+            }
           }
           resolve(undefined);
         }, 5000);
@@ -60,7 +77,7 @@ export default function setupGracefulShutdown({
     try {
       if (JobScheduler?.stopAllJobs) {
         tasks.push(
-          JobScheduler.stopAllJobs().catch((err: any) =>
+          JobScheduler.stopAllJobs().catch((err: unknown) =>
             logger.error('Error stopping all jobs', err)
           )
         );
@@ -75,7 +92,7 @@ export default function setupGracefulShutdown({
         dbConnection
           .close()
           .then(() => logger.info('Sequelize connection closed'))
-          .catch((err: any) =>
+          .catch((err: unknown) =>
             logger.error('Error closing Sequelize connection', err)
           )
       );
@@ -87,10 +104,15 @@ export default function setupGracefulShutdown({
     tasks.push(
       new Promise(resolve => {
         try {
-          const transports = Array.isArray(logger.transports)
-            ? logger.transports
-            : Object.values(logger.transports || {});
-          transports.forEach((t: any) => t.flush?.());
+          const rawTransports: unknown = logger.transports;
+          const transports = Array.isArray(rawTransports)
+            ? rawTransports
+            : Object.values(rawTransports || {});
+          transports.forEach(transport => {
+            if (isFlushableTransport(transport)) {
+              transport.flush?.();
+            }
+          });
           setTimeout(resolve, 500);
         } catch (_) {
           resolve(undefined);

@@ -23,5 +23,10 @@
     "experimentalSpecifierResolution": "node"
   },
   "include": ["src/**/*"],
+  "references": [
+    {
+      "path": "../db/tsconfig.refs.json"
+    }
+  ],
   "exclude": ["node_modules", "dist"]
 }

@@ -9,14 +9,14 @@ import {
   ClusterMonitoring,
   Cluster,
   MonitoringType,
-  NotificationQueue,
   AsrProduct,
   AsrDomain,
   MonitoringLog,
-} from '../../models/index.js';
+} from '@tombolo/db';
 import { generateNotificationId } from '../jobMonitoring/monitorJobsUtil.js';
 import { decryptString } from '@tombolo/shared';
 import { APPROVAL_STATUS } from '../../config/constants.js';
+import { enqueueNotification } from '../../services/notificationProducer.js';
 
 // Helper functions
 async function enrichAsrMetaData(asrSpecificMetaData) {
@@ -189,7 +189,7 @@ async function monitorCluster() {
     // Change the cluster array to an object with cluster ID as key
     const clusterObject = {};
     activeClusterStatusMonitoring.forEach(monitoring => {
-      let clusterPw = monitoring.cluster.hash
+      const clusterPw = monitoring.cluster.hash
         ? decryptString(monitoring.cluster.hash, process.env.ENCRYPTION_KEY)
         : null;
       clusterObject[monitoring.cluster.id] = {
@@ -298,7 +298,7 @@ async function monitorCluster() {
         const { asrSpecificMetaData: enrichedMeta, notificationPrefix } =
           await enrichAsrMetaData(asrSpecificMetaData);
 
-        let notificationId = generateNotificationId({
+        const notificationId = generateNotificationId({
           notificationPrefix,
           timezoneOffset: clusterObject[clusterId].timezone_offset,
         });
@@ -360,7 +360,7 @@ async function monitorCluster() {
         const { asrSpecificMetaData: enrichedMeta, notificationPrefix } =
           await enrichAsrMetaData(asrSpecificMetaData);
 
-        let notificationId = generateNotificationId({
+        const notificationId = generateNotificationId({
           notificationPrefix,
           timezoneOffset: clusterObject[clusterId].timezone_offset,
         });
@@ -417,8 +417,10 @@ async function monitorCluster() {
         });
       }
 
-      // Queue notification that are to be sent
-      await NotificationQueue.bulkCreate(notificationToBeQueued);
+      // Queue notifications that are to be sent
+      await Promise.all(
+        notificationToBeQueued.map(payload => enqueueNotification(payload))
+      );
 
       // Iterate over the notificationToBeQueued and do upsert
       for (const n of notificationToBeQueued) {

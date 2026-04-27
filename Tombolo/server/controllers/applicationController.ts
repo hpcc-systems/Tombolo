@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
 import path from 'path';
 import fs from 'fs';
-import { UserApplication, Application, User } from '../models/index.js';
+import { UserApplication, Application, User } from '@tombolo/db';
 import Sequelize from 'sequelize';
 import { sendError, sendSuccess } from '../utils/response.js';
+import { AuthenticatedRequest } from '../types/request.js';
 const Op = Sequelize.Op;
 import logger from '../config/logger.js';
 import { getDirname } from '../utils/polyfills.js';
@@ -11,9 +12,9 @@ import { getDirname } from '../utils/polyfills.js';
 
 const __dirname = getDirname(import.meta.url);
 
-async function getApplications(req: Request, res: Response) {
+async function getApplications(req: AuthenticatedRequest, res: Response) {
   try {
-    const { id: userId } = (req as any).user;
+    const { id: userId } = req.user || {};
 
     // 1. Get application IDs linked to the user
     const userApps = await UserApplication.findAll({
@@ -45,10 +46,11 @@ async function getApplications(req: Request, res: Response) {
   }
 }
 
-async function getApplicationsByUser(req: Request, res: Response) {
+async function getApplicationsByUser(req: AuthenticatedRequest, res: Response) {
   const { user_id } = req.query;
+  const queryUserId = typeof user_id === 'string' ? user_id : undefined;
   // Use authenticated user ID if user_id is not provided
-  const userId = user_id || (req as any).user?.id;
+  const userId = queryUserId || req.user?.id;
 
   if (!userId) {
     return sendError(res, 'User ID is required', 400);
@@ -93,40 +95,39 @@ async function getApplicationById(req: Request, res: Response) {
   }
 }
 
-async function saveApplication(req: Request, res: Response) {
+async function saveApplication(req: AuthenticatedRequest, res: Response) {
   try {
     if (req.body.id === '') {
+      const creatorId = req.user?.id;
+
+      if (!creatorId) {
+        return sendError(res, 'Unauthorized: User not authenticated', 401);
+      }
+
       const application = await Application.create({
         title: req.body.title,
         description: req.body.description,
-        creator: (req as any).user.id,
+        creator: creatorId,
         visibility: req.body.visibility,
       });
-      if ((req as any).user.id) {
-        const userApp = await UserApplication.create({
-          user_id: (req as any).user.id,
-          application_id: application.id,
-          createdBy: (req as any).user.id,
-          user_app_relation: 'created',
-        });
 
-        return sendSuccess(
-          res,
-          {
-            id: application.id,
-            title: application.title,
-            description: application.description,
-            user_app_id: userApp.id,
-          },
-          'Application created successfully'
-        );
-      } else {
-        return sendSuccess(
-          res,
-          { id: application.id },
-          'Application created successfully'
-        );
-      }
+      const userApp = await UserApplication.create({
+        user_id: creatorId,
+        application_id: application.id,
+        createdBy: creatorId,
+        user_app_relation: 'created',
+      });
+
+      return sendSuccess(
+        res,
+        {
+          id: application.id,
+          title: application.title,
+          description: application.description,
+          user_app_id: userApp.id,
+        },
+        'Application created successfully'
+      );
     } else {
       await Application.update(req.body, {
         where: { id: req.body.id },
@@ -211,11 +212,11 @@ async function exportApplication(req: Request, res: Response) {
         },
       };
 
-      var schemaDir = path.join(__dirname, '..', '..', 'schemas');
+      const schemaDir = path.join(__dirname, '..', '..', 'schemas');
       if (!fs.existsSync(schemaDir)) {
         fs.mkdirSync(schemaDir);
       }
-      var exportFile = path.join(
+      const exportFile = path.join(
         __dirname,
         '..',
         '..',

@@ -1,33 +1,70 @@
-import axios from 'axios';
 import { parentPort, workerData } from 'worker_threads';
 import logger from '../config/logger.js';
 import {
   OrbitMonitoring,
   OrbitBuilds,
   MonitoringNotification,
-} from '../models/index.js';
+} from '@tombolo/db';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  orbitMonitoringEmailBody,
-  orbitMonitoringMessageCard,
-} from './messageCards/notificationTemplate.js';
+import { orbitMonitoringEmailBody } from './messageCards/notificationTemplate.js';
 import { sendEmail } from '../config/emailConfig.js';
 
 import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
 
+type WorkUnitRow = {
+  WorkUnit: string;
+  Build: string;
+  Date: string;
+  Status: string;
+  Version: string;
+  BuildID: string;
+};
+
+type WorkUnitQueryResult = {
+  err?: string;
+  0: WorkUnitRow[];
+};
+
+type MetaDifference = {
+  attribute: string;
+  oldValue: string;
+  newValue: string;
+};
+
+type EmailNotificationDetails = {
+  channel: 'eMail';
+  recipients: string;
+};
+
+type SentNotification = {
+  id: string;
+  file_name: string;
+  monitoring_type: 'orbitMonitoring';
+  status: 'notified';
+  notifiedTo: string;
+  notification_channel: 'eMail';
+  application_id: string;
+  notification_reason: string;
+  monitoring_id: string;
+};
+
+type NotificationDetails = {
+  value: string;
+  title: string;
+  text: string;
+};
+
 (async () => {
   try {
-    const orbitMonitoringDetails: any = await OrbitMonitoring.findOne({
+    const orbitMonitoringDetails = await OrbitMonitoring.findOne({
       where: { id: workerData.orbitMonitoring_id },
       raw: true,
     });
 
     const {
       id,
-      _name,
       cron,
       build,
-      _isActive,
       severityCode,
       product,
       businessUnit,
@@ -36,7 +73,6 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
       secondaryContact,
       application_id,
       metaData: {
-        _lastWorkUnit,
         notifications,
         monitoringCondition,
         monitoringCondition: { notifyCondition },
@@ -47,14 +83,17 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
 
     const query = `select HpccWorkUnit as 'WorkUnit', Name as 'Build', DateUpdated as 'Date', Status_Code as 'Status', Version, BuildTemplateIdKey as 'BuildID'  from DimBuildInstance where Name = '${build}' AND HpccWorkUnit IS NOT NULL order by Date desc Limit 10`;
 
-    const wuResult: any = await runMySQLQuery(query, orbitDbConfig);
+    const wuResult = (await runMySQLQuery(
+      query,
+      orbitDbConfig
+    )) as WorkUnitQueryResult;
 
     if (wuResult.err) {
       throw Error(wuResult.err);
     }
 
     // Keep track of changes
-    const metaDifference: any[] = [];
+    const metaDifference: MetaDifference[] = [];
 
     if (!wuResult || !wuResult[0] || !wuResult[0][0]) return;
 
@@ -78,8 +117,8 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
       notifyCondition.includes('updateIntervalDays')
     ) {
       //update interval is in days, so multiply by 86400000 to get number of milliseconds between updates
-      let updateInterval = monitoringCondition?.updateInterval;
-      let updateIntervalDays = monitoringCondition?.updateIntervalDays;
+      // let updateInterval = monitoringCondition?.updateInterval;
+      // let updateIntervalDays = monitoringCondition?.updateIntervalDays;
 
       // TODO: This code block references undefined variables 'modified' and 'newModified'
       // Commenting out until the proper implementation is available
@@ -148,7 +187,7 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
       // update orbit monitoring last monitored date
       const date = new Date();
       const currentTimeStamp = date.getTime();
-      let metaData = orbitMonitoringDetails.metaData;
+      const metaData = orbitMonitoringDetails.metaData;
       metaData.lastMonitored = currentTimeStamp;
 
       await OrbitMonitoring.update({ metaData }, { where: { id } });
@@ -161,7 +200,7 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
     await Promise.all(
       wuResult[0].map(async result => {
         //check if the result is in the OrbitBuilds table
-        const orbitBuild: any = await OrbitBuilds.findOne({
+        const orbitBuild = await OrbitBuilds.findOne({
           where: {
             wuid: result.WorkUnit,
             monitoring_id: id,
@@ -207,23 +246,23 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
     //------------------------------------------------------------------------------
 
     // Check what notification channel is set up
-    let emailNotificationDetails: any;
-    let teamsNotificationDetails: any;
+    let emailNotificationDetails: EmailNotificationDetails | undefined;
 
     // notifications.channel === "eMail"
 
-    for (let notification of notifications) {
+    for (const notification of notifications) {
       if (notification.channel === 'eMail') {
         emailNotificationDetails = notification;
       }
-      if (notification.channel === 'msTeams') {
-        teamsNotificationDetails = notification;
-      }
     }
 
-    const sentNotifications: any[] = [];
+    const sentNotifications: SentNotification[] = [];
 
-    let notificationDetails: any = {};
+    const notificationDetails: NotificationDetails = {
+      value: '',
+      title: '',
+      text: '',
+    };
 
     if (metaDifference.length > 0) {
       // Note - this does not cover Orbit Build size not in range
@@ -243,9 +282,9 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
       title: notificationDetails.title,
       product: product,
       businessUnit: businessUnit,
-      // region: 'USA',
-      severityCode: severityCode,
-      date: wuResult[0].Date,
+      region: 'USA',
+      severityCode: String(severityCode),
+      date: wuResult[0][0].Date,
       remedy:
         'Please Contact one of the following for assistance <br/>' +
         'PRIMARY: ' +
@@ -293,39 +332,6 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
       }
     }
 
-    // Teams notification
-    if (teamsNotificationDetails && notificationDetails.text) {
-      const { recipients } = teamsNotificationDetails;
-
-      for (let recipient of recipients) {
-        let title = 'Orbit Monitoring alert has been triggered by Tombolo';
-
-        try {
-          let body = orbitMonitoringMessageCard(
-            title,
-            buildDetails,
-            notification_id
-          );
-
-          await axios.post(recipient, JSON.parse(body));
-
-          sentNotifications.push({
-            id: notification_id,
-            file_name: build,
-            monitoring_type: 'orbitMonitoring',
-            status: 'notified',
-            notifiedTo: teamsNotificationDetails.recipients,
-            notification_channel: 'msTeams',
-            application_id,
-            notification_reason: notificationDetails.value,
-            monitoring_id: id,
-          });
-        } catch (err) {
-          logger.error('submitOrbitMonitoring teamsNotification: ', err);
-        }
-      }
-    }
-
     // Add sent notifications to notification table
     if (sentNotifications.length > 0) {
       try {
@@ -340,6 +346,10 @@ import { runMySQLQuery, orbitDbConfig } from '../utils/runSQLQueries.js';
   } catch (err) {
     logger.error('submitOrbitMonitoring - err: ', err);
   } finally {
-    parentPort ? parentPort.postMessage('done') : process.exit(0);
+    if (parentPort) {
+      parentPort.postMessage('done');
+    } else {
+      process.exit(0);
+    }
   }
 })();

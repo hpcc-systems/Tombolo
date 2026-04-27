@@ -28,7 +28,7 @@ type WorkUnitDetailRow = {
   label: string | null;
   kind: number | null;
   fileName: string | null;
-  [key: string]: string | number | ScopeType; // Dynamic metric fields
+  [key: string]: string | number | Date | ScopeType; // Dynamic metric fields
 };
 
 // Constants
@@ -55,9 +55,28 @@ type OutOfRangeTimeValue = {
   maxAllowed?: number;
 };
 
+type DroppedActivityTimeLocalExecuteValue = {
+  clusterId: string;
+  wuId: string;
+  scopeName: string | undefined;
+  scopeType: string | undefined;
+  rawValue: string | undefined;
+  reason:
+    | 'missing_value'
+    | 'non_numeric'
+    | 'non_finite'
+    | 'negative'
+    | 'exceeds_max';
+};
+
 // Global array to track out-of-range time values
 // Cleared at the start of each execution
 const outOfRangeTimeValues: OutOfRangeTimeValue[] = [];
+
+// Global array to track activity TimeLocalExecute drops during conversion
+// Cleared at the start of each execution
+const droppedActivityTimeLocalExecuteValues: DroppedActivityTimeLocalExecuteValue[] =
+  [];
 
 /**
  * Logs current memory usage
@@ -157,6 +176,34 @@ function logOutOfRangeSummary() {
 }
 
 /**
+ * Logs summary of activity TimeLocalExecute values that were dropped during conversion
+ */
+function logDroppedActivityTimeLocalExecuteSummary() {
+  if (droppedActivityTimeLocalExecuteValues.length === 0) return;
+
+  logger.warn(
+    `Dropped ${droppedActivityTimeLocalExecuteValues.length} activity TimeLocalExecute value(s) during conversion`
+  );
+
+  const byReason = droppedActivityTimeLocalExecuteValues.reduce(
+    (acc, item) => {
+      acc[item.reason] = (acc[item.reason] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
+  logger.warn(
+    `Dropped activity TimeLocalExecute breakdown by reason: ${JSON.stringify(byReason, null, 2)}`
+  );
+
+  const sample = droppedActivityTimeLocalExecuteValues.slice(0, 5);
+  logger.warn(
+    `Dropped activity TimeLocalExecute sample (up to 5): ${JSON.stringify(sample, null, 2)}`
+  );
+}
+
+/**
  * Logs detailed statistics for a column across a batch
  */
 function logBatchStatistics(columnName: string, batch: WorkUnitDetailRow[]) {
@@ -220,7 +267,7 @@ function logOutOfRangeError(error: Error, batch: WorkUnitDetailRow[]) {
       const timeFields = Object.keys(problematicRow).filter(k =>
         k.startsWith('Time')
       );
-      const timeValues: Record<string, string | number | null> = {};
+      const timeValues: Record<string, string | number | Date | null> = {};
       timeFields.forEach(field => {
         const val = problematicRow[field];
         if (val !== null && val !== undefined) {
@@ -306,14 +353,55 @@ function extractPerformanceMetrics(
   // Unit lookup and converters
 
   const convertByUnit = (name: string, raw: string | undefined) => {
-    if (raw === undefined || raw === null) return null;
+    const shouldTrackDroppedTimeLocalExecute =
+      name === 'TimeLocalExecute' && scopeType === 'activity';
+
+    if (raw === undefined || raw === null) {
+      if (shouldTrackDroppedTimeLocalExecute) {
+        droppedActivityTimeLocalExecuteValues.push({
+          clusterId,
+          wuId,
+          scopeName,
+          scopeType,
+          rawValue: raw,
+          reason: 'missing_value',
+        });
+      }
+      return null;
+    }
 
     // Coerce numeric strings to numbers
     let num: string | number = raw;
     if (typeof num === 'string' && num.trim() !== '' && !isNaN(Number(num))) {
       num = Number(num);
     }
-    if (typeof num !== 'number' || !isFinite(num)) return null;
+    if (typeof num !== 'number') {
+      if (shouldTrackDroppedTimeLocalExecute) {
+        droppedActivityTimeLocalExecuteValues.push({
+          clusterId,
+          wuId,
+          scopeName,
+          scopeType,
+          rawValue: raw,
+          reason: 'non_numeric',
+        });
+      }
+      return null;
+    }
+
+    if (!isFinite(num)) {
+      if (shouldTrackDroppedTimeLocalExecute) {
+        droppedActivityTimeLocalExecuteValues.push({
+          clusterId,
+          wuId,
+          scopeName,
+          scopeType,
+          rawValue: raw,
+          reason: 'non_finite',
+        });
+      }
+      return null;
+    }
 
     const unit = UNIT_LOOKUP[name];
     switch (unit) {
@@ -341,6 +429,17 @@ function extractPerformanceMetrics(
             `Out-of-range time value detected: ${name} = ${rounded}s (negative value, likely clock skew) in wuId=${wuId}, clusterId=${clusterId}, scopeName=${scopeName}, scopeType=${scopeType}`
           );
 
+          if (shouldTrackDroppedTimeLocalExecute) {
+            droppedActivityTimeLocalExecuteValues.push({
+              clusterId,
+              wuId,
+              scopeName,
+              scopeType,
+              rawValue: raw,
+              reason: 'negative',
+            });
+          }
+
           return null;
         }
 
@@ -364,6 +463,17 @@ function extractPerformanceMetrics(
             `Out-of-range time value detected: ${name} = ${rounded}s (${days} days, exceeds max ${MAX_DECIMAL_13_6}s) in wuId=${wuId}, clusterId=${clusterId}, scopeName=${scopeName}, scopeType=${scopeType}`
           );
 
+          if (shouldTrackDroppedTimeLocalExecute) {
+            droppedActivityTimeLocalExecuteValues.push({
+              clusterId,
+              wuId,
+              scopeName,
+              scopeType,
+              rawValue: raw,
+              reason: 'exceeds_max',
+            });
+          }
+
           return null;
         }
 
@@ -379,6 +489,31 @@ function extractPerformanceMetrics(
       case 'int': {
         return Math.trunc(num);
       }
+      case 'cost':
+      case 'costValue': {
+        // Cost-like metrics arrive as micro-units (e.g. 682944433 -> 682.944433).
+        const cost = num / 1e6;
+        return Math.round(cost * 1e6) / 1e6;
+      }
+      case 'epoch': {
+        // K8s "When*" metrics are epoch/timeseries timestamps, not durations.
+        // Convert to Date so Sequelize can persist to DATETIME/TIMESTAMP columns.
+        const abs = Math.abs(num);
+
+        let ms = num;
+        if (abs >= 1e18) {
+          ms = num / 1e6; // nanoseconds -> milliseconds
+        } else if (abs >= 1e15) {
+          ms = num / 1e3; // microseconds -> milliseconds
+        } else if (abs >= 1e12) {
+          ms = num; // milliseconds
+        } else {
+          ms = num * 1e3; // seconds -> milliseconds
+        }
+
+        const timestamp = new Date(Math.trunc(ms));
+        return isNaN(timestamp.getTime()) ? null : timestamp;
+      }
       default:
         return num;
     }
@@ -392,7 +527,7 @@ function extractPerformanceMetrics(
         prop.RawValue !== undefined ? prop.RawValue : prop.Formatted;
       const converted = convertByUnit(propName, value);
       if (converted !== null) {
-        (metrics as Record<string, number>)[propName] = converted;
+        (metrics as Record<string, number | Date>)[propName] = converted;
       }
     }
   });
@@ -415,7 +550,6 @@ function processScopeToRow(
 
   // Filter out irrelevant scopes early
   if (!ACCEPTED_SCOPE_TYPES.includes(scopeType)) return null;
-  if (scopeName && scopeName.startsWith('>compile')) return null;
 
   const metrics = extractPerformanceMetrics(
     scope,
@@ -454,10 +588,10 @@ function processScopeToRow(
     scopeType: (scopeType || null) as ScopeType, // Convert empty string to null (not a valid ENUM value)
     label:
       typeof label === 'string'
-        ? truncateString(sanitizeScopeLabel(label), 250)
+        ? truncateString(sanitizeScopeLabel(label), 255)
         : null,
     kind: kind ? parseInt(kind, 10) : null,
-    fileName: filename ? truncateString(filename, 125) : null,
+    fileName: filename ?? null,
     ...metrics,
   };
 }
@@ -585,6 +719,7 @@ async function getWorkunitDetails() {
 
   // Clear out-of-range time values from previous execution
   outOfRangeTimeValues.length = 0;
+  droppedActivityTimeLocalExecuteValues.length = 0;
 
   logger.info('Starting WorkUnit Details job');
 
@@ -823,6 +958,7 @@ async function getWorkunitDetails() {
 
     // Log summary of out-of-range time values
     logOutOfRangeSummary();
+    logDroppedActivityTimeLocalExecuteSummary();
 
     logger.info(
       `WorkUnit Details job completed successfully in ${executionTime}ms`

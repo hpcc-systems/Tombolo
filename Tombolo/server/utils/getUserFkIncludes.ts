@@ -1,4 +1,4 @@
-import { User } from '../models/index.js';
+import { User } from '@tombolo/db';
 
 interface UserInclude {
   model: typeof User;

@@ -9,7 +9,7 @@ import {
   AsrProduct,
   Integration,
   SentNotification,
-} from '../../models/index.js';
+} from '@tombolo/db';
 import {
   createNotificationPayload,
   findLocalDateTimeAtCluster,
@@ -18,15 +18,18 @@ import {
   generateNotificationIdempotencyKey,
 } from '../jobMonitoring/monitorJobsUtil.js';
 import { Op } from 'sequelize';
+import type { CreationAttributes } from 'sequelize';
 import _ from 'lodash';
 import currencyCodeToSymbol from '../../utils/currencyCodeToSymbol.js';
 import { msGraphClient, extractFirstName } from '../../utils/msGraphHelper.js';
+import { enqueueNotification } from '../../services/notificationProducer.js';
 
 const notificationPrefix = 'CM';
 const domainMap = new Map();
 const productMap = new Map();
 const clusterMap = new Map();
 let asrEnabled = null;
+type NotificationQueuePayload = CreationAttributes<NotificationQueue>;
 
 async function checkIfAsrEnabled() {
   if (asrEnabled === null) {
@@ -69,7 +72,7 @@ function createCMNotificationPayload({
   currencyCode = 'USD',
   templateName = 'analyzeCost',
   userName = undefined,
-}) {
+}): NotificationQueuePayload {
   const currencySymbol = currencyCodeToSymbol(currencyCode);
   let description = '';
   let issueObject = {};
@@ -116,7 +119,7 @@ function createCMNotificationPayload({
     ? { ...asrSpecificMetaData, userName }
     : asrSpecificMetaData;
 
-  return createNotificationPayload({
+  const payload = createNotificationPayload({
     type: 'email',
     notificationDescription: description,
     templateName,
@@ -136,6 +139,8 @@ function createCMNotificationPayload({
     lastLogged: currentTime,
     idempotencyKey,
   });
+
+  return { ...payload, deliveryType: 'immediate' };
 }
 
 // Use the clusterMap to reduce database calls when the cluster has already been retrieved during job execution
@@ -248,7 +253,7 @@ async function sendNocNotification(
       delete nocNotificationPayload.metaData.cc;
       nocNotificationPayload.metaData.idempotencyKey =
         nocNotificationPayload.metaData.idempotencyKey + '|NOC';
-      await NotificationQueue.create(nocNotificationPayload);
+      await enqueueNotification(nocNotificationPayload);
     }
   } catch (nocError) {
     logOrPostMessage({
@@ -392,7 +397,7 @@ async function notifyIndividualUsersAndManagers(
         });
 
         // Queue the notification
-        await NotificationQueue.create(notificationPayload as any);
+        await enqueueNotification(notificationPayload);
 
         const recipientInfo = [];
         if (primaryContacts.length > 0)
@@ -491,7 +496,7 @@ async function analyzeClusterCost(
       currencyCode,
     });
 
-    await NotificationQueue.create(notificationPayload as any);
+    await enqueueNotification(notificationPayload);
     logOrPostMessage({
       level: 'info',
       text: 'Notification(s) sent for analyzeCost (per cluster)',
@@ -556,7 +561,7 @@ async function analyzeClusterCost(
     currencyCode,
   });
 
-  await NotificationQueue.create(notificationPayload as any);
+  await enqueueNotification(notificationPayload);
   logOrPostMessage({
     level: 'info',
     text: 'Notification(s) sent for analyzeCost (per cluster)',
@@ -629,7 +634,7 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
       currencyCode,
     });
 
-    await NotificationQueue.create(notificationPayload as any);
+    await enqueueNotification(notificationPayload);
     logOrPostMessage({
       level: 'info',
       text: 'Notification(s) sent for analyzeCost',
@@ -703,7 +708,7 @@ async function analyzeUserCost(userCostTotals, costMonitoring, monitoringType) {
     currencyCode,
   });
 
-  await NotificationQueue.create(notificationPayload as any);
+  await enqueueNotification(notificationPayload);
   logOrPostMessage({
     level: 'info',
     text: 'Notification(s) sent for analyzeCost',

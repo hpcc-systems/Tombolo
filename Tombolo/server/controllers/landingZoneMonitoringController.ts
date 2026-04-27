@@ -5,7 +5,7 @@ import Sequelize from 'sequelize';
 
 // Local Imports
 import logger from '../config/logger.js';
-import { Cluster, LandingZoneMonitoring } from '../models/index.js';
+import { Cluster, LandingZoneMonitoring } from '@tombolo/db';
 import { decryptString } from '@tombolo/shared';
 import { getClusterOptions } from '../utils/getClusterOptions.js';
 import { uniqueConstraintErrorHandler } from '../utils/uniqueConstraintErrorHandler.js';
@@ -113,7 +113,7 @@ const getFileList = async (req: Request, res: Response) => {
 // Create new landing zone monitoring
 const createLandingZoneMonitoring = async (req: Request, res: Response) => {
   try {
-    const { id: userId } = (req as any).user;
+    const { id: userId } = req.user;
 
     // Create the landing zone monitoring record with pending approval status
     const response = await LandingZoneMonitoring.create(
@@ -256,7 +256,7 @@ const deleteLandingZoneMonitoring = async (req: Request, res: Response) => {
     // Soft delete the record (sets deletedAt timestamp)
     await LandingZoneMonitoring.handleDelete({
       id,
-      deletedByUserId: (req as any).user.id,
+      deletedByUserId: req.user.id,
     });
 
     logger.info(`Successfully deleted landing zone monitoring: ${id}`);
@@ -298,7 +298,7 @@ const bulkDeleteLandingZoneMonitoring = async (req: Request, res: Response) => {
     // Soft delete the records
     await LandingZoneMonitoring.handleDelete({
       id: ids,
-      deletedByUserId: (req as any).user.id,
+      deletedByUserId: req.user.id,
     });
 
     sendSuccess(res, null, 'Landing zone monitoring deleted successfully');
@@ -312,7 +312,7 @@ const bulkDeleteLandingZoneMonitoring = async (req: Request, res: Response) => {
 // Evaluate landing zone monitoring (approve/reject)
 const evaluateLandingZoneMonitoring = async (req: Request, res: Response) => {
   try {
-    const { id: approver } = (req as any).user;
+    const { id: approver } = req.user;
     const { ids, approvalStatus, approverComment, isActive } = req.body;
 
     const updateData = {
@@ -366,7 +366,7 @@ const toggleLandingZoneMonitoringStatus = async (
     const { ids, isActive } = req.body;
 
     // If no action specified, toggle based on current status
-    let allRecords = await LandingZoneMonitoring.findAll({
+    const allRecords = await LandingZoneMonitoring.findAll({
       where: {
         id: {
           [Sequelize.Op.in]: ids,
