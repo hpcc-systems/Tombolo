@@ -101,7 +101,13 @@ class MSGraphClient {
       const fields =
         'id,displayName,mail,userPrincipalName,jobTitle,department';
 
-      const url = `https://graph.microsoft.com/v1.0/users?$filter=startswith(userPrincipalName,'${encodeURIComponent(upnPrefix)}')&$select=${fields}`;
+      // OData string literals escape single quotes by doubling them.
+      const escapedPrefix = upnPrefix.replace(/'/g, "''");
+      const query = new URLSearchParams({
+        $filter: `startswith(userPrincipalName,'${escapedPrefix}')`,
+        $select: fields,
+      });
+      const url = `https://graph.microsoft.com/v1.0/users?${query.toString()}`;
 
       const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
