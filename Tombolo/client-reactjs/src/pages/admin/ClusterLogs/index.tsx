@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { useEffect, useState } from 'react';
-import { useHistory, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Table, Card, Tag, Button, Tooltip, Select, DatePicker, Input, Modal, message } from 'antd';
 import { ReloadOutlined, SearchOutlined, CopyOutlined } from '@ant-design/icons';
 import Editor from '@monaco-editor/react';
@@ -27,7 +27,7 @@ interface LogDetailsModal {
 }
 
 function ClusterLogs(): ReactElement {
-  const history = useHistory();
+  const navigate = useNavigate();
   const location = useLocation();
   const [loading, setLoading] = useState<boolean>(false);
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
@@ -57,7 +57,7 @@ function ClusterLogs(): ReactElement {
     const workunitId = searchParams.get('wuid');
 
     if (!clusterId) {
-      history.push('/admin/clusters');
+      navigate('/admin/clusters');
       return;
     }
 
@@ -68,7 +68,7 @@ function ClusterLogs(): ReactElement {
     }
     fetchLogAccessInfo(clusterId);
     fetchLogs(clusterId, {}, workunitId);
-  }, [location.search, history]);
+  }, [location.search, navigate]);
 
   // Update time display every minute
   useEffect(() => {

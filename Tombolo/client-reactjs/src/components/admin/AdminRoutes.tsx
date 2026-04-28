@@ -1,5 +1,5 @@
 import React from 'react';
-import { Redirect, Route, Switch } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { PrivateRoute } from '../common/PrivateRoute';
 import { isAdminOrWorkunitPath } from '../common/routeMatching';
 
@@ -18,30 +18,37 @@ const WorkUnitAnalytics = React.lazy(() => import('./workunits/analytics'));
 const WorkUnitDashboard = React.lazy(() => import('./workunits/dashboard/'));
 const HPCC_Tools = React.lazy(() => import('./HPCCTools'));
 
+const AdminRouteFallback: React.FC = () => {
+  const location = useLocation();
+
+  if (isAdminOrWorkunitPath(location.pathname)) {
+    return <Navigate to="/" replace />;
+  }
+
+  return null;
+};
+
 const AdminRoutes: React.FC = () => {
   return (
-    <Switch>
-      <PrivateRoute path="/admin/applications" component={AdminApplications} />
-      <PrivateRoute path="/admin/userManagement" component={UserManagement} />
-      <PrivateRoute path="/admin/bree" component={ScheduledJobsPage} />
-      <PrivateRoute path="/admin/clusters/logs" component={ClusterLogs} />
-      <PrivateRoute path="/admin/clusters" component={Clusters} />
-      <PrivateRoute path="/admin/users" component={Users} />
-      <PrivateRoute path="/admin/integrations/:integrationName" component={IntegrationSettings} />
-      <PrivateRoute path="/admin/integrations" component={Integrations} />
-      <PrivateRoute path="/admin/settings" component={Settings} />
-      <PrivateRoute path="/admin/hpcc-tools" component={HPCC_Tools} />
-      <PrivateRoute exact path="/workunits/history/:clusterId/:wuid" component={WorkUnitDetails} />
-      <PrivateRoute path="/workunits/history" component={WorkUnitHistory} />
-      <PrivateRoute path="/workunits/sql" component={WorkUnitAnalytics} />
-      <PrivateRoute path="/workunits/dashboard" component={WorkUnitDashboard} />
-      <Route
-        path="*"
-        render={({ location }) => {
-          return isAdminOrWorkunitPath(location.pathname) ? <Redirect to="/" /> : null;
-        }}
-      />
-    </Switch>
+    <Routes>
+      <Route element={<PrivateRoute />}>
+        <Route path="/admin/applications" element={<AdminApplications />} />
+        <Route path="/admin/userManagement" element={<UserManagement />} />
+        <Route path="/admin/bree" element={<ScheduledJobsPage />} />
+        <Route path="/admin/clusters/logs" element={<ClusterLogs />} />
+        <Route path="/admin/clusters" element={<Clusters />} />
+        <Route path="/admin/users" element={<Users />} />
+        <Route path="/admin/integrations/:integrationName" element={<IntegrationSettings />} />
+        <Route path="/admin/integrations" element={<Integrations />} />
+        <Route path="/admin/settings" element={<Settings />} />
+        <Route path="/admin/hpcc-tools" element={<HPCC_Tools />} />
+        <Route path="/workunits/history/:clusterId/:wuid" element={<WorkUnitDetails />} />
+        <Route path="/workunits/history" element={<WorkUnitHistory />} />
+        <Route path="/workunits/sql" element={<WorkUnitAnalytics />} />
+        <Route path="/workunits/dashboard" element={<WorkUnitDashboard />} />
+      </Route>
+      <Route path="*" element={<AdminRouteFallback />} />
+    </Routes>
   );
 };
 

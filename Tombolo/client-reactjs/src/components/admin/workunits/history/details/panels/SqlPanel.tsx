@@ -24,6 +24,20 @@ interface Props {
   clusterName?: string;
 }
 
+type SchemaColumn = {
+  name: string;
+};
+
+type SchemaData = Record<string, SchemaColumn[]>;
+
+const FALLBACK_ALLOWED_TABLES = [
+  'work_unit_details',
+  'work_units',
+  'clusters',
+  'work_unit_exceptions',
+  'work_unit_files',
+];
+
 const BASE_COLUMNS = ['id', 'wuId', 'clusterId', 'scopeId', 'scopeName', 'scopeType', 'label', 'fileName'];
 const SUGGEST_COLUMNS = Array.from(new Set([...BASE_COLUMNS, ...relevantMetrics]));
 
@@ -86,6 +100,8 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
   const [resultsSort, setResultsSort] = useState<ResultsSortState>({ columnKey: null, order: null });
   const completionProviderRef = useRef<{ dispose: () => void } | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const tableNamesRef = useRef<string[]>(FALLBACK_ALLOWED_TABLES);
+  const columnNamesRef = useRef<string[]>(SUGGEST_COLUMNS);
 
   const MIN_TABLE_ROWS = 15;
   const ROW_HEIGHT_PX = 28;
@@ -128,6 +144,42 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
     const storedSql = localStorage.getItem(storageKey) || DEFAULT_SQL;
     setEditorSql(storedSql);
   }, [storageKey, setEditorSql]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchSchemaForAutocomplete = async () => {
+      try {
+        const response = await apiClient.get('/workunitAnalytics/schema');
+        const schema = response.data as SchemaData;
+
+        if (!mounted || !schema || typeof schema !== 'object') return;
+
+        const tableNames = Object.keys(schema);
+        if (tableNames.length > 0) {
+          tableNamesRef.current = tableNames;
+        }
+
+        const schemaColumns = tableNames.flatMap(table =>
+          (schema[table] || [])
+            .map(column => column?.name)
+            .filter((columnName): columnName is string => Boolean(columnName))
+        );
+
+        if (schemaColumns.length > 0) {
+          columnNamesRef.current = Array.from(new Set([...SUGGEST_COLUMNS, ...schemaColumns]));
+        }
+      } catch {
+        // Keep static fallbacks if schema metadata request fails.
+      }
+    };
+
+    void fetchSchemaForAutocomplete();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const lintSql = useMemo(() => {
     return validateSql(sqlForValidation);
@@ -221,8 +273,8 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
     registerSqlAutocomplete({
       monaco,
       completionProviderRef,
-      getTables: () => ['work_unit_details'],
-      getColumns: () => SUGGEST_COLUMNS,
+      getTables: () => tableNamesRef.current,
+      getColumns: () => columnNamesRef.current,
       triggerCharacters: ['.', ' ', '\n', '\t'],
     });
   }, []);
@@ -294,9 +346,11 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
             }
             description={
               <span>
-                Only SELECT statements against the <Text code>work_unit_details</Text> table are allowed. Queries are
-                automatically scoped to this workunit (<Text code>{wuid}</Text>) and cluster (
-                <Text code>{clusterName}</Text>), and server-limited to a maximum of 1000 rows.
+                Only SELECT statements against allowed analytics tables are permitted (for example{' '}
+                <Text code>work_unit_details</Text>, <Text code>work_unit_exceptions</Text>, and{' '}
+                <Text code>work_unit_files</Text>). Queries are automatically scoped to this workunit (
+                <Text code>{wuid}</Text>) and cluster (<Text code>{clusterName}</Text>), and server-limited to a maximum
+                of 1000 rows.
               </span>
             }
           />

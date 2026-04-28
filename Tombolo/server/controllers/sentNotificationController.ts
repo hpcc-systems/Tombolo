@@ -91,7 +91,7 @@ async function getNotificationHtml(req: Request, res: Response) {
 
     const templatePath = path.resolve(
       __dirname,
-      '../../jobs/notificationTemplates/email',
+      '../../../../jobs/notificationTemplates/email',
       `${templateName}.ejs`
     );
 

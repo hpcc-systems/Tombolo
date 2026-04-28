@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Input, Button, Divider, Spin } from 'antd';
-import { Link, useLocation, useHistory } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 
 import { handleError } from '../common/handleResponse';
@@ -36,8 +36,8 @@ if (methods.includes('azure') && !hasAllAzureEnv) {
 
 const Login: React.FC = () => {
   const dispatch: any = useDispatch();
-  const location = useLocation<any>();
-  const history = useHistory();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const isValidInternalUrl = (url: any) => {
     try {
@@ -76,8 +76,9 @@ const Login: React.FC = () => {
     }
 
     // Fallback to location state
-    if (location.state?.from) {
-      const { pathname, search = '', hash = '' } = location.state.from;
+    const from = (location.state as { from?: { pathname: string; search?: string; hash?: string } } | null)?.from;
+    if (from) {
+      const { pathname, search = '', hash = '' } = from;
       const fullPath = `${pathname}${search}${hash}`;
       if (fullPath !== '/' && isValidInternalUrl(fullPath)) {
         return fullPath;
@@ -196,7 +197,7 @@ const Login: React.FC = () => {
       if (res?.payload?.type === Constants.LOGIN_SUCCESS) {
         //redirect to intended page or home if login is successful, using replace to clean URL
         const redirectUrl = getRedirectUrl();
-        history.replace(redirectUrl);
+        navigate(redirectUrl, { replace: true });
         return;
       }
     } catch (err: any) {

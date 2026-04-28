@@ -8,7 +8,7 @@ import {
   CloseCircleFilled,
   FileTextOutlined,
 } from '@ant-design/icons';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import clustersService from '@/services/clusters.service';
 import { formatDateTime } from '../../common/CommonUtil';
@@ -35,7 +35,7 @@ const ClustersTable: FC<ClustersTableProps> = ({
   setDisplayEditClusterModal,
 }) => {
   const [testingConnection, setTestingConnection] = useState<string | null>(null);
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const handleDeleteCluster = async (id: string) => {
     try {
@@ -58,7 +58,7 @@ const ClustersTable: FC<ClustersTableProps> = ({
   };
 
   const handleViewClusterLogs = (record: ClusterUI) => {
-    history.push(`/admin/clusters/logs?clusterID=${record.id}&clusterName=${encodeURIComponent(record.name)}`);
+    navigate(`/admin/clusters/logs?clusterID=${record.id}&clusterName=${encodeURIComponent(record.name)}`);
   };
 
   const handleTestConnection = async (record: ClusterUI) => {

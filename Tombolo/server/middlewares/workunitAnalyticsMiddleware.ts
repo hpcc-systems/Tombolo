@@ -111,7 +111,7 @@ const validateAnalyticsQuery = [
 const validateGetSchema = [
   stringQuery('tableName', true, {
     isIn: [...ALLOWED_WORKUNIT_ANALYTICS_TABLES],
-    msg: 'Only work_unit_details, work_units, and clusters tables are available',
+    msg: `Only ${ALLOWED_WORKUNIT_ANALYTICS_TABLES.join(', ')} tables are available`,
   }),
 ];
 

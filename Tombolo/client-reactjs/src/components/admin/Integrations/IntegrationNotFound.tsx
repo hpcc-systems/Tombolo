@@ -1,14 +1,14 @@
 import React from 'react';
 import { Result, Button } from 'antd';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import styles from './integrations.module.css';
 
 const IntegrationNotFound: React.FC = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const handleGoToIntegration = () => {
-    history.push('/admin/integrations');
+    navigate('/admin/integrations');
   };
 
   return (

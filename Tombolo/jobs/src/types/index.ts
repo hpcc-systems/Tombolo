@@ -6,6 +6,7 @@ export enum wuHistoryJobType {
   QUERY = 'query',
   DETAILS = 'details',
   INFO = 'info',
+  COMPILED_RUN_SCAN = 'compiled-run-scan',
 }
 
 export interface ScheduledJob<T = Record<string, unknown>> {
