@@ -4,6 +4,7 @@ import type { AST, Binary, ColumnRefItem, From, Select } from 'node-sql-parser';
 const { Parser } = nodeSqlParser;
 const parser = new Parser();
 const MYSQL_PARSER_OPTIONS = { database: 'mysql' as const };
+const SQL_EDITOR_PLACEHOLDER = '-- enter your sql query here';
 
 export interface ParsedAnalyticsSql {
   originalSql: string;
@@ -81,8 +82,16 @@ function parseSelectSql(sql: string): Select {
   return assertSelectAst(ast);
 }
 
+function stripSqlEditorPlaceholder(sql: string): string {
+  return sql
+    .split(/\r?\n/)
+    .filter(line => line.trim().toLowerCase() !== SQL_EDITOR_PLACEHOLDER)
+    .join('\n')
+    .trim();
+}
+
 export function parseAndValidateAnalyticsSql(sql: string): ParsedAnalyticsSql {
-  const originalSql = sql.trim();
+  const originalSql = stripSqlEditorPlaceholder(sql);
   if (!originalSql) {
     throw new Error('sql is required');
   }
