@@ -218,18 +218,11 @@ describe('analyzeCost.js', () => {
       const spyBuildKey = vi
         .spyOn(monitorJobsUtil, 'generateNotificationIdempotencyKey')
         .mockImplementation(() => 'key');
+      const originalCreateNotificationPayload =
+        monitorJobsUtil.createNotificationPayload;
       const spyBuildPayload = vi
         .spyOn(monitorJobsUtil, 'createNotificationPayload')
-        .mockImplementation(
-          () =>
-            ({
-              type: 'email',
-              templateName: 'analyzeCost',
-              notificationOrigin: 'Cost Monitoring',
-              subject: 'Test',
-              recipients: { primaryContacts: ['test@example.com'] },
-            }) as ReturnType<typeof monitorJobsUtil.createNotificationPayload>
-        );
+        .mockImplementation(input => originalCreateNotificationPayload(input));
 
       Cluster.findAll.mockResolvedValue([{ id: 1, name: 'test-cluster' }]);
       SentNotification.findOne.mockResolvedValue(null);
@@ -281,18 +274,11 @@ describe('analyzeCost.js', () => {
       const spyBuildKey = vi
         .spyOn(monitorJobsUtil, 'generateNotificationIdempotencyKey')
         .mockImplementation(() => 'key');
+      const originalCreateNotificationPayload =
+        monitorJobsUtil.createNotificationPayload;
       const spyBuildPayload = vi
         .spyOn(monitorJobsUtil, 'createNotificationPayload')
-        .mockImplementation(
-          () =>
-            ({
-              type: 'email',
-              templateName: 'analyzeCost',
-              notificationOrigin: 'Cost Monitoring',
-              subject: 'Test',
-              recipients: { primaryContacts: ['test@example.com'] },
-            }) as ReturnType<typeof monitorJobsUtil.createNotificationPayload>
-        );
+        .mockImplementation(input => originalCreateNotificationPayload(input));
 
       const spyBuildNotifId = vi
         .spyOn(monitorJobsUtil, 'generateNotificationId')

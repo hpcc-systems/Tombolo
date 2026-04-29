@@ -1,20 +1,14 @@
-import {
-  vi,
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-  beforeAll,
-} from 'vitest';
-import request from 'supertest';
-import { app } from '../test_server.js';
+import { vi, describe, expect, beforeAll } from 'vitest';
 import { mockedModels } from '../mockedModels.js';
 const { FileMonitoring, sequelize } = mockedModels;
 import { v4 as uuidv4 } from 'uuid';
-import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
 import { AUTHED_USER_ID } from '../helpers.js';
 import { APPROVAL_STATUS } from '../../config/constants.js';
+import {
+  defineApiCase,
+  defineMutationCase,
+  useMonitoringApiRouteLifecycle,
+} from './monitoringCrudContract.js';
 
 beforeAll(async () => {
   const consoleModule = await import('console');
@@ -59,110 +53,126 @@ function getFileMonitoringPayload(overrides = {}) {
 }
 
 describe('File Monitoring API', () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    if (blacklistTokenIntervalId) {
-      clearInterval(blacklistTokenIntervalId as NodeJS.Timeout);
-    }
+  useMonitoringApiRouteLifecycle();
+
+  defineApiCase({
+    title: 'POST /api/fileMonitoring should create a new file monitoring',
+    method: 'post',
+    path: () => '/api/fileMonitoring',
+    buildEntity: () => getFileMonitoringPayload(),
+    expectedStatus: 201,
+    assertSuccess: true,
+    arrange: payload => {
+      FileMonitoring.create.mockResolvedValue(payload);
+      FileMonitoring.findByPk.mockResolvedValue(payload);
+    },
+    assert: (res, payload) => {
+      expect(res.body.data).toMatchObject(payload);
+    },
   });
 
-  afterEach(() => {
-    vi.clearAllTimers();
-    vi.clearAllMocks();
+  defineApiCase({
+    title: 'GET /api/fileMonitoring/:id should get file monitoring by id',
+    method: 'get',
+    path: payload => `/api/fileMonitoring/${payload.id}`,
+    buildEntity: () => getFileMonitoringPayload(),
+    expectedStatus: 200,
+    assertSuccess: true,
+    arrange: payload => {
+      FileMonitoring.findByPk.mockResolvedValue(payload);
+    },
+    assert: (res, payload) => {
+      expect(res.body.data).toMatchObject(payload);
+    },
   });
 
-  it('POST /api/fileMonitoring should create a new file monitoring', async () => {
-    const payload = getFileMonitoringPayload();
-    FileMonitoring.create.mockResolvedValue(payload);
-    FileMonitoring.findByPk.mockResolvedValue(payload);
-
-    const res = await request(app).post('/api/fileMonitoring').send(payload);
-
-    expect(res.status).toBe(201);
-    expect(res.body.success).toBe(true);
-    expect(res.body.data).toMatchObject(payload);
+  defineApiCase({
+    title: 'PUT /api/fileMonitoring/:id should update file monitoring',
+    method: 'put',
+    path: payload => `/api/fileMonitoring/${payload.id}`,
+    buildEntity: () => getFileMonitoringPayload(),
+    expectedStatus: 200,
+    assertSuccess: true,
+    arrange: payload => {
+      FileMonitoring.update.mockResolvedValue([1]);
+      FileMonitoring.findByPk.mockResolvedValue(payload);
+    },
+    assert: (res, payload) => {
+      expect(res.body.data).toMatchObject(payload);
+    },
   });
 
-  it('GET /api/fileMonitoring/:id should get file monitoring by id', async () => {
-    const payload = getFileMonitoringPayload();
-    FileMonitoring.findByPk.mockResolvedValue(payload);
-
-    const res = await request(app).get(`/api/fileMonitoring/${payload.id}`);
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(res.body.data).toMatchObject(payload);
+  defineApiCase({
+    title:
+      'GET /api/fileMonitoring/all/:applicationId should get all file monitorings for an application',
+    method: 'get',
+    path: payload => `/api/fileMonitoring/all/${payload.applicationId}`,
+    buildEntity: () => getFileMonitoringPayload(),
+    expectedStatus: 200,
+    assertSuccess: true,
+    arrange: payload => {
+      FileMonitoring.findAll.mockResolvedValue([payload]);
+    },
+    assert: res => {
+      expect(Array.isArray(res.body.data)).toBe(true);
+    },
   });
 
-  it('PUT /api/fileMonitoring/:id should update file monitoring', async () => {
-    const payload = getFileMonitoringPayload();
-    FileMonitoring.update.mockResolvedValue([1]);
-    FileMonitoring.findByPk.mockResolvedValue(payload);
-
-    const res = await request(app)
-      .put(`/api/fileMonitoring/${payload.id}`)
-      .send(payload);
-
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(res.body.data).toMatchObject(payload);
+  defineMutationCase({
+    title: 'PATCH /api/fileMonitoring/evaluate should evaluate file monitoring',
+    method: 'patch',
+    path: '/api/fileMonitoring/evaluate',
+    buildBody: () => ({
+      ids: [uuidv4()],
+      approvalStatus: APPROVAL_STATUS.APPROVED,
+      approverComment: 'Looks good',
+      approvedBy: AUTHED_USER_ID,
+      isActive: true,
+    }),
+    expectedStatus: 200,
+    assertSuccess: true,
+    arrange: () => {
+      FileMonitoring.findAll.mockResolvedValue([getFileMonitoringPayload()]);
+      FileMonitoring.update.mockResolvedValue([1]);
+    },
   });
 
-  it('GET /api/fileMonitoring/all/:applicationId should get all file monitorings for an application', async () => {
-    const payload = getFileMonitoringPayload();
-    FileMonitoring.findAll.mockResolvedValue([payload]);
-
-    const res = await request(app).get(
-      `/api/fileMonitoring/all/${payload.applicationId}`
-    );
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(Array.isArray(res.body.data)).toBe(true);
+  defineMutationCase({
+    title:
+      'PATCH /api/fileMonitoring/toggle should toggle file monitoring active status',
+    method: 'patch',
+    path: '/api/fileMonitoring/toggle',
+    buildBody: () => ({ ids: [uuidv4()], isActive: true }),
+    expectedStatus: 200,
+    assertSuccess: true,
+    arrange: () => {
+      FileMonitoring.findAll.mockResolvedValue([getFileMonitoringPayload()]);
+      FileMonitoring.update.mockResolvedValue([1]);
+    },
   });
 
-  it('PATCH /api/fileMonitoring/evaluate should evaluate file monitoring', async () => {
-    FileMonitoring.findAll.mockResolvedValue([getFileMonitoringPayload()]);
-    FileMonitoring.update.mockResolvedValue([1]);
-
-    const res = await request(app)
-      .patch('/api/fileMonitoring/evaluate')
-      .send({
-        ids: [uuidv4()],
-        approvalStatus: APPROVAL_STATUS.APPROVED,
-        approverComment: 'Looks good',
-        approvedBy: AUTHED_USER_ID,
-        isActive: true,
+  defineMutationCase({
+    title: 'DELETE /api/fileMonitoring should delete file monitoring',
+    method: 'delete',
+    path: '/api/fileMonitoring',
+    buildBody: () => ({ ids: [uuidv4()] }),
+    expectedStatus: 200,
+    assertSuccess: true,
+    arrange: () => {
+      const commit = vi.fn();
+      const rollback = vi.fn();
+      vi.spyOn(sequelize, 'transaction').mockResolvedValue({
+        commit,
+        rollback,
       });
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-  });
 
-  it('PATCH /api/fileMonitoring/toggle should toggle file monitoring active status', async () => {
-    FileMonitoring.findAll.mockResolvedValue([getFileMonitoringPayload()]);
-    FileMonitoring.update.mockResolvedValue([1]);
-
-    const res = await request(app)
-      .patch('/api/fileMonitoring/toggle')
-      .send({ ids: [uuidv4()], isActive: true });
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-  });
-
-  it('DELETE /api/fileMonitoring should delete file monitoring', async () => {
-    const commit = vi.fn();
-    const rollback = vi.fn();
-    vi.spyOn(sequelize, 'transaction').mockResolvedValue({ commit, rollback });
-
-    FileMonitoring.update = vi.fn().mockResolvedValue([1]);
-    FileMonitoring.destroy = vi.fn().mockResolvedValue(1);
-
-    const res = await request(app)
-      .delete('/api/fileMonitoring')
-      .send({ ids: [uuidv4()] });
-
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(FileMonitoring.update).toHaveBeenCalled();
-    expect(FileMonitoring.destroy).toHaveBeenCalled();
-    expect(commit).toHaveBeenCalled();
+      FileMonitoring.update = vi.fn().mockResolvedValue([1]);
+      FileMonitoring.destroy = vi.fn().mockResolvedValue(1);
+    },
+    assert: () => {
+      expect(FileMonitoring.update).toHaveBeenCalled();
+      expect(FileMonitoring.destroy).toHaveBeenCalled();
+      expect(sequelize.transaction).toHaveBeenCalled();
+    },
   });
 });

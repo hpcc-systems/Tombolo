@@ -225,14 +225,6 @@ describe('User Routes', () => {
     // logger.error should NOT be called for business logic errors like "not found"
   });
 
-  it('reset-password-for-user should return 200 for generating password reset link', async () => {
-    // TODO: Create this test
-  });
-
-  it('reset-password-for-user should return 404 if user not found for password reset', async () => {
-    // TODO: Create this test
-  });
-
   it('bulk-delete should bulk delete users', async () => {
     const users = getUsers();
     User.findByPk
