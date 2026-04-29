@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Layout,
   Button,
@@ -205,16 +204,19 @@ const normalizeSavedResult = (value: unknown): SavedResultEntry | null => {
     return null;
   }
 
+  const sanitizedColumns = candidate.columns.filter((column): column is string => typeof column === 'string');
+  const sanitizedRows = candidate.rows.filter(
+    (row): row is Record<string, unknown> => Boolean(row) && typeof row === 'object' && !Array.isArray(row)
+  );
+
   const payload: SavedResultPayload = {
     name:
       typeof candidate.name === 'string' && candidate.name.trim().length > 0 ? candidate.name : 'Result history entry',
     sql: candidate.sql,
     savedAt: typeof candidate.savedAt === 'string' ? candidate.savedAt : new Date(candidate.id).toISOString(),
-    columns: candidate.columns.filter((column): column is string => typeof column === 'string'),
-    rows: candidate.rows.filter(
-      (row): row is Record<string, unknown> => Boolean(row) && typeof row === 'object' && !Array.isArray(row)
-    ),
-    rowCount: typeof candidate.rowCount === 'number' ? candidate.rowCount : candidate.rows.length,
+    columns: sanitizedColumns,
+    rows: sanitizedRows,
+    rowCount: typeof candidate.rowCount === 'number' ? candidate.rowCount : sanitizedRows.length,
     executionTime: typeof candidate.executionTime === 'number' ? candidate.executionTime : 0,
     limited: Boolean(candidate.limited),
     columnTypes:
@@ -239,7 +241,6 @@ const normalizeSavedResult = (value: unknown): SavedResultEntry | null => {
 };
 
 const AnalyticsWorkspace = () => {
-  const navigate = useNavigate();
   const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
   const completionProviderRef = useRef<{ dispose: () => void } | null>(null);
   const schemaDataRef = useRef<SchemaData | null>(null);
@@ -1590,10 +1591,14 @@ const AnalyticsWorkspace = () => {
       sortDirections: ['ascend', 'descend'] as ('ascend' | 'descend')[],
       render: (text: unknown, record: Record<string, unknown>) => {
         // If column is wuId, make it clickable
-        if (col === 'wuId' && record.clusterId) {
+        if (col === 'wuId' && record.clusterId != null && text != null) {
+          const clusterId = String(record.clusterId);
+          const wuId = String(text);
+          const workunitUrl = `/workunits/history/${encodeURIComponent(clusterId)}/${encodeURIComponent(wuId)}`;
+
           return (
-            <Button type="link" size="small" onClick={() => navigate(`/workunits/history/${record.clusterId}/${text}`)}>
-              {String(text)}
+            <Button type="link" size="small" href={workunitUrl} target="_blank" rel="noopener noreferrer">
+              {wuId}
             </Button>
           );
         }
