@@ -36,6 +36,7 @@ import {
   collectReferencedTables,
   findSensitiveClusterColumnViolation,
   parseAndValidateAnalyticsSql,
+  hasSelectWildcardFromClusters,
 } from '../utils/workunitAnalyticsSqlAst.js';
 
 // Validation for POST /api/analytics/query
@@ -150,6 +151,13 @@ const validateAnalyticsQuery = [
     .bail()
     .custom((value, { req }) => {
       const parsed = parseAndValidateAnalyticsSql(value);
+      
+      if (hasSelectWildcardFromClusters(parsed.ast)) {
+        throw new Error(
+          'SELECT * from clusters is not allowed. Please specify explicit column names instead.'
+        );
+      }
+
       const tables = collectReferencedTables(parsed.ast);
       const invalidTables = tables.filter(
         table => !ALLOWED_WORKUNIT_ANALYTICS_TABLE_SET.has(table)

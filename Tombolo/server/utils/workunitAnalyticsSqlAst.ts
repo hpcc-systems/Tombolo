@@ -327,6 +327,34 @@ export function findSensitiveClusterColumnViolation(
   return null;
 }
 
+export function hasSelectWildcardFromClusters(rootSelect: Select): boolean {
+  for (const selectAst of getSelectChain(rootSelect)) {
+    const aliasToTable = getAliasToTableMap(selectAst);
+    const includesClustersTable = Array.from(aliasToTable.values()).includes(
+      'clusters'
+    );
+
+    if (!includesClustersTable) {
+      continue;
+    }
+
+    const selectedColumns = Array.isArray(selectAst.columns)
+      ? selectAst.columns
+      : [];
+
+    for (const selectedColumn of selectedColumns) {
+      const expr = (selectedColumn as { expr?: unknown }).expr;
+      if (
+        isTopLevelClustersWildcard(expr, aliasToTable, includesClustersTable)
+      ) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 function getAliasValue(alias: unknown): string | null {
   if (!alias) {
     return null;
