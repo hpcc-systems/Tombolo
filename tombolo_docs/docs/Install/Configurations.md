@@ -317,7 +317,29 @@ Integration-specific environment variables should only be configured when the re
 
   Set the same generated value in every environment where the server and jobs packages communicate.
 
-### 13. Test Configuration
+### 13. Azure OpenAI Configuration
+
+- **AZURE_OPENAI_API_KEY**
+  API key for your Azure OpenAI resource.
+
+- **AZURE_OPENAI_ENDPOINT**
+  Base endpoint for your Azure OpenAI resource.
+
+  _Example:_ `https://tombolo.openai.azure.com/`
+
+- **AZURE_OPENAI_DEPLOYMENT**
+  Deployment name used by Tombolo SQL Assistant.
+
+  _Example:_ `gpt-5.4-mini`
+
+- **AZURE_OPENAI_API_VERSION**
+  Azure OpenAI API version passed in requests.
+
+  _Example:_ `2024-12-01-preview`
+
+---
+
+### 14. Test Configuration
 
 - **RATE_LIMIT_REQUEST_MAX**
   The amount of requests per 15 minutes that will rate limit a user.

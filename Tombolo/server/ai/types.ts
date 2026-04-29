@@ -6,8 +6,6 @@ export interface AssistantConversationMessage {
 }
 
 export interface AssistantRequestContext {
-  provider: string;
-  model: string;
   providerConfig: AiProviderConfig;
   message: string;
   assistantContext: string;
@@ -19,5 +17,5 @@ export interface AssistantRequestContext {
 export interface AssistantResult {
   content: string;
   sql: string | null;
-  provider: string;
+  provider: 'azure-openai';
 }

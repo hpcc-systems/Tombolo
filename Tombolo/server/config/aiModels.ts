@@ -1,57 +1,28 @@
-/**
- * Unified AI provider configuration.
- * All secrets come from environment variables — never hardcoded here.
- *
- * To add a new provider, append an entry to AI_PROVIDERS and add the
- * corresponding env vars to your .env file.
- */
-
-export type AiProvider = 'openai' | 'ollama' | 'lmstudio' | 'gpt4all';
-
 export interface AiProviderConfig {
-  /** Canonical provider id — must match what the client sends */
-  provider: AiProvider;
-  /** Base URL for the provider's API */
   endpoint: string;
-  /** API key, or null for local providers that don't need one */
-  apiKey: string | null;
-  /** Whether the provider supports OpenAI-style chat/completions API */
-  openAiCompat: boolean;
+  apiKey: string;
+  deployment: string;
+  apiVersion: string;
 }
 
-export const AI_PROVIDERS: AiProviderConfig[] = [
-  {
-    provider: 'openai',
-    endpoint: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
-    apiKey: process.env.OPENAI_API_KEY || null,
-    openAiCompat: true,
-  },
-  {
-    provider: 'ollama',
-    endpoint: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
-    apiKey: null,
-    openAiCompat: false, // uses /api/chat
-  },
-  {
-    provider: 'lmstudio',
-    endpoint: process.env.LM_STUDIO_BASE_URL || 'http://localhost:1234/v1',
-    apiKey: null,
-    openAiCompat: true,
-  },
-  {
-    provider: 'lmstudio',
-    endpoint: process.env.LM_STUDIO_BASE_URL || 'http://localhost:1234/v1',
-    apiKey: null,
-    openAiCompat: true,
-  },
-  {
-    provider: 'gpt4all',
-    endpoint: process.env.GPT4ALL_BASE_URL || 'http://localhost:4891/v1',
-    apiKey: null,
-    openAiCompat: true,
-  },
-];
+function normalizeEndpoint(endpoint: string): string {
+  return endpoint.replace(/\/$/, '');
+}
 
-/** Look up provider config by provider id. Returns null if not found. */
-export const getProviderConfig = (provider: string): AiProviderConfig | null =>
-  AI_PROVIDERS.find(p => p.provider === provider) ?? null;
+export function getAzureOpenAiConfig(): AiProviderConfig | null {
+  const endpoint = String(process.env.AZURE_OPENAI_ENDPOINT || '').trim();
+  const apiKey = String(process.env.AZURE_OPENAI_API_KEY || '').trim();
+  const deployment = String(process.env.AZURE_OPENAI_DEPLOYMENT || '').trim();
+  const apiVersion = String(process.env.AZURE_OPENAI_API_VERSION || '').trim();
+
+  if (!endpoint || !apiKey || !deployment || !apiVersion) {
+    return null;
+  }
+
+  return {
+    endpoint: normalizeEndpoint(endpoint),
+    apiKey,
+    deployment,
+    apiVersion,
+  };
+}

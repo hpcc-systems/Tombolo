@@ -1,5 +1,5 @@
-import { getProviderConfig } from '../config/aiModels.js';
-import { askOllama, askOpenAi, askOpenAiCompatible } from './providers.js';
+import { getAzureOpenAiConfig } from '../config/aiModels.js';
+import { askAzureOpenAi } from './providers.js';
 import {
   buildUserPrompt,
   normalizeSchemaData,
@@ -8,8 +8,6 @@ import {
 import type { AssistantRequestContext, AssistantResult } from './types.js';
 
 interface BuildAssistantContextInput {
-  provider: string;
-  model: string;
   message: string;
   assistantContext: string;
   knowledgeBase: string;
@@ -20,42 +18,25 @@ interface BuildAssistantContextInput {
 export function buildAssistantContext(
   input: BuildAssistantContextInput
 ): AssistantRequestContext | null {
-  const providerConfig = getProviderConfig(input.provider);
+  const providerConfig = getAzureOpenAiConfig();
   if (!providerConfig) {
     return null;
   }
 
   return {
-    provider: input.provider,
-    model: input.model,
     providerConfig,
     message: input.message,
     assistantContext: input.assistantContext,
     knowledgeBase: input.knowledgeBase,
     schemaData: normalizeSchemaData(input.rawSchemaData),
-    conversationHistory: sanitizeConversationHistory(
-      input.rawHistory,
-      input.provider
-    ),
+    conversationHistory: sanitizeConversationHistory(input.rawHistory),
   };
 }
 
 export async function askAssistant(
   context: AssistantRequestContext
 ): Promise<AssistantResult> {
-  if (context.provider === 'openai') {
-    return askOpenAi(context);
-  }
-
-  if (context.provider === 'ollama') {
-    return askOllama(context);
-  }
-
-  if (context.providerConfig.openAiCompat) {
-    return askOpenAiCompatible(context);
-  }
-
-  throw new Error(`Provider '${context.provider}' is not supported.`);
+  return askAzureOpenAi(context);
 }
 
 export { buildUserPrompt };

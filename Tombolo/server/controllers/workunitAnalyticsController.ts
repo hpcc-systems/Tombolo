@@ -5,7 +5,7 @@ import { sendSuccess, sendError } from '../utils/response.js';
 import logger from '../config/logger.js';
 import { activityKindLabels } from '@tombolo/shared';
 import axios from 'axios';
-import { getProviderConfig } from '../config/aiModels.js';
+import { getAzureOpenAiConfig } from '../config/aiModels.js';
 import type { Select } from 'node-sql-parser';
 import {
   applyScopeToSelect,
@@ -947,7 +947,7 @@ async function getDatabaseStats(req: Request, res: Response) {
 }
 
 /**
- * NL -> SQL and schema Q&A assistant powered by configurable AI providers
+ * NL -> SQL and schema Q&A assistant powered by Azure OpenAI
  */
 async function askAnalyticsAssistant(req: Request, res: Response) {
   try {
@@ -955,15 +955,14 @@ async function askAnalyticsAssistant(req: Request, res: Response) {
     const assistantContext = String(req.body.assistantContext || '');
     const knowledgeBase = String(req.body.knowledgeBase || '');
 
-    // Resolve provider config from unified config file
-    const requestedProvider = String(
-      req.body.provider || 'openai'
-    ).toLowerCase();
-    const requestedModel = String(req.body.model || '').trim();
-    const providerConfig = getProviderConfig(requestedProvider);
+    const azureOpenAiConfig = getAzureOpenAiConfig();
 
-    if (!providerConfig) {
-      return sendError(res, `Unknown provider: ${requestedProvider}`, 400);
+    if (!azureOpenAiConfig) {
+      return sendError(
+        res,
+        'Azure OpenAI is not configured. Set AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_DEPLOYMENT, and AZURE_OPENAI_API_VERSION.',
+        500
+      );
     }
 
     // Filter schema to only essential fields: name, type, keyType (for FK relationships)
@@ -979,17 +978,6 @@ async function askAnalyticsAssistant(req: Request, res: Response) {
       );
     }
 
-    // For gpt4all: keep only column names (drop types) to minimise token usage
-    const schemaForPrompt =
-      requestedProvider === 'gpt4all'
-        ? Object.fromEntries(
-            Object.entries(schemaData).map(([table, cols]) => [
-              table,
-              (cols as Array<{ name: unknown }>).map(c => c.name),
-            ])
-          )
-        : schemaData;
-
     // Sanitised conversation history from the client
     const rawHistory: Array<{ role: string; content: string }> = Array.isArray(
       req.body.conversationHistory
@@ -1002,11 +990,10 @@ async function askAnalyticsAssistant(req: Request, res: Response) {
           (m.role === 'user' || m.role === 'assistant') &&
           typeof m.content === 'string'
       )
-      .slice(requestedProvider === 'gpt4all' ? -3 : -20) // cap turns to keep tokens bounded
+      .slice(-20)
       .map(m => ({
         role: m.role,
-        content:
-          requestedProvider === 'gpt4all' ? m.content.slice(0, 300) : m.content,
+        content: m.content,
       }));
 
     const prompt = [
@@ -1040,11 +1027,11 @@ async function askAnalyticsAssistant(req: Request, res: Response) {
       'If user asks unknown table/column, respond exactly: OUT_OF_SCOPE: Requested table/column is not in KB',
       'If join path is unknown, respond exactly: OUT_OF_SCOPE: Relationship not defined in KB',
       '',
-      ...(requestedProvider === 'gpt4all'
-        ? []
-        : ['Knowledge Base:', knowledgeBase || '(none)', '']),
+      'Knowledge Base:',
+      knowledgeBase || '(none)',
+      '',
       'Runtime Schema:',
-      JSON.stringify(schemaForPrompt),
+      JSON.stringify(schemaData),
       '',
       '',
       assistantContext ? `Context: ${assistantContext}` : '',
@@ -1077,17 +1064,14 @@ async function askAnalyticsAssistant(req: Request, res: Response) {
       };
     };
 
-    const askOpenAi = async () => {
-      if (!providerConfig.apiKey) {
-        throw new Error(
-          'OpenAI is not configured. Set OPENAI_API_KEY on the server.'
-        );
-      }
+    const askAzureOpenAi = async () => {
+      const requestUrl =
+        `${azureOpenAiConfig.endpoint}/openai/deployments/${encodeURIComponent(azureOpenAiConfig.deployment)}/chat/completions` +
+        `?api-version=${encodeURIComponent(azureOpenAiConfig.apiVersion)}`;
 
       const response = await axios.post(
-        `${providerConfig.endpoint.replace(/\/$/, '')}/chat/completions`,
+        requestUrl,
         {
-          model: requestedModel,
           temperature: 0.1,
           response_format: { type: 'json_object' },
           messages: [
@@ -1105,7 +1089,7 @@ async function askAnalyticsAssistant(req: Request, res: Response) {
         },
         {
           headers: {
-            Authorization: `Bearer ${providerConfig.apiKey}`,
+            'api-key': azureOpenAiConfig.apiKey,
             'Content-Type': 'application/json',
           },
           timeout: 30000,
@@ -1117,100 +1101,12 @@ async function askAnalyticsAssistant(req: Request, res: Response) {
         'I could not generate a response right now.';
 
       return {
-        ...parseResponse(rawText),
-        provider: 'openai' as const,
-      };
-    };
-
-    const askOllama = async () => {
-      const response = await axios.post(
-        `${providerConfig.endpoint.replace(/\/$/, '')}/api/chat`,
-        {
-          model: requestedModel,
-          stream: false,
-          options: { temperature: 0.1 },
-          messages: [
-            {
-              role: 'system',
-              content:
-                'You are precise, safe, and schema-grounded. Never hallucinate schema. Return valid JSON with keys content and sql.',
-            },
-            ...conversationHistory,
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
-        },
-        { timeout: 30000 }
-      );
-
-      const rawText =
-        response?.data?.message?.content ||
-        response?.data?.response ||
-        'I could not generate a response right now.';
-
-      return {
         ...parseResponse(String(rawText)),
-        provider: 'ollama' as const,
+        provider: 'azure-openai' as const,
       };
     };
 
-    /** Generic OpenAI-compatible handler (LM Studio, GPT4All, etc.) */
-    const askOpenAiCompat = async () => {
-      const url = `${providerConfig.endpoint.replace(/\/$/, '')}/chat/completions`;
-      const requestBody = {
-        model: requestedModel,
-        temperature: requestedProvider === 'gpt4all' ? 0 : 0.1,
-        ...(requestedProvider === 'gpt4all' && { max_tokens: 512 }),
-        messages: [
-          {
-            role: 'system',
-            content:
-              'You are precise, safe, and schema-grounded. Never hallucinate schema. Return valid JSON with keys content and sql.',
-          },
-          ...(requestedProvider === 'gpt4all' ? [] : conversationHistory),
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-      };
-
-      const response = await axios.post(url, requestBody, {
-        headers: providerConfig.apiKey
-          ? { Authorization: `Bearer ${providerConfig.apiKey}` }
-          : undefined,
-        timeout: 60000,
-      });
-
-      const rawContent: string =
-        response?.data?.choices?.[0]?.message?.content ||
-        'I could not generate a response right now.';
-      // Strip DeepSeek-R1 <think>...</think> reasoning blocks
-      const rawText = rawContent
-        .replace(/<think>[\s\S]*?<\/think>/gi, '')
-        .trim();
-      return {
-        ...parseResponse(rawText),
-        provider: requestedProvider as 'lmstudio' | 'gpt4all',
-      };
-    };
-
-    let result;
-    if (requestedProvider === 'openai') {
-      result = await askOpenAi();
-    } else if (requestedProvider === 'ollama') {
-      result = await askOllama();
-    } else if (providerConfig.openAiCompat) {
-      result = await askOpenAiCompat();
-    } else {
-      return sendError(
-        res,
-        `Provider '${requestedProvider}' is not supported.`,
-        400
-      );
-    }
+    const result = await askAzureOpenAi();
 
     return sendSuccess(res, result);
   } catch (err: unknown) {

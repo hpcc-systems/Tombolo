@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FC, type ReactNode } from 'react';
-import { Button, Card, Drawer, Dropdown, Input, Select, Space, Typography } from 'antd';
+import { Button, Card, Drawer, Dropdown, Input, Space, Typography } from 'antd';
 import {
   ArrowUpOutlined,
   CopyOutlined,
@@ -12,7 +12,6 @@ import Editor from '@monaco-editor/react';
 import { format as formatSql } from 'sql-formatter';
 import { apiClient } from '@/services/api';
 import styles from './AiAssistantDrawer.module.css';
-import { aiModels } from './aiModels';
 
 const { Text } = Typography;
 
@@ -116,7 +115,6 @@ interface ChatMessage {
 interface PersistedAssistantState {
   chatMessages: ChatMessage[];
   promptHistory: string[];
-  selectedModelIndex: number;
 }
 
 export interface AiAssistantDrawerProps {
@@ -205,7 +203,6 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
   const [chatLoading, setChatLoading] = useState(false);
   const [sqlRunningId, setSqlRunningId] = useState<number | null>(null);
-  const [selectedModelIndex, setSelectedModelIndex] = useState(0);
   const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
   const [editingPrompt, setEditingPrompt] = useState('');
   const [copiedMessageId, setCopiedMessageId] = useState<number | null>(null);
@@ -284,7 +281,6 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
       if (!rawState) {
         setChatMessages(buildInitialChatMessages(initialMessage));
         setPromptHistory([]);
-        setSelectedModelIndex(0);
         return;
       }
 
@@ -295,20 +291,12 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
       const persistedPromptHistory = Array.isArray(parsed.promptHistory)
         ? parsed.promptHistory.filter((entry): entry is string => typeof entry === 'string')
         : [];
-      const persistedModelIndex =
-        typeof parsed.selectedModelIndex === 'number' &&
-        parsed.selectedModelIndex >= 0 &&
-        parsed.selectedModelIndex < aiModels.length
-          ? parsed.selectedModelIndex
-          : 0;
 
       setChatMessages(persistedMessages.length > 0 ? persistedMessages : buildInitialChatMessages(initialMessage));
       setPromptHistory(persistedPromptHistory);
-      setSelectedModelIndex(persistedModelIndex);
     } catch {
       setChatMessages(buildInitialChatMessages(initialMessage));
       setPromptHistory([]);
-      setSelectedModelIndex(0);
     } finally {
       hasLoadedPersistedStateRef.current = true;
     }
@@ -322,11 +310,10 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
     const persistedState: PersistedAssistantState = {
       chatMessages,
       promptHistory,
-      selectedModelIndex,
     };
 
     window.localStorage.setItem(storageKey, JSON.stringify(persistedState));
-  }, [chatMessages, promptHistory, selectedModelIndex, storageKey]);
+  }, [chatMessages, promptHistory, storageKey]);
 
   useEffect(() => {
     if (!open) return;
@@ -397,12 +384,10 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
     signal?: AbortSignal
   ): Promise<{ content: string; sql?: string }> => {
     try {
-      const activeModel = aiModels[selectedModelIndex];
-
       // Build conversation history from previous messages (skip initial greeting)
       const history = priorMessages
         .slice(1) // skip the initial assistant greeting
-        .slice(activeModel.provider === 'gpt4all' ? -3 : -20) // truncate to avoid token limits
+        .slice(-20) // truncate to avoid token limits
         .map(msg => ({ role: msg.role, content: msg.content }));
 
       const editorSql = currentEditorSql?.trim();
@@ -431,8 +416,6 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
           message: request,
           assistantContext: enhancedContext,
           ...(schemaData && { schemaData }),
-          provider: activeModel.provider,
-          model: activeModel.model,
           conversationHistory: history,
         },
         {
@@ -502,16 +485,8 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
       const modelUnavailable =
         errorCode === 'MODEL_UNAVAILABLE' ||
         /not configured|unavailable|econnrefused|network error|timeout|failed to fetch/i.test(errorMessage);
-
-      const activeModel = aiModels[selectedModelIndex];
-      let unavailableText = `${activeModel?.label ?? 'The model'} is not available right now. Check the endpoint and try again.`;
-      if (activeModel?.provider === 'openai') {
-        unavailableText = 'OpenAI is not available right now. Check OPENAI_API_KEY/server connectivity and try again.';
-      } else if (activeModel?.provider === 'ollama') {
-        unavailableText = 'Ollama is not reachable right now. Check OLLAMA_BASE_URL/model and try again.';
-      } else if (activeModel?.provider === 'lmstudio') {
-        unavailableText = 'LM Studio is not reachable right now. Make sure LM Studio server is running on port 1234.';
-      }
+      const unavailableText =
+        'Azure OpenAI is not available right now. Check AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_DEPLOYMENT, and AZURE_OPENAI_API_VERSION.';
 
       setChatMessages(prev => [
         ...prev,
@@ -614,16 +589,8 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
       const modelUnavailable =
         errorCode === 'MODEL_UNAVAILABLE' ||
         /not configured|unavailable|econnrefused|network error|timeout|failed to fetch/i.test(errorMessage);
-
-      const activeModel = aiModels[selectedModelIndex];
-      let unavailableText = `${activeModel?.label ?? 'The model'} is not available right now. Check the endpoint and try again.`;
-      if (activeModel?.provider === 'openai') {
-        unavailableText = 'OpenAI is not available right now. Check OPENAI_API_KEY/server connectivity and try again.';
-      } else if (activeModel?.provider === 'ollama') {
-        unavailableText = 'Ollama is not reachable right now. Check OLLAMA_BASE_URL/model and try again.';
-      } else if (activeModel?.provider === 'lmstudio') {
-        unavailableText = 'LM Studio is not reachable right now. Make sure LM Studio server is running on port 1234.';
-      }
+      const unavailableText =
+        'Azure OpenAI is not available right now. Check AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_DEPLOYMENT, and AZURE_OPENAI_API_VERSION.';
 
       setChatMessages(prev => [
         ...prev,
@@ -894,19 +861,6 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
             />
 
             <div className={styles.chatComposerFooter}>
-              <div className={styles.chatLeftControls}>
-                <Select
-                  size="small"
-                  className={styles.chatModelSelect}
-                  value={selectedModelIndex}
-                  onChange={setSelectedModelIndex}
-                  options={aiModels.map((m, i) => ({
-                    value: i,
-                    label: `${m.label} · ${m.model.length > 22 ? m.model.slice(0, 22) + '…' : m.model}`,
-                  }))}
-                />
-              </div>
-
               <Button
                 type="primary"
                 shape="circle"

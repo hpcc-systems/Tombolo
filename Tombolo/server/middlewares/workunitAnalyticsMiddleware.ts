@@ -397,22 +397,6 @@ const validateAssistantRequest = [
     .isObject()
     .withMessage('schemaData must be an object'),
 
-  body('provider')
-    .optional()
-    .isString()
-    .withMessage('provider must be a string')
-    .bail()
-    .isIn(['openai', 'ollama', 'lmstudio', 'gpt4all'])
-    .withMessage('provider must be one of: openai, ollama, lmstudio, gpt4all'),
-
-  body('model')
-    .optional()
-    .isString()
-    .withMessage('model must be a string')
-    .bail()
-    .isLength({ max: 200 })
-    .withMessage('model must be less than 200 characters'),
-
   body('conversationHistory')
     .optional()
     .custom(value => {

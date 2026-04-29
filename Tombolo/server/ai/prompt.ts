@@ -18,10 +18,8 @@ export function normalizeSchemaData(rawSchemaData: Record<string, unknown>) {
 }
 
 export function sanitizeConversationHistory(
-  rawHistory: Array<{ role: string; content: string }>,
-  provider: string
+  rawHistory: Array<{ role: string; content: string }>
 ): AssistantConversationMessage[] {
-  const turnLimit = provider === 'gpt4all' ? 5 : 20;
   return (Array.isArray(rawHistory) ? rawHistory : [])
     .filter(
       message =>
@@ -32,13 +30,10 @@ export function sanitizeConversationHistory(
       role: message.role as 'user' | 'assistant',
       content: message.content,
     }))
-    .slice(-turnLimit);
+    .slice(-20);
 }
 
 export function buildUserPrompt(context: AssistantRequestContext): string {
-  const compactKnowledgeBase =
-    context.provider === 'gpt4all' ? '' : context.knowledgeBase || '(none)';
-
   return [
     'You are a SQL analytics assistant.',
     'Respond naturally and concisely for normal questions.',
@@ -74,9 +69,9 @@ export function buildUserPrompt(context: AssistantRequestContext): string {
     'If user asks unknown table/column, respond exactly: OUT_OF_SCOPE: Requested table/column is not in KB',
     'If join path is unknown, respond exactly: OUT_OF_SCOPE: Relationship not defined in KB',
     '',
-    ...(compactKnowledgeBase
-      ? ['Knowledge Base:', compactKnowledgeBase, '']
-      : []),
+    'Knowledge Base:',
+    context.knowledgeBase || '(none)',
+    '',
     'Runtime Schema (includes column types):',
     JSON.stringify(context.schemaData),
     '',
@@ -89,30 +84,6 @@ export function buildUserPrompt(context: AssistantRequestContext): string {
     .join('\n');
 }
 
-export function buildSystemPrompt(provider: string): string {
-  if (provider === 'lmstudio') {
-    return [
-      'You are precise, safe, and schema-grounded.',
-      'Never hallucinate schema.',
-      'Return only valid JSON.',
-      'Do not use markdown.',
-      'Do not add text before or after the JSON.',
-      'Format: {"content":"string","sql":"string|null"}',
-    ].join(' ');
-  }
-
-  if (provider === 'gpt4all') {
-    return [
-      'You are precise, safe, and schema-grounded.',
-      'Never hallucinate schema.',
-      'Return valid JSON with keys content and sql.',
-      'Keep answers short.',
-    ].join(' ');
-  }
-
-  if (provider === 'openai') {
-    return 'You are precise, safe, and schema-grounded. Never hallucinate schema.';
-  }
-
-  return 'You are precise, safe, and schema-grounded. Never hallucinate schema. Return valid JSON with keys content and sql.';
+export function buildSystemPrompt(_provider = 'azure-openai'): string {
+  return 'You are precise, safe, and schema-grounded. Never hallucinate schema.';
 }
