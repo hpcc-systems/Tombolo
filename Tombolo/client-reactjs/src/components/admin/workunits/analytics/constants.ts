@@ -1,6 +1,7 @@
 import type { WhereClauseRow } from './utils';
 
-export const DEFAULT_SQL = '-- Enter your SQL query here\nSELECT * FROM work_unit_details LIMIT 10';
+export const SQL_EDITOR_PLACEHOLDER = '-- Enter your SQL query here';
+export const DEFAULT_SQL = `${SQL_EDITOR_PLACEHOLDER}\nSELECT * FROM work_unit_details LIMIT 10`;
 
 export const WHERE_OPERATORS = ['=', '!=', '>', '<', '>=', '<=', 'LIKE', 'NOT LIKE', 'IN', 'IS NULL', 'IS NOT NULL'];
 

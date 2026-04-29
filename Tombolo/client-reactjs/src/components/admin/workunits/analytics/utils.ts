@@ -1,4 +1,5 @@
 import { message } from 'antd';
+import { SQL_EDITOR_PLACEHOLDER } from './constants';
 
 export interface WhereClauseRow {
   id: number;
@@ -28,6 +29,16 @@ export const buildConditionString = (row: WhereClauseRow): string => {
 
 export const stripComments = (sql: string): string => {
   return sql.replace(/--.*$/gm, '').trim();
+};
+
+const SQL_EDITOR_PLACEHOLDER_NORMALIZED = SQL_EDITOR_PLACEHOLDER.toLowerCase();
+
+export const stripSqlEditorPlaceholder = (sql: string): string => {
+  return sql
+    .split(/\r?\n/)
+    .filter(line => line.trim().toLowerCase() !== SQL_EDITOR_PLACEHOLDER_NORMALIZED)
+    .join('\n')
+    .trim();
 };
 
 export const extractWhereClause = (sql: string): string | null => {
