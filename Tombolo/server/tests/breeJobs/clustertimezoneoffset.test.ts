@@ -22,7 +22,7 @@ describe('getClusterTimezoneOffset', () => {
     vi.clearAllMocks();
     vi.clearAllMocks();
     const workerUtils = (await import('../../jobs/workerUtils.js')).default;
-    _log = workerUtils(parentPort).log;
+    _log = workerUtils(workerParentPort).log;
   });
 
   it('should post info and exit if no clusters', async () => {

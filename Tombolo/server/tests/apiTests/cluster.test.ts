@@ -140,8 +140,6 @@ describe('Cluster Routes', () => {
     });
   });
 
-  it('add-cluster-w-progress should add cluster with progress', async () => {});
-
   it('ping-cluster should ping cluster', async () => {
     const cluster = getCluster();
 

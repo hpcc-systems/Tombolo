@@ -4,7 +4,6 @@ import { app } from '../test_server.js';
 import { mockedModels } from '../mockedModels.js';
 const { LandingZoneMonitoring, Cluster } = mockedModels;
 import { v4 as uuidv4 } from 'uuid';
-import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
 import {
   getLandingZoneMonitoring,
   getLandingZoneMonitoringCreatePayload,
@@ -15,6 +14,11 @@ import {
   AUTHED_USER_ID,
 } from '../helpers.js';
 import { APPROVAL_STATUS } from '../../config/constants.js';
+import {
+  defineApiCase,
+  defineMutationCase,
+  useMonitoringApiRouteLifecycle,
+} from './monitoringCrudContract.js';
 
 // Mock HPCC-JS services
 vi.mock('@hpcc-js/comms', async () => {
@@ -57,14 +61,11 @@ const validClusterId = uuidv4();
 const validUserId = uuidv4();
 
 describe('Landing Zone Monitoring Routes', () => {
+  useMonitoringApiRouteLifecycle();
+
   const originalEnv = process.env;
 
   beforeEach(() => {
-    vi.useFakeTimers();
-    if (blacklistTokenIntervalId) {
-      clearInterval(blacklistTokenIntervalId as NodeJS.Timeout);
-    }
-    vi.clearAllMocks();
     // Set up ENCRYPTION_KEY for tests
     process.env = {
       ...originalEnv,
@@ -74,10 +75,6 @@ describe('Landing Zone Monitoring Routes', () => {
 
   afterEach(() => {
     process.env = originalEnv;
-  });
-
-  afterEach(() => {
-    vi.clearAllTimers();
   });
 
   describe('GET /api/landingZoneMonitoring/getDropzones', () => {
@@ -163,33 +160,28 @@ describe('Landing Zone Monitoring Routes', () => {
   });
 
   describe('POST /api/landingZoneMonitoring', () => {
-    it('should create new landing zone monitoring', async () => {
-      const newMonitoring = getLandingZoneMonitoring({
-        applicationId: validApplicationId,
-        clusterId: validClusterId,
-        createdBy: validUserId,
-        lastUpdatedBy: validUserId,
-      });
-
-      const createPayload = getLandingZoneMonitoringCreatePayload({
-        applicationId: validApplicationId,
-        clusterId: validClusterId,
-        createdBy: validUserId,
-        lastUpdatedBy: validUserId,
-      });
-
-      LandingZoneMonitoring.create.mockResolvedValue(createPayload);
-
-      const res = await request(app)
-        .post('/api/landingZoneMonitoring')
-        .send(createPayload);
-
-      expect(res.status).toBe(201);
-      expect(res.body.success).toBe(true);
-      expect(res.body.message).toBe(
-        'Landing zone monitoring created successfully'
-      );
-      expect(res.body.data).toMatchObject(newMonitoring);
+    defineApiCase({
+      title: 'should create new landing zone monitoring',
+      method: 'post',
+      path: () => '/api/landingZoneMonitoring',
+      buildEntity: () =>
+        getLandingZoneMonitoringCreatePayload({
+          applicationId: validApplicationId,
+          clusterId: validClusterId,
+          createdBy: validUserId,
+          lastUpdatedBy: validUserId,
+        }),
+      expectedStatus: 201,
+      assertSuccess: true,
+      arrange: createPayload => {
+        LandingZoneMonitoring.create.mockResolvedValue(createPayload);
+      },
+      assert: (res, createPayload) => {
+        expect(res.body.message).toBe(
+          'Landing zone monitoring created successfully'
+        );
+        expect(res.body.data).toMatchObject(createPayload);
+      },
     });
 
     it('should return 400 for invalid application ID', async () => {
@@ -239,27 +231,30 @@ describe('Landing Zone Monitoring Routes', () => {
   });
 
   describe('GET /api/landingZoneMonitoring/all/:applicationId', () => {
-    it('should get all landing zone monitorings for valid application ID', async () => {
-      const app1 = getLandingZoneMonitoring({
-        applicationId: validApplicationId,
-        monitoringName: 'First Monitoring',
-      });
-      const app2 = getLandingZoneMonitoring({
-        applicationId: validApplicationId,
-        monitoringName: 'Second Monitor',
-      });
-      const monitorings = [app1, app2];
+    defineApiCase({
+      title: 'should get all landing zone monitorings for valid application ID',
+      method: 'get',
+      path: monitoring =>
+        `/api/landingZoneMonitoring/all/${monitoring.applicationId}`,
+      buildEntity: () =>
+        getLandingZoneMonitoring({ applicationId: validApplicationId }),
+      expectedStatus: 200,
+      assertSuccess: true,
+      arrange: monitoring => {
+        const app1 = {
+          ...monitoring,
+          monitoringName: 'First Monitoring',
+        };
+        const app2 = getLandingZoneMonitoring({
+          applicationId: monitoring.applicationId,
+          monitoringName: 'Second Monitor',
+        });
 
-      LandingZoneMonitoring.findAll.mockResolvedValue(monitorings);
-
-      const res = await request(app).get(
-        `/api/landingZoneMonitoring/all/${validApplicationId}`
-      );
-
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.data).toHaveLength(2);
-      // expect(res.body.count).toBe(2);
+        LandingZoneMonitoring.findAll.mockResolvedValue([app1, app2]);
+      },
+      assert: res => {
+        expect(res.body.data).toHaveLength(2);
+      },
     });
 
     it('should return 422 for invalid application ID', async () => {
@@ -271,51 +266,61 @@ describe('Landing Zone Monitoring Routes', () => {
       expect(res.body.success).toBe(false);
     });
 
-    it('should return empty array when no monitorings found', async () => {
-      LandingZoneMonitoring.findAll.mockResolvedValue([]);
-
-      const res = await request(app).get(
-        `/api/landingZoneMonitoring/all/${validApplicationId}`
-      );
-
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.data).toHaveLength(0);
-      // expect(res.body.count).toBe(0);
+    defineApiCase({
+      title: 'should return empty array when no monitorings found',
+      method: 'get',
+      path: monitoring =>
+        `/api/landingZoneMonitoring/all/${monitoring.applicationId}`,
+      buildEntity: () =>
+        getLandingZoneMonitoring({ applicationId: validApplicationId }),
+      expectedStatus: 200,
+      assertSuccess: true,
+      arrange: () => {
+        LandingZoneMonitoring.findAll.mockResolvedValue([]);
+      },
+      assert: res => {
+        expect(res.body.data).toHaveLength(0);
+      },
     });
   });
 
   describe('GET /api/landingZoneMonitoring/:id', () => {
-    it('should get landing zone monitoring by valid ID', async () => {
-      const monitoring = getLandingZoneMonitoring({
-        id: uuidv4(),
-        applicationId: validApplicationId,
-        clusterId: validClusterId,
-      });
-      LandingZoneMonitoring.findByPk.mockResolvedValue(monitoring);
-
-      const res = await request(app).get(
-        `/api/landingZoneMonitoring/${monitoring.id}`
-      );
-
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.data).toMatchObject(monitoring);
-      expect(LandingZoneMonitoring.findByPk).toHaveBeenCalledWith(
-        monitoring.id
-      );
+    defineApiCase({
+      title: 'should get landing zone monitoring by valid ID',
+      method: 'get',
+      path: monitoring => `/api/landingZoneMonitoring/${monitoring.id}`,
+      buildEntity: () =>
+        getLandingZoneMonitoring({
+          id: uuidv4(),
+          applicationId: validApplicationId,
+          clusterId: validClusterId,
+        }),
+      expectedStatus: 200,
+      assertSuccess: true,
+      arrange: monitoring => {
+        LandingZoneMonitoring.findByPk.mockResolvedValue(monitoring);
+      },
+      assert: (res, monitoring) => {
+        expect(res.body.data).toMatchObject(monitoring);
+        expect(LandingZoneMonitoring.findByPk).toHaveBeenCalledWith(
+          monitoring.id
+        );
+      },
     });
 
-    it('should return 404 when monitoring not found', async () => {
-      LandingZoneMonitoring.findByPk.mockResolvedValue(null);
-
-      const res = await request(app).get(
-        `/api/landingZoneMonitoring/${nonExistentID}`
-      );
-
-      expect(res.status).toBe(404);
-      expect(res.body.success).toBe(false);
-      expect(res.body.message).toBe('Landing zone monitoring not found');
+    defineApiCase({
+      title: 'should return 404 when monitoring not found',
+      method: 'get',
+      path: monitoring => `/api/landingZoneMonitoring/${monitoring.id}`,
+      buildEntity: () => ({ id: nonExistentID }),
+      expectedStatus: 404,
+      assertSuccess: false,
+      arrange: () => {
+        LandingZoneMonitoring.findByPk.mockResolvedValue(null);
+      },
+      assert: res => {
+        expect(res.body.message).toBe('Landing zone monitoring not found');
+      },
     });
 
     it('should return 422 for invalid ID format', async () => {
@@ -426,37 +431,42 @@ describe('Landing Zone Monitoring Routes', () => {
   });
 
   describe('DELETE /api/landingZoneMonitoring/:id', () => {
-    it('should delete landing zone monitoring successfully', async () => {
-      const monitoring = getLandingZoneMonitoring();
-      LandingZoneMonitoring.findByPk.mockResolvedValue(monitoring);
-      LandingZoneMonitoring.handleDelete.mockResolvedValue(1);
-
-      const res = await request(app).delete(
-        `/api/landingZoneMonitoring/${monitoring.id}`
-      );
-
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.message).toBe(
-        'Landing zone monitoring deleted successfully'
-      );
-      expect(LandingZoneMonitoring.handleDelete).toHaveBeenCalledWith({
-        id: monitoring.id,
-        deletedByUserId: AUTHED_USER_ID,
-      });
+    defineApiCase({
+      title: 'should delete landing zone monitoring successfully',
+      method: 'delete',
+      path: monitoring => `/api/landingZoneMonitoring/${monitoring.id}`,
+      buildEntity: () => getLandingZoneMonitoring(),
+      expectedStatus: 200,
+      assertSuccess: true,
+      arrange: monitoring => {
+        LandingZoneMonitoring.findByPk.mockResolvedValue(monitoring);
+        LandingZoneMonitoring.handleDelete.mockResolvedValue(1);
+      },
+      assert: (res, monitoring) => {
+        expect(res.body.message).toBe(
+          'Landing zone monitoring deleted successfully'
+        );
+        expect(LandingZoneMonitoring.handleDelete).toHaveBeenCalledWith({
+          id: monitoring.id,
+          deletedByUserId: AUTHED_USER_ID,
+        });
+      },
     });
 
-    it('should return 404 when deleting non-existent monitoring', async () => {
-      LandingZoneMonitoring.findByPk.mockResolvedValue(null);
-
-      const res = await request(app).delete(
-        `/api/landingZoneMonitoring/${nonExistentID}`
-      );
-
-      expect(res.status).toBe(404);
-      expect(res.body.success).toBe(false);
-      expect(res.body.message).toBe('Landing zone monitoring not found');
-      expect(LandingZoneMonitoring.handleDelete).not.toHaveBeenCalled();
+    defineApiCase({
+      title: 'should return 404 when deleting non-existent monitoring',
+      method: 'delete',
+      path: monitoring => `/api/landingZoneMonitoring/${monitoring.id}`,
+      buildEntity: () => ({ id: nonExistentID }),
+      expectedStatus: 404,
+      assertSuccess: false,
+      arrange: () => {
+        LandingZoneMonitoring.findByPk.mockResolvedValue(null);
+      },
+      assert: res => {
+        expect(res.body.message).toBe('Landing zone monitoring not found');
+        expect(LandingZoneMonitoring.handleDelete).not.toHaveBeenCalled();
+      },
     });
 
     it('should return 422 for invalid ID format', async () => {
@@ -470,67 +480,61 @@ describe('Landing Zone Monitoring Routes', () => {
   });
 
   describe('PATCH /api/landingZoneMonitoring/evaluate', () => {
-    it('should approve landing zone monitoring successfully', async () => {
-      const monitoringIds = [uuidv4(), uuidv4()];
-      const evaluatePayload = {
-        ids: monitoringIds,
+    defineMutationCase({
+      title: 'should approve landing zone monitoring successfully',
+      method: 'patch',
+      path: '/api/landingZoneMonitoring/evaluate',
+      buildBody: () => ({
+        ids: [uuidv4(), uuidv4()],
         approvalStatus: APPROVAL_STATUS.APPROVED,
         approverComment: 'Looks good, approved for production use',
         approvedBy: validUserId,
         isActive: true,
-      };
-
-      LandingZoneMonitoring.update.mockResolvedValue([2]); // Two rows updated
-
-      const res = await request(app)
-        .patch('/api/landingZoneMonitoring/evaluate')
-        .send(evaluatePayload);
-
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.message).toBe('OK');
+      }),
+      expectedStatus: 200,
+      assertSuccess: true,
+      expectedMessage: 'OK',
+      arrange: () => {
+        LandingZoneMonitoring.update.mockResolvedValue([2]);
+      },
     });
 
-    it('should reject landing zone monitoring successfully', async () => {
-      const monitoringIds = [uuidv4()];
-      const evaluatePayload = {
-        ids: monitoringIds,
+    defineMutationCase({
+      title: 'should reject landing zone monitoring successfully',
+      method: 'patch',
+      path: '/api/landingZoneMonitoring/evaluate',
+      buildBody: () => ({
+        ids: [uuidv4()],
         approvalStatus: APPROVAL_STATUS.REJECTED,
         approverComment: 'Security concerns, needs revision',
         approvedBy: validUserId,
         isActive: false,
-      };
-
-      LandingZoneMonitoring.update.mockResolvedValue([1]);
-
-      const res = await request(app)
-        .patch('/api/landingZoneMonitoring/evaluate')
-        .send(evaluatePayload);
-
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.message).toBe('OK');
+      }),
+      expectedStatus: 200,
+      assertSuccess: true,
+      expectedMessage: 'OK',
+      arrange: () => {
+        LandingZoneMonitoring.update.mockResolvedValue([1]);
+      },
     });
 
-    it('should return 404 when no records found to evaluate', async () => {
-      const evaluatePayload = {
+    defineMutationCase({
+      title: 'should return 404 when no records found to evaluate',
+      method: 'patch',
+      path: '/api/landingZoneMonitoring/evaluate',
+      buildBody: () => ({
         ids: [nonExistentID],
         approvalStatus: APPROVAL_STATUS.APPROVED,
         approverComment: 'Test comment',
         approvedBy: validUserId,
-      };
-
-      LandingZoneMonitoring.update.mockResolvedValue([0]); // No rows updated
-
-      const res = await request(app)
-        .patch('/api/landingZoneMonitoring/evaluate')
-        .send(evaluatePayload);
-
-      expect(res.status).toBe(404);
-      expect(res.body.success).toBe(false);
-      expect(res.body.message).toBe(
-        'No landing zone monitoring records found with the provided IDs'
-      );
+      }),
+      expectedStatus: 404,
+      assertSuccess: false,
+      expectedMessage:
+        'No landing zone monitoring records found with the provided IDs',
+      arrange: () => {
+        LandingZoneMonitoring.update.mockResolvedValue([0]);
+      },
     });
 
     it('should return 422 for validation errors in evaluate', async () => {
@@ -549,59 +553,57 @@ describe('Landing Zone Monitoring Routes', () => {
       expect(res.body.success).toBe(false);
     });
 
-    it('should handle missing isActive field gracefully', async () => {
-      const evaluatePayload = {
+    defineMutationCase({
+      title: 'should handle missing isActive field gracefully',
+      method: 'patch',
+      path: '/api/landingZoneMonitoring/evaluate',
+      buildBody: () => ({
         ids: [uuidv4()],
         approvalStatus: APPROVAL_STATUS.APPROVED,
         approverComment: 'Approved without explicit isActive',
         approvedBy: validUserId,
-        // isActive is optional
-      };
-
-      LandingZoneMonitoring.update.mockResolvedValue([1]);
-
-      const res = await request(app)
-        .patch('/api/landingZoneMonitoring/evaluate')
-        .send(evaluatePayload);
-
-      expect(res.status).toBe(200);
-      expect(LandingZoneMonitoring.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          isActive: false, // Should default to false
-        }),
-        expect.any(Object)
-      );
+      }),
+      expectedStatus: 200,
+      arrange: () => {
+        LandingZoneMonitoring.update.mockResolvedValue([1]);
+      },
+      assert: () => {
+        expect(LandingZoneMonitoring.update).toHaveBeenCalledWith(
+          expect.objectContaining({
+            isActive: false,
+          }),
+          expect.any(Object)
+        );
+      },
     });
   });
 
-  it('should activate landing zone monitoring successfully', async () => {
-    const monitoringIds = [uuidv4(), uuidv4()];
-    const togglePayload = {
-      ids: monitoringIds,
+  defineMutationCase({
+    title: 'should activate landing zone monitoring successfully',
+    method: 'patch',
+    path: '/api/landingZoneMonitoring/toggleStatus',
+    buildBody: () => ({
+      ids: [uuidv4(), uuidv4()],
       isActive: true,
-    };
-
-    LandingZoneMonitoring.findAll.mockResolvedValue([
-      {
-        id: monitoringIds[0],
-        isActive: false,
-        approvalStatus: APPROVAL_STATUS.APPROVED, // Add this - must be approved to activate
-      },
-      {
-        id: monitoringIds[1],
-        isActive: false,
-        approvalStatus: APPROVAL_STATUS.APPROVED, // Add this - must be approved to activate
-      },
-    ]);
-    LandingZoneMonitoring.update.mockResolvedValue([2]);
-
-    const res = await request(app)
-      .patch('/api/landingZoneMonitoring/toggleStatus')
-      .send(togglePayload);
-
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(res.body.message).toBe('OK');
+    }),
+    expectedStatus: 200,
+    assertSuccess: true,
+    expectedMessage: 'OK',
+    arrange: togglePayload => {
+      LandingZoneMonitoring.findAll.mockResolvedValue([
+        {
+          id: togglePayload.ids[0],
+          isActive: false,
+          approvalStatus: APPROVAL_STATUS.APPROVED,
+        },
+        {
+          id: togglePayload.ids[1],
+          isActive: false,
+          approvalStatus: APPROVAL_STATUS.APPROVED,
+        },
+      ]);
+      LandingZoneMonitoring.update.mockResolvedValue([2]);
+    },
   });
   // Error handling tests
   describe('Error Handling', () => {
