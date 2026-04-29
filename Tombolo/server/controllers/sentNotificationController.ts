@@ -1,12 +1,76 @@
 import { Request, Response } from 'express';
 import moment from 'moment';
 import { Op } from 'sequelize';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import ejs from 'ejs';
 
 //Local imports
 import logger from '../config/logger.js';
 import { SentNotification, sequelize } from '@tombolo/db';
-import emailNotificationHtmlCode from '../utils/emailNotificationHtmlCode.js';
 import { sendSuccess, sendError } from '../utils/response.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const defaultTheme = {
+  bg: '#f6f8fb',
+  cardBg: '#ffffff',
+  text: '#1f2937',
+  muted: '#6b7280',
+  border: '#dbe3ec',
+  primary: '#0f62fe',
+  success: '#198754',
+  danger: '#dc3545',
+  warning: '#f59e0b',
+};
+
+const defaultTemplateData = {
+  theme: defaultTheme,
+  contentWidth: 640,
+};
+
+const resolveTemplatePath = (templateName: string): string | undefined => {
+  const candidates = [
+    path.join(
+      process.cwd(),
+      'jobs',
+      'notificationTemplates',
+      'email',
+      `${templateName}.ejs`
+    ),
+    path.join(
+      process.cwd(),
+      '..',
+      'jobs',
+      'notificationTemplates',
+      'email',
+      `${templateName}.ejs`
+    ),
+    path.resolve(
+      __dirname,
+      '../../jobs/notificationTemplates/email',
+      `${templateName}.ejs`
+    ),
+    path.resolve(
+      __dirname,
+      '../../../jobs/notificationTemplates/email',
+      `${templateName}.ejs`
+    ),
+  ];
+
+  const resolved = candidates.find(candidate => fs.existsSync(candidate));
+  if (!resolved) {
+    logger.warn('Template file not found for sent notification HTML render', {
+      templateName,
+      cwd: process.cwd(),
+      candidates,
+    });
+  }
+
+  return resolved;
+};
 
 async function createSentNotification(req: Request, res: Response) {
   try {
@@ -66,6 +130,39 @@ async function getSentNotification(req: Request, res: Response) {
   } catch (err) {
     logger.error('getSentNotification: ', err);
     return sendError(res, 'Failed to get sent notification', 500);
+  }
+}
+
+async function getNotificationHtml(req: Request, res: Response) {
+  try {
+    const { id } = req.body as { id: string };
+    const notification = await SentNotification.findByPk(id, { raw: true });
+    if (!notification) {
+      return sendError(res, 'Sent notification not found', 404);
+    }
+
+    const payload = (notification as any).metaData?.notificationDetails;
+    const templateName = payload?.templateName;
+    if (!templateName) {
+      return sendSuccess(res, null, 'No template name found');
+    }
+
+    const templatePath = resolveTemplatePath(templateName);
+    if (!templatePath) {
+      return sendSuccess(res, null, `Template ${templateName} not found`);
+    }
+
+    const template = fs.readFileSync(templatePath, 'utf-8');
+    const html = ejs.render(
+      template,
+      { ...defaultTemplateData, ...(payload?.metaData ?? {}) },
+      { filename: templatePath }
+    );
+
+    return sendSuccess(res, html, 'Notification HTML retrieved successfully');
+  } catch (err) {
+    logger.error('getNotificationHtml: ', err);
+    return sendError(res, 'Failed to get notification HTML', 500);
   }
 }
 
@@ -164,48 +261,12 @@ async function updateSentNotifications(req: Request, res: Response) {
   }
 }
 
-async function getNotificationHtml(req: Request, res: Response) {
-  try {
-    const notification = await SentNotification.findByPk(req.body.id);
-    if (!notification) {
-      return sendError(res, 'Sent notification not found', 404);
-    }
-
-    if (!notification.metaData || !notification.metaData.notificationDetails) {
-      return sendError(res, 'No details for this notification', 404);
-    }
-
-    const notificationDetails = notification.metaData.notificationDetails;
-    const templateName = notificationDetails.templateName;
-    if (!templateName) {
-      return sendError(res, 'Notification template not found', 404);
-    }
-
-    // Support legacy shape (template data at notificationDetails)
-    // and new jobs shape (template data at notificationDetails.metaData).
-    const templateData = notificationDetails.metaData ?? notificationDetails;
-
-    const htmlCode = emailNotificationHtmlCode({
-      templateName,
-      data: templateData,
-    });
-    return sendSuccess(
-      res,
-      htmlCode,
-      'Successfully fetched notification details'
-    );
-  } catch (err) {
-    logger.error(err.message);
-    return sendError(res, 'Failed to get notification html code', 500);
-  }
-}
-
 export {
-  getNotificationHtml,
   updateSentNotifications,
   deleteSentNotifications,
   deleteSentNotification,
   getSentNotification,
   getSentNotifications,
   createSentNotification,
+  getNotificationHtml,
 };

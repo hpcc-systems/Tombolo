@@ -1,5 +1,4 @@
 import { defineConfig } from 'tsup';
-import { cp } from 'fs/promises';
 
 export default defineConfig({
   entry: [
@@ -20,10 +19,4 @@ export default defineConfig({
   shims: true,
   external: [/^[^./]/], // Externalize bare module imports (node_modules), not relative paths
   bundle: false, // Don't bundle - transpile each file individually, preserving structure
-  onSuccess: async () => {
-    await cp('notificationTemplates', 'dist/notificationTemplates', {
-      recursive: true,
-    });
-    console.info('Copied notificationTemplates to dist/');
-  },
 });

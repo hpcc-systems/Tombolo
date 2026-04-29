@@ -1,8 +1,4 @@
-import type { NotificationQueue } from '@tombolo/db';
-
-type NotificationQueueCreateInput = Parameters<
-  typeof NotificationQueue.create
->[0];
+import type { NotificationEnqueueInput } from '../../services/notificationProducer.js';
 
 type PasswordExpiryInProximityNotificationPayloadParams = {
   clusterName: string;
@@ -18,8 +14,8 @@ const passwordExpiryInProximityNotificationPayload = ({
   passwordDaysRemaining,
   recipients,
   notificationId,
-}: PasswordExpiryInProximityNotificationPayloadParams): NotificationQueueCreateInput => {
-  const payload: NotificationQueueCreateInput = {
+}: PasswordExpiryInProximityNotificationPayloadParams): NotificationEnqueueInput => {
+  const payload: NotificationEnqueueInput = {
     type: 'email',
     templateName,
     deliveryType: 'immediate',

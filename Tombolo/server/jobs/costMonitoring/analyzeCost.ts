@@ -2,7 +2,6 @@ import { logOrPostMessage } from '../jobUtils.js';
 import {
   CostMonitoring,
   CostMonitoringData,
-  NotificationQueue,
   MonitoringType,
   Cluster,
   AsrDomain,
@@ -18,7 +17,7 @@ import {
   generateNotificationIdempotencyKey,
 } from '../jobMonitoring/monitorJobsUtil.js';
 import { Op } from 'sequelize';
-import type { CreationAttributes } from 'sequelize';
+import type { NotificationEnqueueInput } from '../../services/notificationProducer.js';
 import _ from 'lodash';
 import currencyCodeToSymbol from '../../utils/currencyCodeToSymbol.js';
 import { msGraphClient, extractFirstName } from '../../utils/msGraphHelper.js';
@@ -29,7 +28,10 @@ const domainMap = new Map();
 const productMap = new Map();
 const clusterMap = new Map();
 let asrEnabled = null;
-type NotificationQueuePayload = CreationAttributes<NotificationQueue>;
+type NotificationQueuePayload = NotificationEnqueueInput &
+  Required<
+    Pick<NotificationEnqueueInput, 'type' | 'deliveryType' | 'templateName'>
+  >;
 
 async function checkIfAsrEnabled() {
   if (asrEnabled === null) {

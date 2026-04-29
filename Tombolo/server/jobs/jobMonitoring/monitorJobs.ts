@@ -9,7 +9,6 @@ import {
   Cluster,
   MonitoringType,
   MonitoringLog,
-  NotificationQueue,
   JobMonitoringData,
 } from '@tombolo/db';
 import { decryptString } from '@tombolo/shared';

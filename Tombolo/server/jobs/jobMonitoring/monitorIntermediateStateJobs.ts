@@ -6,7 +6,6 @@ import _ from 'lodash';
 // Local imports
 import {
   Cluster,
-  NotificationQueue,
   MonitoringType,
   MonitoringLog,
   JobMonitoringData,

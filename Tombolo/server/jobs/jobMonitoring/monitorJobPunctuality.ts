@@ -15,12 +15,7 @@ import {
   differenceInMs,
   nocAlertDescription,
 } from './monitorJobsUtil.js';
-import {
-  JobMonitoring,
-  Cluster,
-  NotificationQueue,
-  MonitoringType,
-} from '@tombolo/db';
+import { JobMonitoring, Cluster, MonitoringType } from '@tombolo/db';
 import { getClusterOptions } from '../../utils/getClusterOptions.js';
 import { APPROVAL_STATUS } from '../../config/constants.js';
 import type { ClusterWithPassword } from '../../types/cluster.js';
