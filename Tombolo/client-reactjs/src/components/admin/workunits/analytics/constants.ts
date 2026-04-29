@@ -19,6 +19,10 @@ export const SQL_FORMATTER_OPTIONS = {
 
 export const QUERY_TIMEOUT_MS = 300_000;
 export const MAX_HISTORY_ITEMS = 20;
+export const SAVED_RESULTS_STORAGE_KEY = 'analytics_saved_results';
+export const MAX_SAVED_RESULTS_ITEMS = 10;
+export const MAX_SAVED_RESULT_BYTES = 250_000;
+export const MAX_SAVED_RESULTS_TOTAL_BYTES = 1_000_000;
 
 export const KEYBOARD_SHORTCUTS = [
   { keys: 'Ctrl/Cmd + Enter', description: 'Execute' },
