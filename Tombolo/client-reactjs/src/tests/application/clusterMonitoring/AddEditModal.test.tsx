@@ -1,49 +1,17 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { assertModalTitles } from '@/tests/application/testUtils/modalAssertions';
+import {
+  assertUncontrolledFinalTabAction,
+  clickNextIfPresent,
+  createModalPropsFactory,
+} from '@/tests/application/testUtils/modalHarness';
 
 vi.mock('antd', async importOriginal => {
   const antd = await importOriginal();
-  const MockModal = ({ open, title, footer, children, onCancel }) =>
-    open ? (
-      <div>
-        <div data-testid="title">{title}</div>
-        <div>{children}</div>
-        <div>{footer}</div>
-        <button aria-label="modal-cancel" onClick={onCancel}>
-          x
-        </button>
-      </div>
-    ) : null;
-  const MockTabs = ({ items, activeKey, onChange }) => (
-    <div>
-      <div data-testid="tabs">
-        {items.map(it => (
-          <button key={it.key} aria-label={`tab-${it.key}`} onClick={() => onChange?.(it.key)}>
-            {it.label}
-          </button>
-        ))}
-      </div>
-      <div data-testid="tab-content">{items.find(i => i.key === activeKey)?.children}</div>
-    </div>
-  );
-  const MockButton = ({ children, onClick }) => <button onClick={onClick}>{children}</button>;
-  const MockBadge = () => null;
-  const MockCard = ({ children }) => <div>{children}</div>;
-  return {
-    ...(antd as any),
-    Modal: MockModal,
-    Tabs: MockTabs,
-    Button: MockButton,
-    Badge: MockBadge,
-    Card: MockCard,
-    notification: {
-      success: vi.fn(),
-      error: vi.fn(),
-      warning: vi.fn(),
-      info: vi.fn(),
-    },
-  };
+  const { createModalAntdMocks } = await import('@/tests/application/testUtils/antdModalMock');
+  return { ...(antd as any), ...createModalAntdMocks() };
 });
 
 vi.mock('@/components/application/clusterMonitoring/AddEditModal/BasicTab', () => ({
@@ -108,21 +76,25 @@ describe('Cluster AddEditModal', () => {
   });
 
   it('shows correct title based on mode', () => {
-    const { rerender } = render(<AddEditModal {...baseProps} />);
-    expect(screen.getByTestId('title')).toHaveTextContent('Add Cluster Monitoring');
-
-    rerender(<AddEditModal {...baseProps} editingMonitoring />);
-    expect(screen.getByTestId('title')).toHaveTextContent('Edit Cluster Monitoring');
-
-    rerender(<AddEditModal {...baseProps} isDuplicating />);
-    expect(screen.getByTestId('title')).toHaveTextContent('Duplicate Cluster Monitoring');
+    const makeProps = createModalPropsFactory(baseProps);
+    const { rerender } = render(<AddEditModal {...makeProps()} />);
+    assertModalTitles({
+      rerender,
+      renderModal: (props = {}) => <AddEditModal {...makeProps(props)} />,
+      cases: [
+        { title: 'Add Cluster Monitoring' },
+        { title: 'Edit Cluster Monitoring', props: { editingMonitoring: true } },
+        { title: 'Duplicate Cluster Monitoring', props: { isDuplicating: true } },
+      ],
+    });
   });
 
   it('navigates Next/Previous and Cancel resets state', async () => {
     const user = userEvent.setup();
-    render(<AddEditModal {...baseProps} />);
+    const makeProps = createModalPropsFactory(baseProps);
+    render(<AddEditModal {...makeProps()} />);
 
-    await user.click(screen.getByText('Next'));
+    await clickNextIfPresent(user);
     // Now should be on tab 1; clicking Previous returns
     await user.click(screen.getByText('Previous'));
 
@@ -134,33 +106,28 @@ describe('Cluster AddEditModal', () => {
 
   it('on last tab shows Previous and Update when not editing; Submit when editing and calls update util', async () => {
     const user = userEvent.setup();
+    const makeProps = createModalPropsFactory(baseProps);
     // Render with editing to drop into last tab footer showing Previous/Submit in our mock
-    const { rerender } = render(<AddEditModal {...baseProps} editingMonitoring />);
+    const { rerender } = render(<AddEditModal {...makeProps({ editingMonitoring: true })} />);
 
-    // Initially on first tab, should see Next; navigate to last tab to see Submit
-    const nextBtn1 = screen.queryByText('Next');
-    if (nextBtn1) {
-      await user.click(nextBtn1);
-    }
-    expect(screen.getByText(/Submit|Update/)).toBeInTheDocument();
-
-    // Editing path: expect Submit and updateClusterMonitoring called
-    rerender(<AddEditModal {...baseProps} editingMonitoring selectedMonitoring={{ id: '77' }} />);
-    const nextBtn2 = screen.queryByText('Next');
-    if (nextBtn2) {
-      await user.click(nextBtn2);
-    }
-    const submitBtn = screen.getByText(/Submit|Update/);
-    await user.click(submitBtn);
+    rerender(<AddEditModal {...makeProps({ editingMonitoring: true, selectedMonitoring: { id: '77' } })} />);
+    await assertUncontrolledFinalTabAction({
+      user,
+      actionMatcher: /Submit|Update/,
+      actionSpy: clusterMonitoringService.update,
+    });
     expect(clusterMonitoringService.update).toHaveBeenCalled();
   });
 
   it('calls create util when not editing on submit', async () => {
     const user = userEvent.setup();
-    render(<AddEditModal {...baseProps} />);
-    await user.click(screen.getByText('Next'));
-    const updateOrSubmit = screen.getByText(/Submit|Update/);
-    await user.click(updateOrSubmit);
+    const makeProps = createModalPropsFactory(baseProps);
+    render(<AddEditModal {...makeProps()} />);
+    await assertUncontrolledFinalTabAction({
+      user,
+      actionMatcher: /Submit|Update/,
+      actionSpy: clusterMonitoringService.create,
+    });
     expect(clusterMonitoringService.create).toHaveBeenCalled();
   });
 });

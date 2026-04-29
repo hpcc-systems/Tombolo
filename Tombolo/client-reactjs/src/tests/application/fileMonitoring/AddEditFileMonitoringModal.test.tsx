@@ -1,35 +1,16 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import {
+  assertControlledFinalTabActionFlow,
+  assertFirstTabNavigationFlow,
+  createModalPropsFactory,
+} from '@/tests/application/testUtils/modalHarness';
 
 vi.mock('antd', async importOriginal => {
   const antd = await importOriginal();
-  const MockModal = ({ open, title, footer, children, onCancel }) =>
-    open ? (
-      <div>
-        <div data-testid="title">{title}</div>
-        <div>{children}</div>
-        <div>{footer}</div>
-        <button aria-label="modal-cancel" onClick={onCancel}>
-          x
-        </button>
-      </div>
-    ) : null;
-  const MockTabs = ({ items, activeKey, onChange }) => (
-    <div>
-      <div data-testid="tabs">
-        {items.map(it => (
-          <button key={it.key} aria-label={`tab-${it.key}`} onClick={() => onChange?.(it.key)}>
-            {it.label}
-          </button>
-        ))}
-      </div>
-      <div data-testid="tab-content">{items.find(i => i.key === activeKey)?.children}</div>
-    </div>
-  );
-  const MockButton = ({ children, onClick }) => <button onClick={onClick}>{children}</button>;
-  const MockBadge = () => null;
-  return { ...(antd as any), Modal: MockModal, Tabs: MockTabs, Button: MockButton, Badge: MockBadge };
+  const { createModalAntdMocks } = await import('@/tests/application/testUtils/antdModalMock');
+  return { ...(antd as any), ...createModalAntdMocks() };
 });
 
 vi.mock('@/components/application/fileMonitoring/FileMonitoringBasicTab', () => ({
@@ -72,32 +53,33 @@ describe('AddEditFileMonitoringModal', () => {
 
   it('renders modal and allows navigation; Cancel resets state', async () => {
     const user = userEvent.setup();
-    render(<AddEditFileMonitoringModal {...baseProps} />);
+    const makeProps = createModalPropsFactory(baseProps);
+    render(<AddEditFileMonitoringModal {...makeProps()} />);
 
-    // First tab footer has Next and Cancel
-    await user.click(screen.getByText('Next'));
-    expect(baseProps.setActiveTab).toHaveBeenCalledWith('1');
+    await assertFirstTabNavigationFlow({
+      user,
+      nextTab: '1',
+      setActiveTabSpy: baseProps.setActiveTab,
+      cancelAction: () => user.click(screen.getByText('Cancel')),
+    });
 
-    // Cancel
-    await user.click(screen.getByText('Cancel'));
     expect(baseProps.resetStates).toHaveBeenCalled();
-    expect(baseProps.setActiveTab).toHaveBeenCalledWith('0');
   });
 
   it('shows Submit on last tab when not editing; Update when editing', async () => {
     const user = userEvent.setup();
-    const { rerender } = render(<AddEditFileMonitoringModal {...baseProps} activeTab={'1'} />);
+    const makeProps = createModalPropsFactory(baseProps);
+    const { rerender } = render(<AddEditFileMonitoringModal {...makeProps()} />);
 
-    // Last tab
-    expect(screen.getByText('Previous')).toBeInTheDocument();
-    const submitBtn = screen.getByText('Submit');
-    await user.click(submitBtn);
-    expect(baseProps.handleSaveFileMonitoring).toHaveBeenCalled();
-
-    // Editing mode
-    rerender(<AddEditFileMonitoringModal {...baseProps} isEditing activeTab={'1'} />);
-    const updateBtn = screen.getByText('Update');
-    await user.click(updateBtn);
-    expect(baseProps.handleUpdateFileMonitoring).toHaveBeenCalled();
+    await assertControlledFinalTabActionFlow({
+      user,
+      rerender,
+      renderModal: overrides => <AddEditFileMonitoringModal {...makeProps(overrides)} />,
+      lastTab: '1',
+      saveLabel: 'Submit',
+      updateLabel: 'Update',
+      saveSpy: baseProps.handleSaveFileMonitoring,
+      updateSpy: baseProps.handleUpdateFileMonitoring,
+    });
   });
 });

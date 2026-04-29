@@ -1,35 +1,16 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import {
+  assertControlledFinalTabActionFlow,
+  assertFirstTabNavigationFlow,
+  createModalPropsFactory,
+} from '@/tests/application/testUtils/modalHarness';
 
 vi.mock('antd', async importOriginal => {
   const antd = await importOriginal();
-  const MockModal = ({ open, title, footer, children, onCancel }) =>
-    open ? (
-      <div>
-        <div data-testid="title">{title}</div>
-        <div>{children}</div>
-        <div>{footer}</div>
-        <button aria-label="modal-cancel" onClick={onCancel}>
-          x
-        </button>
-      </div>
-    ) : null;
-  const MockTabs = ({ items, activeKey, onChange }) => (
-    <div>
-      <div data-testid="tabs">
-        {items.map(it => (
-          <button key={it.key} aria-label={`tab-${it.key}`} onClick={() => onChange?.(it.key)}>
-            {it.label}
-          </button>
-        ))}
-      </div>
-      <div data-testid="tab-content">{items.find(i => i.key === activeKey)?.children}</div>
-    </div>
-  );
-  const MockButton = ({ children, onClick }) => <button onClick={onClick}>{children}</button>;
-  const MockBadge = () => null;
-  return { ...(antd as any), Modal: MockModal, Tabs: MockTabs, Button: MockButton, Badge: MockBadge };
+  const { createModalAntdMocks } = await import('@/tests/application/testUtils/antdModalMock');
+  return { ...(antd as any), ...createModalAntdMocks() };
 });
 
 vi.mock('@/components/application/jobMonitoring/JobMonitoringBasicTab', () => ({
@@ -81,41 +62,44 @@ describe('AddEditJobMonitoringModal', () => {
   });
 
   it('shows title based on mode', () => {
-    const { rerender } = render(<AddEditJobMonitoringModal {...baseProps} />);
+    const makeProps = createModalPropsFactory(baseProps);
+    const { rerender } = render(<AddEditJobMonitoringModal {...makeProps()} />);
     // Title is provided via Modal title? The component uses footer only; no title passed. So just ensure modal rendered by checking tabs.
     expect(screen.getByTestId('tabs')).toBeInTheDocument();
 
-    rerender(<AddEditJobMonitoringModal {...baseProps} isEditing />);
+    rerender(<AddEditJobMonitoringModal {...makeProps({ isEditing: true })} />);
     expect(screen.getByTestId('tabs')).toBeInTheDocument();
   });
 
-  it('navigates tabs with Next/Previous and Cancel resets state', async () => {
+  it('navigates first tab and resets state on cancel', async () => {
     const user = userEvent.setup();
-    const { rerender } = render(<AddEditJobMonitoringModal {...baseProps} />);
+    const makeProps = createModalPropsFactory(baseProps);
+    render(<AddEditJobMonitoringModal {...makeProps()} />);
 
-    // Simulate Next by updating activeTab prop since component relies on external state
-    rerender(<AddEditJobMonitoringModal {...baseProps} activeTab={'1'} />);
-    // Now move to last tab
-    rerender(<AddEditJobMonitoringModal {...baseProps} activeTab={'2'} />);
+    await assertFirstTabNavigationFlow({
+      user,
+      nextTab: '1',
+      setActiveTabSpy: baseProps.setActiveTab,
+      cancelAction: () => user.click(screen.getByLabelText('modal-cancel')),
+    });
 
-    // Last tab: shows Previous and Submit (when not editing)
-    expect(screen.getByText('Previous')).toBeInTheDocument();
-    const submitBtn = screen.getByText('Submit');
-    await user.click(submitBtn);
-    expect(baseProps.handleSaveJobMonitoring).toHaveBeenCalled();
-
-    // Cancel from anywhere should reset
-    await user.click(screen.getByLabelText('modal-cancel'));
     expect(baseProps.resetStates).toHaveBeenCalled();
-    expect(baseProps.setActiveTab).toHaveBeenCalledWith('0');
   });
 
-  it('shows Update on last tab when editing and calls update handler', async () => {
+  it('submits and updates on final tab', async () => {
     const user = userEvent.setup();
-    render(<AddEditJobMonitoringModal {...baseProps} isEditing activeTab={'2'} />);
+    const makeProps = createModalPropsFactory(baseProps);
+    const { rerender } = render(<AddEditJobMonitoringModal {...makeProps()} />);
 
-    const updateBtn = screen.getByText('Update');
-    await user.click(updateBtn);
-    expect(baseProps.handleUpdateJobMonitoring).toHaveBeenCalled();
+    await assertControlledFinalTabActionFlow({
+      user,
+      rerender,
+      renderModal: overrides => <AddEditJobMonitoringModal {...makeProps(overrides)} />,
+      lastTab: '2',
+      saveLabel: 'Submit',
+      updateLabel: 'Update',
+      saveSpy: baseProps.handleSaveJobMonitoring,
+      updateSpy: baseProps.handleUpdateJobMonitoring,
+    });
   });
 });

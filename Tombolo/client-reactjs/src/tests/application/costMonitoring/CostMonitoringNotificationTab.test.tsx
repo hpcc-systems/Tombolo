@@ -23,9 +23,10 @@ vi.mock('antd', async importOriginal => {
 });
 
 // Stub NotificationContacts to simple pass-through
-vi.mock('@/components/common/Monitoring/NotificationContacts', () => ({
-  default: ({ children }) => <div data-testid="notification-contacts">{children}</div>,
-}));
+vi.mock('@/components/common/Monitoring/NotificationContacts', async () => {
+  const { notificationContactsMockModule } = await import('@/tests/application/testUtils/notificationContactsMock');
+  return notificationContactsMockModule;
+});
 
 vi.mock('@/components/common/currencyCodeToSymbol', () => ({
   default: code => (code === 'EUR' ? '€' : code === 'USD' ? '$' : '$'),
