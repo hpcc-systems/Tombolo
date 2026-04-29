@@ -62,8 +62,9 @@ const validateAnalyticsQuery = [
     })
     .custom(value => {
       // At this point value has comments stripped and whitespace normalized
-      // Check if starts with SELECT (case-insensitive)
-      if (!value.toLowerCase().startsWith('select')) {
+      // Check if starts with SELECT or WITH (CTE) (case-insensitive)
+      const lower = value.toLowerCase().trimStart();
+      if (!lower.startsWith('select') && !lower.startsWith('with')) {
         throw new Error('Only SELECT statements are allowed');
       }
       return true;
@@ -104,15 +105,6 @@ const validateAnalyticsQuery = [
             `Keyword '${keyword}' is not allowed. Only non-destructive SELECT queries permitted.`
           );
         }
-      }
-      return true;
-    })
-    .bail()
-    .custom(value => {
-      // Check for UNIONs (still not allowed)
-      const lowerQuery = value.toLowerCase();
-      if (/\bunion\b/i.test(lowerQuery)) {
-        throw new Error('UNIONs are not allowed in this interface');
       }
       return true;
     })
