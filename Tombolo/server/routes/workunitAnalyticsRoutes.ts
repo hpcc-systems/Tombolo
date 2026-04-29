@@ -2,12 +2,15 @@ import express from 'express';
 import {
   executeAnalyticsQuery,
   getSchema,
+  getScopedSchema,
   getDatabaseStats,
 } from '../controllers/workunitAnalyticsController.js';
 import {
   validateAnalyticsQuery,
   validateGetSchema,
   validateGetDatabaseStats,
+  validateScopedAnalyticsQuery,
+  validateGetScopedSchema,
 } from '../middlewares/workunitAnalyticsMiddleware.js';
 import {
   validate,
@@ -40,12 +43,36 @@ router.post(
 );
 
 /**
+ * @route   POST /api/workunitAnalytics/scoped/query
+ * @desc    Execute a scoped read-only SQL query against workunit analytics tables (excluding clusters)
+ * @access  Private
+ * @body    { sql: string, options: { scopeToWuid: string, scopeToClusterId: string, limit?: number } }
+ */
+router.post(
+  '/scoped/query',
+  validateWithFirstErrorMessage(validateScopedAnalyticsQuery),
+  executeAnalyticsQuery
+);
+
+/**
  * @route   GET /api/workunitAnalytics/schema
  * @desc    Get database schema for work_unit_details table
  * @access  Private
  * @query   { tableName?: string }
  */
 router.get('/schema', validate(validateGetSchema), getSchema);
+
+/**
+ * @route   GET /api/workunitAnalytics/scoped/schema
+ * @desc    Get scoped schema for scopeable workunit analytics tables only
+ * @access  Private
+ * @query   { tableName?: string }
+ */
+router.get(
+  '/scoped/schema',
+  validate(validateGetScopedSchema),
+  getScopedSchema
+);
 
 /**
  * @route   GET /api/workunitAnalytics/stats

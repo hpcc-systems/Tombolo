@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import type { Request } from 'express';
 import { validationResult } from 'express-validator';
 import {
   validateAnalyticsQuery,
   validateGetSchema,
 } from '../../middlewares/workunitAnalyticsMiddleware.js';
+import type { AuthenticatedRequest } from '../../types/request.js';
 
 async function runValidation(body: Record<string, unknown>) {
   const req = {
     body,
-  } as Request;
+  } as AuthenticatedRequest;
 
   for (const validator of validateAnalyticsQuery) {
     await validator.run(req);
@@ -24,7 +24,7 @@ async function runValidation(body: Record<string, unknown>) {
 async function runSchemaValidation(query: Record<string, unknown>) {
   const req = {
     query,
-  } as Request;
+  } as AuthenticatedRequest;
 
   for (const validator of validateGetSchema) {
     await validator.run(req);
@@ -115,6 +115,18 @@ describe('workunitAnalyticsMiddleware AST validation', () => {
     expect(req.analyticsSqlContext?.hadTrailingSemicolon).toBe(true);
     expect(req.analyticsSqlContext?.normalizedSql).toBe(
       'SELECT wuId, clusterId FROM work_unit_details'
+    );
+  });
+
+  it('strips SQL editor placeholder comments from normalized SQL', async () => {
+    const { req, errors } = await runValidation({
+      sql: '-- Enter your SQL query here\nSELECT wuId FROM work_unit_details',
+    });
+
+    expect(errors).toEqual([]);
+    expect(req.analyticsSqlContext).toBeDefined();
+    expect(req.analyticsSqlContext?.normalizedSql).toBe(
+      'SELECT wuId FROM work_unit_details'
     );
   });
 });
