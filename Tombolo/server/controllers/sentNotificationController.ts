@@ -14,6 +14,64 @@ import { sendSuccess, sendError } from '../utils/response.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const defaultTheme = {
+  bg: '#f6f8fb',
+  cardBg: '#ffffff',
+  text: '#1f2937',
+  muted: '#6b7280',
+  border: '#dbe3ec',
+  primary: '#0f62fe',
+  success: '#198754',
+  danger: '#dc3545',
+  warning: '#f59e0b',
+};
+
+const defaultTemplateData = {
+  theme: defaultTheme,
+  contentWidth: 640,
+};
+
+const resolveTemplatePath = (templateName: string): string | undefined => {
+  const candidates = [
+    path.join(
+      process.cwd(),
+      'jobs',
+      'notificationTemplates',
+      'email',
+      `${templateName}.ejs`
+    ),
+    path.join(
+      process.cwd(),
+      '..',
+      'jobs',
+      'notificationTemplates',
+      'email',
+      `${templateName}.ejs`
+    ),
+    path.resolve(
+      __dirname,
+      '../../jobs/notificationTemplates/email',
+      `${templateName}.ejs`
+    ),
+    path.resolve(
+      __dirname,
+      '../../../jobs/notificationTemplates/email',
+      `${templateName}.ejs`
+    ),
+  ];
+
+  const resolved = candidates.find(candidate => fs.existsSync(candidate));
+  if (!resolved) {
+    logger.warn('Template file not found for sent notification HTML render', {
+      templateName,
+      cwd: process.cwd(),
+      candidates,
+    });
+  }
+
+  return resolved;
+};
+
 async function createSentNotification(req: Request, res: Response) {
   try {
     const response = await SentNotification.create(
@@ -89,20 +147,15 @@ async function getNotificationHtml(req: Request, res: Response) {
       return sendSuccess(res, null, 'No template name found');
     }
 
-    const templatePath = path.resolve(
-      __dirname,
-      '../../../../jobs/notificationTemplates/email',
-      `${templateName}.ejs`
-    );
-
-    if (!fs.existsSync(templatePath)) {
+    const templatePath = resolveTemplatePath(templateName);
+    if (!templatePath) {
       return sendSuccess(res, null, `Template ${templateName} not found`);
     }
 
     const template = fs.readFileSync(templatePath, 'utf-8');
     const html = ejs.render(
       template,
-      { ...(payload?.metaData ?? {}) },
+      { ...defaultTemplateData, ...(payload?.metaData ?? {}) },
       { filename: templatePath }
     );
 
