@@ -16,9 +16,10 @@ vi.mock('antd', async importOriginal => {
   return { ...(antd as any), Form: MockForm, Select: MockSelect };
 });
 
-vi.mock('@/components/common/Monitoring/NotificationContacts', () => ({
-  default: ({ children }) => <div data-testid="notification-contacts">{children}</div>,
-}));
+vi.mock('@/components/common/Monitoring/NotificationContacts', async () => {
+  const { notificationContactsMockModule } = await import('@/tests/application/testUtils/notificationContactsMock');
+  return notificationContactsMockModule;
+});
 
 import type { FormInstance } from 'antd';
 import JobMonitoringNotificationTab from '@/components/application/jobMonitoring/JobMonitoringNotificationTab';
@@ -30,17 +31,27 @@ describe('JobMonitoringNotificationTab', () => {
 
   it('renders NotificationContacts and filters job statuses based on scheduling frequency', () => {
     const form = {};
-    const intermittentScheduling = { frequency: 'anytime' };
-    render(
+    const { rerender } = render(
       <JobMonitoringNotificationTab
         form={form as unknown as FormInstance}
-        intermittentScheduling={intermittentScheduling}
+        intermittentScheduling={{ frequency: 'anytime' }}
       />
     );
 
     expect(screen.getByTestId('notification-contacts')).toBeInTheDocument();
-    // NotStarted and NotCompleted should be filtered out for 'anytime'
-    const select = screen.getByRole('combobox');
-    expect(select).toBeInTheDocument();
+    expect(screen.getByRole('combobox')).toBeInTheDocument();
+    expect(screen.queryByText('Not started on time')).not.toBeInTheDocument();
+    expect(screen.queryByText('Not completed on time')).not.toBeInTheDocument();
+    expect(screen.getByText('Failed')).toBeInTheDocument();
+
+    rerender(
+      <JobMonitoringNotificationTab
+        form={form as unknown as FormInstance}
+        intermittentScheduling={{ frequency: 'daily' }}
+      />
+    );
+
+    expect(screen.getByText('Not started on time')).toBeInTheDocument();
+    expect(screen.getByText('Not completed on time')).toBeInTheDocument();
   });
 });

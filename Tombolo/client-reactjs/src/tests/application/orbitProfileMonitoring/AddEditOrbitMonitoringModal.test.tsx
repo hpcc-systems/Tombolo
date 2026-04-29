@@ -1,35 +1,17 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { assertModalTitles } from '@/tests/application/testUtils/modalAssertions';
+import {
+  assertControlledFinalTabActionFlow,
+  assertFirstTabNavigationFlow,
+  createModalPropsFactory,
+} from '@/tests/application/testUtils/modalHarness';
 
 vi.mock('antd', async importOriginal => {
   const antd = await importOriginal();
-  const MockModal = ({ open, title, footer, children, onCancel }) =>
-    open ? (
-      <div>
-        <div data-testid="title">{title}</div>
-        <div>{children}</div>
-        <div>{footer}</div>
-        <button aria-label="modal-cancel" onClick={onCancel}>
-          x
-        </button>
-      </div>
-    ) : null;
-  const MockTabs = ({ items, activeKey, onChange }) => (
-    <div>
-      <div data-testid="tabs">
-        {items.map(it => (
-          <button key={it.key} aria-label={`tab-${it.key}`} onClick={() => onChange?.(it.key)}>
-            {it.label}
-          </button>
-        ))}
-      </div>
-      <div data-testid="tab-content">{items.find(i => i.key === activeKey)?.children}</div>
-    </div>
-  );
-  const MockButton = ({ children, onClick }) => <button onClick={onClick}>{children}</button>;
-  const MockBadge = () => null;
-  return { ...(antd as any), Modal: MockModal, Tabs: MockTabs, Button: MockButton, Badge: MockBadge };
+  const { createModalAntdMocks } = await import('@/tests/application/testUtils/antdModalMock');
+  return { ...(antd as any), ...createModalAntdMocks() };
 });
 
 // Stub child tabs
@@ -78,43 +60,49 @@ describe('AddEditOrbitMonitoringModal', () => {
   });
 
   it('shows correct title based on mode', () => {
-    const { rerender } = render(<AddEditModal {...baseProps} />);
-    expect(screen.getByTestId('title')).toHaveTextContent('Add Orbit Monitoring');
-
-    rerender(<AddEditModal {...baseProps} isEditing />);
-    expect(screen.getByTestId('title')).toHaveTextContent('Edit Orbit Monitoring');
-
-    rerender(<AddEditModal {...baseProps} isDuplicating />);
-    expect(screen.getByTestId('title')).toHaveTextContent('Duplicate Orbit Monitoring');
+    const makeProps = createModalPropsFactory(baseProps);
+    const { rerender } = render(<AddEditModal {...makeProps()} />);
+    assertModalTitles({
+      rerender,
+      renderModal: (props = {}) => <AddEditModal {...makeProps(props)} />,
+      cases: [
+        { title: 'Add Orbit Monitoring' },
+        { title: 'Edit Orbit Monitoring', props: { isEditing: true } },
+        { title: 'Duplicate Orbit Monitoring', props: { isDuplicating: true } },
+      ],
+    });
   });
 
   it('renders Next/Cancel on first tab and navigates on Next; Cancel resets', async () => {
     const user = userEvent.setup();
-    render(<AddEditModal {...baseProps} />);
+    const makeProps = createModalPropsFactory(baseProps);
+    render(<AddEditModal {...makeProps()} />);
 
-    // First tab footer includes Next and Cancel
-    await user.click(screen.getByText('Next'));
-    expect(baseProps.setActiveTab).toHaveBeenCalledWith('1');
+    await assertFirstTabNavigationFlow({
+      user,
+      nextTab: '1',
+      setActiveTabSpy: baseProps.setActiveTab,
+      assertCancelResetsToFirstTab: false,
+      cancelAction: () => user.click(screen.getByText('Cancel')),
+    });
 
-    await user.click(screen.getByText('Cancel'));
     expect(baseProps.resetStates).toHaveBeenCalled();
   });
 
   it('renders Previous and Save on last tab when not editing; shows Update when editing', async () => {
     const user = userEvent.setup();
-    const props = { ...baseProps, activeTab: '2' }; // last tab (three tabs: keys 0, 1, 2)
-    const { rerender } = render(<AddEditModal {...props} />);
+    const makeProps = createModalPropsFactory(baseProps);
+    const { rerender } = render(<AddEditModal {...makeProps()} />);
 
-    // Has Previous and Save
-    expect(screen.getByText('Previous')).toBeInTheDocument();
-    const saveBtn = screen.getByText('Save');
-    await user.click(saveBtn);
-    expect(baseProps.saveOrbitMonitoring).toHaveBeenCalled();
-
-    // Editing path shows Update
-    rerender(<AddEditModal {...props} isEditing />);
-    const updateBtn = screen.getByText('Update');
-    await user.click(updateBtn);
-    expect(baseProps.saveOrbitMonitoring).toHaveBeenCalled();
+    await assertControlledFinalTabActionFlow({
+      user,
+      rerender,
+      renderModal: overrides => <AddEditModal {...makeProps(overrides)} />,
+      lastTab: '2',
+      saveLabel: 'Save',
+      updateLabel: 'Update',
+      saveSpy: baseProps.saveOrbitMonitoring,
+      updateSpy: baseProps.saveOrbitMonitoring,
+    });
   });
 });

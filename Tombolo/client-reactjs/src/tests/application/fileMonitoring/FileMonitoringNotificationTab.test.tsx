@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { FormInstance } from 'antd';
 
@@ -35,9 +36,10 @@ vi.mock('antd', async importOriginal => {
   };
 });
 
-vi.mock('@/components/common/Monitoring/NotificationContacts', () => ({
-  default: ({ children }) => <div data-testid="notification-contacts">{children}</div>,
-}));
+vi.mock('@/components/common/Monitoring/NotificationContacts', async () => {
+  const { notificationContactsMockModule } = await import('@/tests/application/testUtils/notificationContactsMock');
+  return notificationContactsMockModule;
+});
 
 import FileMonitoringNotificationTab from '@/components/application/fileMonitoring/FileMonitoringNotificationTab';
 
@@ -71,8 +73,12 @@ describe('FileMonitoringNotificationTab', () => {
     );
 
     expect(screen.getByTestId('notification-contacts')).toBeInTheDocument();
-    // Should render one option for stdLogicalFile
     expect(screen.getByRole('combobox')).toBeInTheDocument();
+    expect(screen.getByText('File size not in range')).toBeInTheDocument();
+    expect(screen.queryByText('Subfile count not in range')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'sizeNotInRange' } });
+    expect(setSelectedNotificationCondition).toHaveBeenCalledWith(['sizeNotInRange']);
 
     // Rerender for superFile to ensure different options exist
     rerender(
@@ -93,5 +99,7 @@ describe('FileMonitoringNotificationTab', () => {
     );
 
     expect(screen.getByRole('combobox')).toBeInTheDocument();
+    expect(screen.getByText('Subfile count not in range')).toBeInTheDocument();
+    expect(screen.getByText('Total size not in range')).toBeInTheDocument();
   });
 });

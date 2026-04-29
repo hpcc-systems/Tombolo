@@ -5,86 +5,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // Mocks for antd minimal rendering similar to costMonitoring tests
 vi.mock('antd', async importOriginal => {
   const antd = await importOriginal();
-  const MockTable = ({ dataSource = [], columns = [], rowSelection }) => {
-    return (
-      <div>
-        <div data-testid="headers">
-          {columns.map((c, i) => (
-            <div key={i}>{c.title}</div>
-          ))}
-        </div>
-        <div data-testid="rows">
-          {dataSource.map((row, rIdx) => (
-            <div key={row.id ?? rIdx} data-testid={`row-${rIdx}`}>
-              {columns.map((col, cIdx) => {
-                const value = col.dataIndex ? row[col.dataIndex] : row;
-                const content = col.render ? col.render(value, row) : value;
-                return (
-                  <div key={cIdx} data-testid={`cell-${rIdx}-${cIdx}`}>
-                    {content}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-        {rowSelection ? (
-          <button
-            aria-label="select-first"
-            onClick={() => rowSelection.onChange?.([dataSource[0]?.id], [dataSource[0]])}>
-            select-first
-          </button>
-        ) : null}
-      </div>
-    );
-  };
-  const MockTooltip = ({ children }) => <>{children}</>;
-  const MockPopover = ({ children, content }) => (
-    <div>
-      <span>{children}</span>
-      <div data-testid="popover">{content}</div>
-    </div>
-  );
-  const MockPopconfirm = ({ children, onConfirm }) => (
-    <span>
-      <button aria-label="confirm" onClick={onConfirm}>
-        confirm
-      </button>
-      {children}
-    </span>
-  );
-  const MockTag = ({ children }) => <span>{children}</span>;
-  const notification = { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() };
-  return {
-    ...(antd as any),
-    Table: MockTable,
-    Tooltip: MockTooltip,
-    Popover: MockPopover,
-    Popconfirm: MockPopconfirm,
-    Tag: MockTag,
-    notification,
-  };
+  const { createTableAntdMocks } = await import('@/tests/application/testUtils/antdTableMock');
+  return { ...(antd as any), ...createTableAntdMocks() };
 });
 
-vi.mock('@ant-design/icons', () => ({
-  EyeOutlined: ({ onClick }) => (
-    <button aria-label="view" onClick={onClick}>
-      view
-    </button>
-  ),
-  EditOutlined: ({ onClick }) => (
-    <button aria-label="edit" onClick={onClick}>
-      edit
-    </button>
-  ),
-  DeleteOutlined: () => <span>del</span>,
-  CheckCircleFilled: () => <span>approveIcon</span>,
-  BellOutlined: () => <span>bell</span>,
-  PlayCircleOutlined: () => <span>play</span>,
-  PauseCircleOutlined: () => <span>pause</span>,
-  CopyOutlined: () => <span>copy</span>,
-  DownOutlined: () => <span>v</span>,
-}));
+vi.mock('@ant-design/icons', async () => {
+  const { monitoringTableIconMocks } = await import('@/tests/application/testUtils/antdIconMock');
+  return monitoringTableIconMocks;
+});
 
 vi.mock('react-router-dom', () => ({ Link: ({ children, to }) => <a href={to}>{children}</a> }));
 
@@ -102,6 +30,11 @@ import { notification } from 'antd';
 import ClusterMonitoringTable from '@/components/application/clusterMonitoring/ClusterMonitoringTable';
 import type { ClusterMonitoringDTO } from '@tombolo/shared';
 import { APPROVAL_STATUS } from '@/components/common/Constants';
+import {
+  assertNonApprovedToggleError,
+  clickSelectFirstRow,
+  runCommonTableActions,
+} from '@/tests/application/testUtils/tableAssertions';
 
 const rowApproved = {
   id: '1',
@@ -150,27 +83,26 @@ describe('ClusterMonitoringTable', () => {
       />
     );
 
-    // View
-    await user.click(screen.getByRole('button', { name: 'view' }));
-    expect(setDisplayViewDetailsModal).toHaveBeenCalledWith(true);
-    expect(setSelectedMonitoring).toHaveBeenCalledWith(rowApproved);
-
-    // Edit
-    await user.click(screen.getByRole('button', { name: 'edit' }));
-    expect(setEditingMonitoring).toHaveBeenCalledWith(true);
-    expect(setSelectedMonitoring).toHaveBeenCalledWith(rowApproved);
-    expect(setDisplayAddEditModal).toHaveBeenCalledWith(true);
-
-    // Approve / Reject in More popover
-    await user.click(screen.getByText('Approve / Reject'));
-    expect(setSelectedMonitoring).toHaveBeenCalledWith(rowApproved);
-    expect(setApproveRejectModal).toHaveBeenCalledWith(true);
-
-    // Duplicate
-    await user.click(screen.getByText('Duplicate'));
-    expect(setDuplicatingData).toHaveBeenCalledWith({ isDuplicating: true, selectedMonitoring: rowApproved });
-    expect(setSelectedMonitoring).toHaveBeenCalledWith(rowApproved);
-    expect(setDisplayAddEditModal).toHaveBeenCalledWith(true);
+    await runCommonTableActions(user, {
+      onView: () => {
+        expect(setDisplayViewDetailsModal).toHaveBeenCalledWith(true);
+        expect(setSelectedMonitoring).toHaveBeenCalledWith(rowApproved);
+      },
+      onEdit: () => {
+        expect(setEditingMonitoring).toHaveBeenCalledWith(true);
+        expect(setSelectedMonitoring).toHaveBeenCalledWith(rowApproved);
+        expect(setDisplayAddEditModal).toHaveBeenCalledWith(true);
+      },
+      onApproveReject: () => {
+        expect(setSelectedMonitoring).toHaveBeenCalledWith(rowApproved);
+        expect(setApproveRejectModal).toHaveBeenCalledWith(true);
+      },
+      onDuplicate: () => {
+        expect(setDuplicatingData).toHaveBeenCalledWith({ isDuplicating: true, selectedMonitoring: rowApproved });
+        expect(setSelectedMonitoring).toHaveBeenCalledWith(rowApproved);
+        expect(setDisplayAddEditModal).toHaveBeenCalledWith(true);
+      },
+    });
   });
 
   it('shows error when starting non-approved; toggles when approved; shows success message', async () => {
@@ -195,13 +127,7 @@ describe('ClusterMonitoringTable', () => {
     );
 
     // For a pending and inactive monitoring, UI shows Start; clicking Start should error because not approved.
-    await user.click(screen.getByText('Start'));
-    expect(notification.error).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: 'Error occurred',
-        description: expect.anything(),
-      })
-    );
+    await assertNonApprovedToggleError(user, 'Start', notification.error);
 
     // Now approved row should toggle
     rerender(
@@ -279,7 +205,7 @@ describe('ClusterMonitoringTable', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: 'select-first' }));
+    await clickSelectFirstRow(user);
     expect(setSelectedRows).toHaveBeenCalledWith([rowApproved]);
   });
 });
