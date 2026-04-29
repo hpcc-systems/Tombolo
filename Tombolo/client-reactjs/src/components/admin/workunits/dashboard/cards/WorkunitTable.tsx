@@ -1,10 +1,14 @@
 import { Table, Tag, Tooltip, Input, Select, Button } from 'antd';
 import { SearchOutlined, EyeOutlined } from '@ant-design/icons';
 import { formatCurrency } from '@tombolo/shared';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { ColumnsType } from 'antd/es/table';
+import { useNavigate } from 'react-router-dom';
 import workunitsService from '@/services/workunits.service';
 import clustersService from '@/services/clusters.service';
+import WorkunitOpenOptionsModal from '@/components/admin/workunits/history/common/WorkunitOpenOptionsModal';
+import { handleError } from '@/components/common/handleResponse';
+import { getDashboardFailedRowClass } from './workunitRowStyles';
 
 export interface CostBreakdown {
   compute: number;
@@ -42,6 +46,8 @@ const stateColors: Record<string, string> = {
 };
 
 export default function WorkunitTable({ startDate, endDate, clusterId }: WorkunitTableProps) {
+  const navigate = useNavigate();
+  const suppressNextRowClick = useRef(false);
   const [data, setData] = useState<WorkunitRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -49,6 +55,7 @@ export default function WorkunitTable({ startDate, endDate, clusterId }: Workuni
   const [limit, setLimit] = useState(15);
   const [sortField, setSortField] = useState('totalCost');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [clusters, setClusters] = useState<any[]>([]);
   const [clusterMap, setClusterMap] = useState<Record<string, string>>({});
 
   // Controlled text inputs
@@ -74,15 +81,44 @@ export default function WorkunitTable({ startDate, endDate, clusterId }: Workuni
   useEffect(() => {
     clustersService
       .getAll()
-      .then((clusters: any[]) => {
+      .then((clusterList: any[]) => {
+        setClusters(clusterList || []);
         const map: Record<string, string> = {};
-        (clusters || []).forEach((c: any) => {
+        (clusterList || []).forEach((c: any) => {
           map[c.id] = c.name;
         });
         setClusterMap(map);
       })
       .catch(() => {});
   }, []);
+
+  const getClusterById = (cId?: string) => clusters.find((c: any) => c.id === cId);
+
+  const buildEclWatchUrl = (record: WorkunitRecord): string | null => {
+    const cluster = getClusterById(record.clusterId);
+    const thorHost = typeof cluster?.thor_host === 'string' ? cluster.thor_host.trim() : '';
+    const thorPort = typeof cluster?.thor_port === 'string' ? cluster.thor_port.trim() : '';
+    const wuId = typeof record.wuid === 'string' ? record.wuid.trim() : '';
+    if (!thorHost || !thorPort || !wuId) return null;
+    return `${thorHost}:${thorPort}/esp/files/index.html#/workunits/${encodeURIComponent(wuId)}`;
+  };
+
+  const handleOpenInTombolo = (record: WorkunitRecord) => {
+    navigate(`/workunits/history/${record.clusterId}/${record.wuid}`);
+  };
+
+  const handleOpenInEclWatch = (record: WorkunitRecord) => {
+    const url = buildEclWatchUrl(record);
+    if (!url) {
+      handleError('Cluster thor host/port not available for this workunit');
+      return;
+    }
+    suppressNextRowClick.current = true;
+    setTimeout(() => {
+      suppressNextRowClick.current = false;
+    }, 300);
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -183,15 +219,25 @@ export default function WorkunitTable({ startDate, endDate, clusterId }: Workuni
       dataIndex: 'wuid',
       key: 'wuid',
       width: 180,
-      render: (val: string) => (
-        <span
-          style={{
-            fontFamily: 'var(--font-mono), monospace',
-            fontSize: 12,
-            color: '#2563eb',
-          }}>
-          {val}
-        </span>
+      render: (val: string, record: WorkunitRecord) => (
+        <WorkunitOpenOptionsModal
+          wuId={val}
+          hasEclWatchLink={Boolean(buildEclWatchUrl(record))}
+          onOpenTombolo={() => handleOpenInTombolo(record)}
+          onOpenEclWatch={() => handleOpenInEclWatch(record)}>
+          <Button
+            type="link"
+            size="small"
+            style={{
+              fontFamily: 'var(--font-mono), monospace',
+              fontSize: 12,
+              color: '#2563eb',
+              padding: 0,
+              height: 'auto',
+            }}>
+            {val}
+          </Button>
+        </WorkunitOpenOptionsModal>
       ),
     },
     {
@@ -426,6 +472,7 @@ export default function WorkunitTable({ startDate, endDate, clusterId }: Workuni
         dataSource={data}
         loading={loading}
         rowKey={record => `${record.clusterId}:${record.wuid}`}
+        rowClassName={record => getDashboardFailedRowClass(record.state)}
         size="small"
         scroll={{ x: 1200 }}
         pagination={{

@@ -15,6 +15,7 @@ import {
 } from './monitorJobsUtil.js';
 
 import { trimURL } from '../../utils/authUtil.js';
+import { enqueueNotification } from '../../services/notificationProducer.js';
 
 // Models
 
@@ -279,7 +280,7 @@ import { trimURL } from '../../utils/authUtil.js';
           notifyContacts = [],
         } = monitoring.metaData?.notificationMetaData;
 
-        await NotificationQueue.create({
+        await enqueueNotification({
           type: 'email',
           templateName: 'timeSeriesAnalysisAlert',
           notificationOrigin: 'Job Monitoring - Time Series Analysis',

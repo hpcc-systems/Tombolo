@@ -1,28 +1,22 @@
 import React from 'react';
-import { Route, Redirect } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { getUser } from './userStorage';
 
 type PrivateRouteProps = {
-  component: React.ComponentType<any>;
-  [key: string]: any;
+  children?: React.ReactElement;
 };
 
-export const PrivateRoute: React.FC<PrivateRouteProps> = ({ component: Component, ...rest }) => {
-  return (
-    <Route
-      {...rest}
-      render={props => {
-        if (getUser()) {
-          return <Component {...props} {...rest} />;
-        } else {
-          const intendedUrl = `${props.location.pathname}${props.location.search || ''}${props.location.hash || ''}`;
-          localStorage.setItem('intendedUrl', intendedUrl);
+export const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
+  const location = useLocation();
 
-          return <Redirect to={{ pathname: '/login', state: { from: props.location } }} />;
-        }
-      }}
-    />
-  );
+  if (getUser()) {
+    return children ?? <Outlet />;
+  }
+
+  const intendedUrl = `${location.pathname}${location.search || ''}${location.hash || ''}`;
+  localStorage.setItem('intendedUrl', intendedUrl);
+
+  return <Navigate to="/login" state={{ from: location }} replace />;
 };
 
 export default PrivateRoute;

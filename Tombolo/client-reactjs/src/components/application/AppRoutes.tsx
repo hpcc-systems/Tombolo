@@ -1,5 +1,5 @@
 import React from 'react';
-import { Redirect, Route, Switch } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { PrivateRoute } from '../common/PrivateRoute';
 import { isAdminOrWorkunitPath } from '../common/routeMatching';
 
@@ -7,7 +7,7 @@ import { isAdminOrWorkunitPath } from '../common/routeMatching';
 const Home = React.lazy(() => import('./home'));
 
 const FileMonitoring = React.lazy(() => import('./fileMonitoring'));
-const orbitProfileMonitoring = React.lazy(() => import('./orbitProfileMonitoring'));
+const OrbitProfileMonitoring = React.lazy(() => import('./orbitProfileMonitoring'));
 const Notifications = React.lazy(() => import('./dashboard/notifications'));
 const ClusterMonitoring = React.lazy(() => import('./clusterMonitoring'));
 const JobMonitoring = React.lazy(() => import('./jobMonitoring'));
@@ -20,30 +20,37 @@ type AppRoutesProps = {
   allowAdminOrWorkunitPaths?: boolean;
 };
 
+type AppRouteFallbackProps = {
+  allowAdminOrWorkunitPaths: boolean;
+};
+
+const AppRouteFallback: React.FC<AppRouteFallbackProps> = ({ allowAdminOrWorkunitPaths }) => {
+  const location = useLocation();
+
+  if (isAdminOrWorkunitPath(location.pathname) && allowAdminOrWorkunitPaths) {
+    return null;
+  }
+
+  return <Navigate to="/" replace />;
+};
+
 const AppRoutes: React.FC<AppRoutesProps> = ({ allowAdminOrWorkunitPaths = false }) => {
   return (
-    <Switch>
-      <PrivateRoute exact path="/" component={Home} />
-      <PrivateRoute path="/myAccount" component={MyAccount} />
-      <PrivateRoute path="/:applicationId/fileMonitoring" component={FileMonitoring} />
-      <PrivateRoute path="/:applicationId/ClusterMonitoring" component={ClusterMonitoring} />
-      <PrivateRoute path="/:applicationId/orbit-profile-monitoring" component={orbitProfileMonitoring} />
-      <PrivateRoute path="/:applicationId/jobMonitoring/timeSeriesAnalysis" component={TimeSeriesAnalysis} />
-      <PrivateRoute path="/:applicationId/jobMonitoring" component={JobMonitoring} />
-      <PrivateRoute path="/:applicationId/costMonitoring" component={CostMonitoring} />
-      <PrivateRoute path="/:applicationId/landingZoneMonitoring" component={LandingZoneMonitoring} />
-      <PrivateRoute path="/:applicationId/dashboard/notifications" component={Notifications} />
-      <Route
-        path="*"
-        render={({ location }) => {
-          if (isAdminOrWorkunitPath(location.pathname) && allowAdminOrWorkunitPaths) {
-            return null;
-          }
-
-          return <Redirect to="/" />;
-        }}
-      />
-    </Switch>
+    <Routes>
+      <Route element={<PrivateRoute />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/myAccount" element={<MyAccount />} />
+        <Route path="/:applicationId/fileMonitoring" element={<FileMonitoring />} />
+        <Route path="/:applicationId/ClusterMonitoring" element={<ClusterMonitoring />} />
+        <Route path="/:applicationId/orbit-profile-monitoring" element={<OrbitProfileMonitoring />} />
+        <Route path="/:applicationId/jobMonitoring/timeSeriesAnalysis" element={<TimeSeriesAnalysis />} />
+        <Route path="/:applicationId/jobMonitoring" element={<JobMonitoring />} />
+        <Route path="/:applicationId/costMonitoring" element={<CostMonitoring />} />
+        <Route path="/:applicationId/landingZoneMonitoring" element={<LandingZoneMonitoring />} />
+        <Route path="/:applicationId/dashboard/notifications" element={<Notifications />} />
+      </Route>
+      <Route path="*" element={<AppRouteFallback allowAdminOrWorkunitPaths={allowAdminOrWorkunitPaths} />} />
+    </Routes>
   );
 };
 

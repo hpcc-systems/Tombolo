@@ -7,13 +7,14 @@ import { logOrPostMessage } from '../jobUtils.js';
 import { User, NotificationQueue } from '@tombolo/db';
 import { trimURL, getSupportContactEmails } from '../../utils/authUtil.js';
 import { passwordExpiryAlertDaysForUser } from '../../config/monitorings.js';
+import { enqueueNotification } from '../../services/notificationProducer.js';
 
 // Constants
 const passwordResetLink = `${trimURL(process.env.WEB_URL)}/myaccount`;
 
 const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
   // Queue notification
-  await NotificationQueue.create({
+  await enqueueNotification({
     type: 'email',
     templateName: 'passwordExpiryWarning',
     notificationOrigin: 'Password Expiry Warning',
@@ -141,7 +142,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
         const emails = 'mailto:' + (await getSupportContactEmails());
 
         // Queue notification
-        await NotificationQueue.create({
+        await enqueueNotification({
           type: 'email',
           templateName: 'passwordExpired',
           notificationOrigin: 'Password Expired',

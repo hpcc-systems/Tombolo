@@ -16,6 +16,8 @@ import {
   registerHpccToolsJobs,
 } from './queues/hpccToolsQueue.js';
 import { hpccToolsWorker } from './workers/hpccTools/hpccToolsWorker.js';
+import { notificationsQueue } from './queues/notificationsQueue.js';
+import { notificationsWorker } from './workers/notifications/index.js';
 import { redisConnectionOptions } from './config/redis.js';
 import logger from './config/logger.js';
 import { formatErrorForLogging } from './utils/errorFormatter.js';
@@ -63,6 +65,7 @@ async function clearBullMqStateOnStartup() {
   await clearQueueOnStartup(workunitHistoryQueue, 'workunit-history');
   await clearQueueOnStartup(archiveQueue, 'archive');
   await clearQueueOnStartup(hpccToolsQueue, 'hpcc-tools');
+  await clearQueueOnStartup(notificationsQueue, 'notifications');
 }
 
 function runWorkerWithLogging(workerName: string, runner: () => Promise<void>) {
@@ -87,6 +90,7 @@ async function startJobProcessor() {
   runWorkerWithLogging('Workunit history', () => workunitHistoryWorker.run());
   runWorkerWithLogging('Archive', () => archiveWorker.run());
   runWorkerWithLogging('hpcc-tools', () => hpccToolsWorker.run());
+  runWorkerWithLogging('Notifications', () => notificationsWorker.run());
 
   logger.info(
     `Workunit history worker started (concurrency: 1) - Worker ready: ${workunitHistoryWorker.isRunning()}`
@@ -96,6 +100,9 @@ async function startJobProcessor() {
   );
   logger.info(
     `hpcc-tools worker started (concurrency: 1) - Worker ready: ${hpccToolsWorker.isRunning()}`
+  );
+  logger.info(
+    `Notifications worker started (concurrency: 2) - Worker ready: ${notificationsWorker.isRunning()}`
   );
 
   // Setup Bull Board
@@ -107,6 +114,7 @@ async function startJobProcessor() {
       new BullMQAdapter(workunitHistoryQueue),
       new BullMQAdapter(archiveQueue),
       new BullMQAdapter(hpccToolsQueue),
+      new BullMQAdapter(notificationsQueue),
     ],
     serverAdapter: serverAdapter,
   });

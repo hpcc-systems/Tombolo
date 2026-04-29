@@ -1,0 +1,26 @@
+<%- include('partials/layoutStart') %>
+
+<h1 style="margin:0 0 16px;font-size:24px;line-height:32px;color:<%= theme.text %>;">Verify Your Email</h1>
+
+<p style="margin:0 0 16px;font-size:14px;line-height:22px;color:<%= theme.text %>;">
+  Thank you for registering with Tombolo. Confirm your email to complete registration.
+</p>
+
+<% if (typeof verificationLink !== 'undefined' && verificationLink) { %>
+<div style="margin:0 0 20px;">
+  <%- include('partials/button', { href: verificationLink, label: 'Verify Email', bgColor: theme.primary }) %>
+</div>
+<p style="margin:0 0 20px;font-size:13px;line-height:20px;color:<%= theme.muted %>;word-break:break-all;">
+  Direct link: <a href="<%= verificationLink %>" style="color:<%= theme.primary %>;"><%= verificationLink %></a>
+</p>
+<% } %>
+
+<p style="margin:0 0 16px;font-size:14px;line-height:22px;color:<%= theme.warning %>;font-weight:bold;">
+  Please take action within the next <%= typeof validForHours !== 'undefined' ? validForHours : '' %> hours.
+</p>
+
+<p style="margin:0;font-size:14px;line-height:22px;color:<%= theme.text %>;">
+  If this email was unexpected, you can safely ignore it.
+</p>
+
+<%- include('partials/layoutEnd') %>

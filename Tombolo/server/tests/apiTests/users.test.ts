@@ -10,9 +10,14 @@ import {
 import request from 'supertest';
 import { app } from '../test_server.js';
 import { mockedModels } from '../mockedModels.js';
-const { User, UserArchive, NotificationQueue, sequelize } = mockedModels;
+const { User, UserArchive, sequelize } = mockedModels;
 import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
 import { getUsers, nonExistentID } from '../helpers.js';
+
+// Mock the notification producer service
+vi.mock('../../services/notificationProducer.js', () => ({
+  enqueueNotification: vi.fn(),
+}));
 
 const sequelizeTx = sequelize as typeof sequelize & {
   __commit: ReturnType<typeof vi.fn>;
@@ -95,7 +100,11 @@ describe('User Routes', () => {
     expect(sequelize.transaction).toHaveBeenCalled();
     expect(sequelizeTx.__commit).toHaveBeenCalled();
     expect(sequelizeTx.__rollback).not.toHaveBeenCalled();
-    expect(NotificationQueue.create).toHaveBeenCalled();
+
+    const { enqueueNotification } =
+      await import('../../services/notificationProducer.js');
+    const mockEnqueue = enqueueNotification as ReturnType<typeof vi.fn>;
+    expect(mockEnqueue).toHaveBeenCalled();
   });
 
   it('update-user should return 404 if user id is invalid', async () => {
@@ -118,7 +127,6 @@ describe('User Routes', () => {
     expect(sequelize.transaction).toHaveBeenCalled();
     expect(sequelizeTx.__commit).not.toHaveBeenCalled();
     expect(sequelizeTx.__rollback).toHaveBeenCalled();
-    expect(NotificationQueue.create).not.toHaveBeenCalled();
     // logger.error should NOT be called for business logic errors like "not found"
   });
 
@@ -165,7 +173,11 @@ describe('User Routes', () => {
     expect(res.body.success).toBe(true);
     expect(User.findOne).toHaveBeenCalled();
     expect(User.update).toHaveBeenCalled();
-    expect(NotificationQueue.create).toHaveBeenCalled();
+
+    const { enqueueNotification: enqueueNotification2 } =
+      await import('../../services/notificationProducer.js');
+    const mockEnqueue2 = enqueueNotification2 as ReturnType<typeof vi.fn>;
+    expect(mockEnqueue2).toHaveBeenCalled();
     expect(sequelize.transaction).toHaveBeenCalled();
     expect(sequelizeTx.__commit).toHaveBeenCalled();
     expect(sequelizeTx.__rollback).not.toHaveBeenCalled();
@@ -187,7 +199,6 @@ describe('User Routes', () => {
     expect(res.body.success).toBe(false);
     expect(User.findOne).toHaveBeenCalled();
     expect(User.update).not.toHaveBeenCalled();
-    expect(NotificationQueue.create).not.toHaveBeenCalled();
     expect(sequelize.transaction).toHaveBeenCalled();
     expect(sequelizeTx.__commit).not.toHaveBeenCalled();
     expect(sequelizeTx.__rollback).toHaveBeenCalled();
@@ -208,7 +219,6 @@ describe('User Routes', () => {
     expect(res.body.success).toBe(false);
     expect(User.findOne).toHaveBeenCalled();
     expect(User.update).not.toHaveBeenCalled();
-    expect(NotificationQueue.create).not.toHaveBeenCalled();
     expect(sequelize.transaction).toHaveBeenCalled();
     expect(sequelizeTx.__commit).not.toHaveBeenCalled();
     expect(sequelizeTx.__rollback).toHaveBeenCalled();

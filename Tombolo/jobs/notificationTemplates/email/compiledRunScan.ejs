@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        color: #1f2937;
+        margin: 0;
+        padding: 0;
+        background-color: #f6f8fb;
+      }
+      .container {
+        max-width: 640px;
+        margin: 30px auto;
+        background-color: #ffffff;
+        border: 1px solid #dbe3ec;
+        border-radius: 6px;
+        padding: 30px;
+      }
+      .header {
+        border-bottom: 2px solid #0f62fe;
+        padding-bottom: 16px;
+        margin-bottom: 24px;
+      }
+      .header h2 {
+        margin: 0;
+        font-size: 18px;
+        color: #0f62fe;
+      }
+      .alert-box {
+        background-color: #fff3cd;
+        border: 1px solid #f59e0b;
+        border-radius: 4px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+        color: #92400e;
+        font-size: 14px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+      th {
+        background-color: #f1f5f9;
+        text-align: left;
+        padding: 8px 12px;
+        font-size: 12px;
+        text-transform: uppercase;
+        color: #6b7280;
+        border: 1px solid #dbe3ec;
+      }
+      td {
+        padding: 8px 12px;
+        border: 1px solid #dbe3ec;
+        vertical-align: top;
+      }
+      td.label {
+        width: 160px;
+        font-weight: bold;
+        color: #374151;
+        background-color: #f9fafb;
+      }
+      .action-box {
+        background-color: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 4px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+        color: #1e40af;
+        font-size: 14px;
+      }
+      .footer {
+        margin-top: 30px;
+        font-size: 12px;
+        color: #9ca3af;
+        border-top: 1px solid #dbe3ec;
+        padding-top: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h2>⚠ Workunit Stuck in Compiled State</h2>
+      </div>
+
+      <p>Hello,</p>
+
+      <div class="alert-box">
+        Workunit <strong><%= typeof wuId !== 'undefined' ? wuId : '—' %></strong>
+        <% if (typeof wuName !== 'undefined' && wuName) { %>
+          (<strong><%= wuName %></strong>)
+        <% } %>
+        has been in the <strong>compiled</strong> state for
+        <strong><%= typeof stuckDuration !== 'undefined' ? stuckDuration : '—' %></strong>.
+        This may indicate that the workunit is stuck and requires attention.
+      </div>
+
+      <table>
+        <tbody>
+          <tr>
+            <td class="label">Workunit ID</td>
+            <td><%= typeof wuId !== 'undefined' ? wuId : '—' %></td>
+          </tr>
+          <% if (typeof wuName !== 'undefined' && wuName) { %>
+          <tr>
+            <td class="label">Job Name</td>
+            <td><%= wuName %></td>
+          </tr>
+          <% } %>
+          <tr>
+            <td class="label">State</td>
+            <td>compiled</td>
+          </tr>
+          <tr>
+            <td class="label">Time in Compiled</td>
+            <td><%= typeof stuckDuration !== 'undefined' ? stuckDuration : '—' %></td>
+          </tr>
+          <tr>
+            <td class="label">Owner</td>
+            <td><%= typeof owner !== 'undefined' ? owner : '—' %></td>
+          </tr>
+          <% if (typeof ownerEmail !== 'undefined' && ownerEmail && ownerEmail !== 'unknown') { %>
+          <tr>
+            <td class="label">Owner Email</td>
+            <td><%= ownerEmail %></td>
+          </tr>
+          <% } %>
+          <% if (typeof supervisorEmail !== 'undefined' && supervisorEmail && supervisorEmail !== 'unknown') { %>
+          <tr>
+            <td class="label">Supervisor Email</td>
+            <td><%= supervisorEmail %></td>
+          </tr>
+          <% } %>
+          <tr>
+            <td class="label">Action</td>
+            <td><%= typeof actionEx !== 'undefined' ? actionEx : '—' %></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="action-box">
+        Please check the workunit in HPCC Systems and verify whether it is genuinely stuck.
+        If so, consider aborting or re-submitting the job.
+      </div>
+
+      <div class="footer">
+        This alert was generated automatically by Tombolo workunit monitoring.
+        If you believe this is a false positive, please contact your administrator.
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,152 @@
+import { describe, expect, it } from 'vitest';
+import { validationResult } from 'express-validator';
+import {
+  validateAnalyticsQuery,
+  validateGetSchema,
+} from '../../middlewares/workunitAnalyticsMiddleware.js';
+import type { AuthenticatedRequest } from '../../types/request.js';
+
+async function runValidation(body: Record<string, unknown>) {
+  const req = {
+    body,
+  } as AuthenticatedRequest;
+
+  for (const validator of validateAnalyticsQuery) {
+    await validator.run(req);
+  }
+
+  return {
+    req,
+    errors: validationResult(req).array(),
+  };
+}
+
+async function runSchemaValidation(query: Record<string, unknown>) {
+  const req = {
+    query,
+  } as AuthenticatedRequest;
+
+  for (const validator of validateGetSchema) {
+    await validator.run(req);
+  }
+
+  return {
+    req,
+    errors: validationResult(req).array(),
+  };
+}
+
+describe('workunitAnalyticsMiddleware AST validation', () => {
+  it('accepts read-only UNION select queries', async () => {
+    const { req, errors } = await runValidation({
+      sql: 'SELECT wuId FROM work_unit_details UNION SELECT wuId FROM work_units',
+    });
+
+    expect(errors).toEqual([]);
+    expect(req.analyticsSqlContext).toBeDefined();
+    expect(req.analyticsSqlContext?.ast.type).toBe('select');
+    expect(req.analyticsSqlContext?.ast.set_op).toBe('union');
+  });
+
+  it('accepts selects from work_unit_exceptions table', async () => {
+    const { errors } = await runValidation({
+      sql: 'SELECT wuId, clusterId, severity FROM work_unit_exceptions LIMIT 10',
+    });
+
+    expect(errors).toEqual([]);
+  });
+
+  it('accepts selects from work_unit_files table', async () => {
+    const { errors } = await runValidation({
+      sql: 'SELECT wuId, clusterId, fileType FROM work_unit_files LIMIT 10',
+    });
+
+    expect(errors).toEqual([]);
+  });
+
+  it('rejects non-select destructive statements', async () => {
+    const { errors } = await runValidation({
+      sql: 'DELETE FROM work_unit_details WHERE state = "completed"',
+    });
+
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors[0]?.msg).toContain('Only SELECT statements are allowed');
+  });
+
+  it('rejects multiple statements', async () => {
+    const { errors } = await runValidation({
+      sql: 'SELECT wuId FROM work_unit_details; SELECT wuId FROM work_units',
+    });
+
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors[0]?.msg).toContain('Multiple statements are not allowed');
+  });
+
+  it('rejects disallowed tables via AST references', async () => {
+    const { errors } = await runValidation({
+      sql: 'SELECT * FROM users',
+    });
+
+    expect(errors.length).toBeGreaterThan(0);
+    expect(String(errors[0]?.msg)).toContain('Invalid table(s): users');
+  });
+
+  it('rejects sensitive clusters columns by AST selection', async () => {
+    const { errors } = await runValidation({
+      sql: 'SELECT c.username FROM clusters c',
+    });
+
+    expect(errors.length).toBeGreaterThan(0);
+    expect(String(errors[0]?.msg)).toContain(
+      "Column 'username' from clusters table is not allowed"
+    );
+  });
+
+  it('attaches parsed AST context for controller reuse', async () => {
+    const { req, errors } = await runValidation({
+      sql: 'SELECT wuId, clusterId FROM work_unit_details;',
+      options: {
+        scopeToWuid: 'W20260101-123456',
+      },
+    });
+
+    expect(errors).toEqual([]);
+    expect(req.analyticsSqlContext).toBeDefined();
+    expect(req.analyticsSqlContext?.hadTrailingSemicolon).toBe(true);
+    expect(req.analyticsSqlContext?.normalizedSql).toBe(
+      'SELECT wuId, clusterId FROM work_unit_details'
+    );
+  });
+
+  it('strips SQL editor placeholder comments from normalized SQL', async () => {
+    const { req, errors } = await runValidation({
+      sql: '-- Enter your SQL query here\nSELECT wuId FROM work_unit_details',
+    });
+
+    expect(errors).toEqual([]);
+    expect(req.analyticsSqlContext).toBeDefined();
+    expect(req.analyticsSqlContext?.normalizedSql).toBe(
+      'SELECT wuId FROM work_unit_details'
+    );
+  });
+});
+
+describe('workunitAnalyticsMiddleware schema validation', () => {
+  it('accepts supported tableName values for schema endpoint', async () => {
+    const { errors } = await runSchemaValidation({
+      tableName: 'work_unit_exceptions',
+    });
+
+    expect(errors).toEqual([]);
+  });
+
+  it('rejects unsupported tableName values for schema endpoint', async () => {
+    const { errors } = await runSchemaValidation({
+      tableName: 'users',
+    });
+
+    expect(errors.length).toBeGreaterThan(0);
+    expect(String(errors[0]?.msg)).toContain('work_unit_exceptions');
+    expect(String(errors[0]?.msg)).toContain('work_unit_files');
+  });
+});

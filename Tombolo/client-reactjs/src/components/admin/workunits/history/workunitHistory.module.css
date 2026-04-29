@@ -130,9 +130,6 @@
   border-bottom: 1px solid #f0f0f0;
 }
 .scrollAreaTall {
-  /* Use max-height to prevent the explorer from forcing the page taller than the viewport
-     and set a slightly shorter minimum height so it doesn't extend below the screen
-     when combined with other page components. */
   max-height: 520px;
   min-height: 320px;
   overflow: auto;
@@ -213,11 +210,29 @@
   font-size: 12px;
 }
 
-/* Fix for fixed table columns overlapping other elements (like tooltips or headers)
-   When scrolling horizontally, AntD uses fixed positioning for some columns.
-   We need them to stay below the global app header (which now has z-index: 1000)
-   and standard overlays.
-*/
+.workunitOpenPopconfirm :global(.ant-popconfirm-buttons) {
+  display: flex;
+  justify-content: center;
+}
+
+.workunitOpenPopconfirm :global(.ant-popover-inner) {
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+}
+
+.workunitOpenTitle {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-weight: 600;
+}
+
+.workunitOpenBtn {
+  border-radius: 6px;
+  font-weight: 600;
+}
+
 :global(.ant-table-cell-fix-right),
 :global(.ant-table-cell-fix-left) {
   z-index: 10 !important;

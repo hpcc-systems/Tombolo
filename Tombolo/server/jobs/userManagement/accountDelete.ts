@@ -7,6 +7,7 @@ import { logOrPostMessage } from '../jobUtils.js';
 import { User, UserRole, RoleType, NotificationQueue } from '@tombolo/db';
 import { trimURL, deleteUser } from '../../utils/authUtil.js';
 import { accountDeleteAlertDaysForUser } from '../../config/monitorings.js';
+import { enqueueNotification } from '../../services/notificationProducer.js';
 
 // Constants
 const accountUnlockLink = `${trimURL(process.env.WEB_URL)}`;
@@ -17,7 +18,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
   ).toDateString();
 
   // Queue notification
-  await NotificationQueue.create({
+  await enqueueNotification({
     type: 'email',
     templateName: 'accountDeleteWarning',
     notificationOrigin: 'Account Delete Warning',
@@ -172,7 +173,7 @@ const updateUserAndSendNotification = async (user, daysToExpiry, version) => {
 
         const accountUnlockLink = `${trimURL(process.env.WEB_URL)}/register`;
         // Queue notification
-        await NotificationQueue.create({
+        await enqueueNotification({
           type: 'email',
           templateName: 'accountDeleted',
           notificationOrigin: 'Account Deleted',

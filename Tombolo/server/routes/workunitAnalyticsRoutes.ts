@@ -2,20 +2,25 @@ import express from 'express';
 import {
   executeAnalyticsQuery,
   getSchema,
-  analyzeQuery,
+  getScopedSchema,
   getDatabaseStats,
   askAnalyticsAssistant,
 } from '../controllers/workunitAnalyticsController.js';
 import {
   validateAnalyticsQuery,
-  validateAnalyzeQuery,
   validateGetSchema,
   validateGetDatabaseStats,
   validateAssistantRequest,
+  validateScopedAnalyticsQuery,
+  validateGetScopedSchema,
 } from '../middlewares/workunitAnalyticsMiddleware.js';
-import { validate } from '../middlewares/validateRequestBody.js';
+import {
+  validate,
+  validateWithFirstErrorMessage,
+} from '../middlewares/validateRequestBody.js';
 import { validateUserRole } from '../middlewares/rbacMiddleware.js';
 import role from '../config/roleTypes.js';
+import logger from '../config/logger.js';
 
 const router = express.Router();
 
@@ -28,7 +33,28 @@ router.use(validateUserRole([role.OWNER, role.ADMIN]));
  * @access  Private
  * @body    { sql: string, options?: { limit?: number, clusterId?: string } }
  */
-router.post('/query', validate(validateAnalyticsQuery), executeAnalyticsQuery);
+router.post(
+  '/query',
+  (req, res, next) => {
+    logger.debug('=== POST /workunitAnalytics/query ===');
+    logger.debug('Request body:', JSON.stringify(req.body, null, 2));
+    next();
+  },
+  validateWithFirstErrorMessage(validateAnalyticsQuery),
+  executeAnalyticsQuery
+);
+
+/**
+ * @route   POST /api/workunitAnalytics/scoped/query
+ * @desc    Execute a scoped read-only SQL query against workunit analytics tables (excluding clusters)
+ * @access  Private
+ * @body    { sql: string, options: { scopeToWuid: string, scopeToClusterId: string, limit?: number } }
+ */
+router.post(
+  '/scoped/query',
+  validateWithFirstErrorMessage(validateScopedAnalyticsQuery),
+  executeAnalyticsQuery
+);
 
 /**
  * @route   GET /api/workunitAnalytics/schema
@@ -39,12 +65,16 @@ router.post('/query', validate(validateAnalyticsQuery), executeAnalyticsQuery);
 router.get('/schema', validate(validateGetSchema), getSchema);
 
 /**
- * @route   POST /api/workunitAnalytics/analyze
- * @desc    Analyze query execution plan without running it
+ * @route   GET /api/workunitAnalytics/scoped/schema
+ * @desc    Get scoped schema for scopeable workunit analytics tables only
  * @access  Private
- * @body    { sql: string }
+ * @query   { tableName?: string }
  */
-router.post('/analyze', validate(validateAnalyzeQuery), analyzeQuery);
+router.get(
+  '/scoped/schema',
+  validate(validateGetScopedSchema),
+  getScopedSchema
+);
 
 /**
  * @route   GET /api/workunitAnalytics/stats

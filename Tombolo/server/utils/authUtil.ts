@@ -21,9 +21,9 @@ import {
   UserApplication,
   Application,
   InstanceSettings,
-  NotificationQueue,
   AccountVerificationCode,
 } from '@tombolo/db';
+import { enqueueNotification } from '../services/notificationProducer.js';
 import { generateToken } from '../middlewares/csrfMiddleware.js';
 
 const csrfHeaderName = 'x-csrf-token';
@@ -314,11 +314,12 @@ const sendPasswordExpiredEmail = async (
   const contactEmail = await getSupportContactEmails();
 
   //send notification to contact email
-  await NotificationQueue.create({
+  await enqueueNotification({
     type: 'email',
+    deliveryType: 'immediate',
     templateName: 'passwordExpiredAdmin',
     notificationOrigin: 'Password Expiry',
-    deliveryType: 'immediate',
+    createdBy: user.id,
     metaData: {
       notificationId: uuidv4(),
       recipientName: 'Admin',
@@ -330,7 +331,6 @@ const sendPasswordExpiredEmail = async (
       userName: user.firstName + ' ' + user.lastName,
       userEmail: user.email,
     },
-    createdBy: user.id,
   });
   await user.update({
     metaData: {
@@ -517,11 +517,12 @@ const sendAccountLockedEmail = async (user: any): Promise<void> => {
   // Get support email recipients
   const supportEmailRecipients = await getSupportContactEmails();
 
-  await NotificationQueue.create({
+  await enqueueNotification({
     type: 'email',
+    deliveryType: 'immediate',
     templateName: 'accountLocked',
     notificationOrigin: 'User Authentication',
-    deliveryType: 'immediate',
+    createdBy: user.id,
     metaData: {
       notificationId: `ACC_LOCKED_${moment().format('YYYYMMDD_HHmmss_SSS')}`,
       recipientName: user.firstName,
@@ -534,7 +535,6 @@ const sendAccountLockedEmail = async (user: any): Promise<void> => {
       userEmail: user.email,
       supportEmailRecipients,
     },
-    createdBy: user.id,
   });
 };
 
@@ -548,11 +548,12 @@ const sendAccountUnlockedEmail = async ({
   tempPassword: string;
   verificationCode: string;
 }): Promise<void> => {
-  await NotificationQueue.create({
+  await enqueueNotification({
     type: 'email',
+    deliveryType: 'immediate',
     templateName: 'accountUnlocked',
     notificationOrigin: 'User Authentication',
-    deliveryType: 'immediate',
+    createdBy: user.id,
     metaData: {
       notificationId: `ACC_UNLOCKED_${moment().format('YYYYMMDD_HHmmss_SSS')}`,
       recipientName: user.firstName,
@@ -567,7 +568,6 @@ const sendAccountUnlockedEmail = async ({
         process.env.WEB_URL
       )}/reset-temporary-password/${verificationCode}`,
     },
-    createdBy: user.id,
   });
 };
 
