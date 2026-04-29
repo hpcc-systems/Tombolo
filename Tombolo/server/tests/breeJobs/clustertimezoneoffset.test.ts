@@ -20,7 +20,6 @@ describe('getClusterTimezoneOffset', () => {
   let _log;
   beforeEach(async () => {
     vi.clearAllMocks();
-    vi.clearAllMocks();
     const workerUtils = (await import('../../jobs/workerUtils.js')).default;
     _log = workerUtils(workerParentPort).log;
   });

@@ -171,7 +171,7 @@ describe('costMonitoring Routes', () => {
     buildBody: () => {
       const costMonitoringOne = getCostMonitoring();
       const costMonitoringTwo = getCostMonitoring({
-        metadata: {
+        metaData: {
           users: ['testuser'],
           notificationMetaData: {
             notificationCondition: 12,
@@ -187,6 +187,9 @@ describe('costMonitoring Routes', () => {
     expectedMessage: 'Cost monitorings updated successfully',
     assert: (_res, reqBody) => {
       const [costMonitoringOne, costMonitoringTwo] = reqBody.costMonitorings;
+      expect(
+        costMonitoringTwo.metaData.notificationMetaData.primaryContacts
+      ).toEqual(['testemail2@lexisnexisrisk.com']);
       expect(CostMonitoring.update).toHaveBeenCalledTimes(2);
       expect(CostMonitoring.update).toHaveBeenCalledWith(
         { metaData: costMonitoringOne.metaData },
@@ -196,7 +199,13 @@ describe('costMonitoring Routes', () => {
         }
       );
       expect(CostMonitoring.update).toHaveBeenCalledWith(
-        { metaData: costMonitoringTwo.metaData },
+        {
+          metaData: expect.objectContaining({
+            notificationMetaData: expect.objectContaining({
+              primaryContacts: ['testemail2@lexisnexisrisk.com'],
+            }),
+          }),
+        },
         {
           where: { id: costMonitoringTwo.id },
           transaction: expect.any(Object),
