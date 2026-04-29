@@ -151,7 +151,7 @@ const validateAnalyticsQuery = [
     .bail()
     .custom((value, { req }) => {
       const parsed = parseAndValidateAnalyticsSql(value);
-      
+
       if (hasSelectWildcardFromClusters(parsed.ast)) {
         throw new Error(
           'SELECT * from clusters is not allowed. Please specify explicit column names instead.'
