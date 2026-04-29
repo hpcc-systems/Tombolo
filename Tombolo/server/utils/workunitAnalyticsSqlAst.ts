@@ -15,6 +15,7 @@ export interface ParsedAnalyticsSql {
 export interface AnalyticsScopeOptions {
   scopeToWuid?: string;
   scopeToClusterId?: string;
+  scopeableTableSet?: ReadonlySet<string>;
 }
 
 function cloneAstNode<T>(value: T): T {
@@ -317,41 +318,76 @@ export function findSensitiveClusterColumnViolation(
   return null;
 }
 
-function buildScopeFilter(options: AnalyticsScopeOptions): Binary | null {
-  const conditions: Binary[] = [];
-
-  if (options.scopeToWuid) {
-    conditions.push({
-      type: 'binary_expr',
-      operator: '=',
-      left: {
-        type: 'column_ref',
-        table: null,
-        column: 'wuId',
-      },
-      right: {
-        type: 'single_quote_string',
-        value: options.scopeToWuid,
-      },
-    });
+function getAliasValue(alias: unknown): string | null {
+  if (!alias) {
+    return null;
   }
 
-  if (options.scopeToClusterId) {
-    conditions.push({
-      type: 'binary_expr',
-      operator: '=',
-      left: {
-        type: 'column_ref',
-        table: null,
-        column: 'clusterId',
-      },
-      right: {
-        type: 'single_quote_string',
-        value: options.scopeToClusterId,
-      },
-    });
+  if (typeof alias === 'string') {
+    return alias;
   }
 
+  if (typeof alias === 'object' && 'value' in alias) {
+    const value = (alias as { value?: unknown }).value;
+    return typeof value === 'string' ? value : null;
+  }
+
+  return null;
+}
+
+function appendScopedEquals(
+  conditions: Binary[],
+  qualifier: string | null,
+  column: 'wuId' | 'clusterId',
+  value: string
+): void {
+  conditions.push({
+    type: 'binary_expr',
+    operator: '=',
+    left: {
+      type: 'column_ref',
+      table: qualifier,
+      column,
+    },
+    right: {
+      type: 'single_quote_string',
+      value,
+    },
+  });
+}
+
+function getInitialScopedQualifierForSelect(
+  selectAst: Select,
+  scopeableTableSet?: ReadonlySet<string>
+): string | null {
+  const fromClause = selectAst.from;
+  const entries = !fromClause
+    ? []
+    : Array.isArray(fromClause)
+      ? fromClause
+      : [fromClause];
+
+  const initialEntry = entries[0];
+  if (!initialEntry || typeof initialEntry !== 'object') {
+    return null;
+  }
+
+  const tableName = (initialEntry as From & { table?: string }).table;
+  if (typeof tableName !== 'string' || tableName.trim() === '') {
+    return null;
+  }
+
+  const normalizedTableName = tableName.toLowerCase();
+  if (scopeableTableSet && !scopeableTableSet.has(normalizedTableName)) {
+    return null;
+  }
+
+  const alias = getAliasValue((initialEntry as From & { as?: unknown }).as);
+  const qualifier = (alias || tableName).trim();
+  return qualifier || null;
+}
+
+function reduceConditions(conditions: Binary[]): Binary | null {
   if (conditions.length === 0) {
     return null;
   }
@@ -367,16 +403,65 @@ function buildScopeFilter(options: AnalyticsScopeOptions): Binary | null {
   );
 }
 
+function buildScopeFilterForSelect(
+  selectAst: Select,
+  options: AnalyticsScopeOptions
+): Binary | null {
+  const conditions: Binary[] = [];
+  const qualifier = getInitialScopedQualifierForSelect(
+    selectAst,
+    options.scopeableTableSet
+  );
+
+  if (qualifier) {
+    if (options.scopeToWuid) {
+      appendScopedEquals(conditions, qualifier, 'wuId', options.scopeToWuid);
+    }
+
+    if (options.scopeToClusterId) {
+      appendScopedEquals(
+        conditions,
+        qualifier,
+        'clusterId',
+        options.scopeToClusterId
+      );
+    }
+
+    return reduceConditions(conditions);
+  }
+
+  // Backward-compatible fallback for legacy calls that do not pass a scopeable table set.
+  if (!options.scopeableTableSet) {
+    if (options.scopeToWuid) {
+      appendScopedEquals(conditions, null, 'wuId', options.scopeToWuid);
+    }
+
+    if (options.scopeToClusterId) {
+      appendScopedEquals(
+        conditions,
+        null,
+        'clusterId',
+        options.scopeToClusterId
+      );
+    }
+  }
+
+  return reduceConditions(conditions);
+}
+
 export function applyScopeToSelect(
   rootSelect: Select,
   options: AnalyticsScopeOptions
 ): boolean {
-  const scopeFilter = buildScopeFilter(options);
-  if (!scopeFilter) {
-    return false;
-  }
+  let scopeApplied = false;
 
   for (const selectAst of getSelectChain(rootSelect)) {
+    const scopeFilter = buildScopeFilterForSelect(selectAst, options);
+    if (!scopeFilter) {
+      continue;
+    }
+
+    scopeApplied = true;
     const nextWhere = cloneAstNode(scopeFilter);
     if (!selectAst.where) {
       selectAst.where = nextWhere;
@@ -391,7 +476,7 @@ export function applyScopeToSelect(
     };
   }
 
-  return true;
+  return scopeApplied;
 }
 
 export function enforceRowLimit(rootSelect: Select, maxLimit: number): void {
@@ -424,23 +509,6 @@ export function enforceRowLimit(rootSelect: Select, maxLimit: number): void {
     type: 'number',
     value: maxLimit,
   };
-}
-
-function getAliasValue(alias: unknown): string | null {
-  if (!alias) {
-    return null;
-  }
-
-  if (typeof alias === 'string') {
-    return alias;
-  }
-
-  if (typeof alias === 'object' && 'value' in alias) {
-    const value = (alias as { value?: unknown }).value;
-    return typeof value === 'string' ? value : null;
-  }
-
-  return null;
 }
 
 export function getOutputToSourceColumnMapFromAst(

@@ -16,6 +16,8 @@ import {
 import {
   ALLOWED_WORKUNIT_ANALYTICS_TABLES,
   ALLOWED_WORKUNIT_ANALYTICS_TABLE_SET,
+  SCOPEABLE_WORKUNIT_ANALYTICS_TABLES,
+  SCOPEABLE_WORKUNIT_ANALYTICS_TABLE_SET,
   SENSITIVE_WORKUNIT_ANALYTICS_CLUSTER_COLUMN_SET,
 } from '../config/workunitAnalyticsPolicy.js';
 
@@ -408,6 +410,7 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
     const scopeApplied = applyScopeToSelect(finalSelectAst, {
       scopeToWuid: options.scopeToWuid,
       scopeToClusterId: options.scopeToClusterId,
+      scopeableTableSet: SCOPEABLE_WORKUNIT_ANALYTICS_TABLE_SET,
     });
 
     if (scopeApplied) {
@@ -592,6 +595,103 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
       'Failed to execute query';
 
     return sendError(res, errorMessage, 400);
+  }
+}
+
+/**
+ * Get scoped database schema information (scopeable tables only)
+ */
+async function getScopedSchema(req: Request, res: Response) {
+  try {
+    const tableName = req.query.tableName as string | undefined;
+
+    if (tableName) {
+      const normalizedTableName = tableName.toLowerCase();
+      if (!SCOPEABLE_WORKUNIT_ANALYTICS_TABLE_SET.has(normalizedTableName)) {
+        return sendError(
+          res,
+          `Invalid table name for scoped schema. Allowed: ${SCOPEABLE_WORKUNIT_ANALYTICS_TABLES.join(', ')}`,
+          400
+        );
+      }
+
+      const columns = await readOnlySequelize.query(
+        `
+        SELECT
+          c.COLUMN_NAME as name,
+          c.DATA_TYPE as type,
+          c.IS_NULLABLE as nullable,
+          c.COLUMN_KEY as \`key\`,
+          c.COLUMN_COMMENT as description,
+          c.ORDINAL_POSITION,
+          CASE
+            WHEN c.COLUMN_KEY = 'PRI' THEN 'PRI'
+            WHEN MAX(kcu.REFERENCED_TABLE_NAME) IS NOT NULL THEN 'FK'
+            WHEN c.COLUMN_KEY = 'MUL' THEN 'MUL'
+            ELSE NULL
+          END as keyType
+        FROM INFORMATION_SCHEMA.COLUMNS c
+        LEFT JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
+          ON c.TABLE_SCHEMA = kcu.TABLE_SCHEMA
+          AND c.TABLE_NAME = kcu.TABLE_NAME
+          AND c.COLUMN_NAME = kcu.COLUMN_NAME
+          AND kcu.REFERENCED_TABLE_NAME IS NOT NULL
+        WHERE c.TABLE_SCHEMA = DATABASE()
+          AND c.TABLE_NAME = ?
+        GROUP BY c.COLUMN_NAME, c.DATA_TYPE, c.IS_NULLABLE, c.COLUMN_KEY, c.COLUMN_COMMENT, c.ORDINAL_POSITION
+        ORDER BY c.ORDINAL_POSITION
+      `,
+        {
+          replacements: [normalizedTableName],
+          type: QueryTypes.SELECT,
+        }
+      );
+
+      return sendSuccess(res, columns);
+    }
+
+    const allSchemas: Record<string, SchemaColumnRow[]> = {};
+
+    for (const table of SCOPEABLE_WORKUNIT_ANALYTICS_TABLES) {
+      const columns = await readOnlySequelize.query(
+        `
+        SELECT
+          c.COLUMN_NAME as name,
+          c.DATA_TYPE as type,
+          c.IS_NULLABLE as nullable,
+          c.COLUMN_KEY as \`key\`,
+          c.COLUMN_COMMENT as description,
+          c.ORDINAL_POSITION,
+          CASE
+            WHEN c.COLUMN_KEY = 'PRI' THEN 'PRI'
+            WHEN MAX(kcu.REFERENCED_TABLE_NAME) IS NOT NULL THEN 'FK'
+            WHEN c.COLUMN_KEY = 'MUL' THEN 'MUL'
+            ELSE NULL
+          END as keyType
+        FROM INFORMATION_SCHEMA.COLUMNS c
+        LEFT JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
+          ON c.TABLE_SCHEMA = kcu.TABLE_SCHEMA
+          AND c.TABLE_NAME = kcu.TABLE_NAME
+          AND c.COLUMN_NAME = kcu.COLUMN_NAME
+          AND kcu.REFERENCED_TABLE_NAME IS NOT NULL
+        WHERE c.TABLE_SCHEMA = DATABASE()
+          AND c.TABLE_NAME = ?
+        GROUP BY c.COLUMN_NAME, c.DATA_TYPE, c.IS_NULLABLE, c.COLUMN_KEY, c.COLUMN_COMMENT, c.ORDINAL_POSITION
+        ORDER BY c.ORDINAL_POSITION
+      `,
+        {
+          replacements: [table],
+          type: QueryTypes.SELECT,
+        }
+      );
+
+      allSchemas[table] = columns as SchemaColumnRow[];
+    }
+
+    return sendSuccess(res, allSchemas);
+  } catch (err) {
+    logger.error('Scoped schema fetch error:', err);
+    return sendError(res, 'Failed to fetch scoped schema', 500);
   }
 }
 
@@ -790,4 +890,4 @@ async function getDatabaseStats(req: Request, res: Response) {
   }
 }
 
-export { executeAnalyticsQuery, getSchema, getDatabaseStats };
+export { executeAnalyticsQuery, getSchema, getScopedSchema, getDatabaseStats };

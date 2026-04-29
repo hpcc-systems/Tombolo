@@ -60,6 +60,7 @@ import { LeftPanelIcon, RightPanelIcon } from '@/components/common/icons/PanelIc
 import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
 import analyticsFiltersService from '@/services/analyticsFilters.service';
 import { handleError, handleSuccess } from '@/components/common/handleResponse';
+import { getSqlErrorForToast } from '@/components/common/sqlError';
 import QUERY_TEMPLATES from './queryTemplates';
 import ChartModal from './ChartModal';
 import { disposeSqlAutocomplete, registerSqlAutocomplete } from '@/components/common/sqlAutocomplete';
@@ -143,64 +144,6 @@ interface SavedFilter {
 type ResultsSortState = {
   columnKey: string | null;
   order: 'ascend' | 'descend' | null;
-};
-
-const toNonEmptyStringArray = (value: unknown): string[] => {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value
-    .filter(item => typeof item === 'string')
-    .map(item => item.trim())
-    .filter(item => item.length > 0);
-};
-
-const getBackendErrorForToast = (
-  error: unknown,
-  fallbackMessage: string
-): string | string[] => {
-  if (typeof error === 'string' && error.trim().length > 0) {
-    return error.trim();
-  }
-
-  if (!error || typeof error !== 'object') {
-    return fallbackMessage;
-  }
-
-  const candidate = error as {
-    messages?: unknown;
-    message?: unknown;
-    raw?: { errors?: unknown; message?: unknown };
-    response?: { data?: { errors?: unknown; message?: unknown } };
-  };
-
-  const messageSources = [
-    candidate.messages,
-    candidate.raw?.errors,
-    candidate.response?.data?.errors,
-  ];
-
-  for (const source of messageSources) {
-    const messages = toNonEmptyStringArray(source);
-    if (messages.length > 0) {
-      return messages;
-    }
-  }
-
-  const singleMessageSources = [
-    candidate.raw?.message,
-    candidate.response?.data?.message,
-    candidate.message,
-  ];
-
-  for (const source of singleMessageSources) {
-    if (typeof source === 'string' && source.trim().length > 0) {
-      return source.trim();
-    }
-  }
-
-  return fallbackMessage;
 };
 
 const AnalyticsWorkspace = () => {
@@ -340,7 +283,7 @@ const AnalyticsWorkspace = () => {
         const response = await apiClient.get('/workunitAnalytics/schema');
         setSchemaData(response.data);
       } catch (error) {
-        handleError(getBackendErrorForToast(error, 'Failed to load database schema'));
+        handleError(getSqlErrorForToast(error, 'Failed to load database schema'));
       } finally {
         setIsLoadingSchema(false);
       }
@@ -377,7 +320,7 @@ const AnalyticsWorkspace = () => {
         setSavedFilters(validFilters);
       } catch (error) {
         console.error('Failed to load filters:', error);
-        handleError(getBackendErrorForToast(error, 'Failed to load saved filters'));
+        handleError(getSqlErrorForToast(error, 'Failed to load saved filters'));
         setSavedFilters([]); // Ensure it's always an array
       }
     };
@@ -504,7 +447,7 @@ const AnalyticsWorkspace = () => {
       if (axios.isCancel(error)) {
         handleSuccess('Query cancelled');
       } else {
-        handleError(getBackendErrorForToast(error, 'Failed to execute query'));
+        handleError(getSqlErrorForToast(error, 'Failed to execute query'));
         console.error('Query execution error:', error);
       }
     } finally {
@@ -693,7 +636,7 @@ const AnalyticsWorkspace = () => {
       handleSuccess('Filter deleted successfully');
     } catch (error) {
       console.error('Failed to delete filter:', error);
-      handleError(getBackendErrorForToast(error, 'Failed to delete filter'));
+      handleError(getSqlErrorForToast(error, 'Failed to delete filter'));
     }
   };
 
@@ -736,7 +679,7 @@ const AnalyticsWorkspace = () => {
       handleSuccess(`Filter "${newFilter.name}" saved successfully`);
     } catch (error) {
       console.error('Failed to save filter:', error);
-      handleError(getBackendErrorForToast(error, 'Failed to save filter'));
+      handleError(getSqlErrorForToast(error, 'Failed to save filter'));
     }
   };
 
@@ -776,7 +719,7 @@ const AnalyticsWorkspace = () => {
       handleSuccess(`Updated "${appliedFilter.name}" successfully`);
     } catch (error) {
       console.error('Failed to update filter:', error);
-      handleError(getBackendErrorForToast(error, 'Failed to update filter'));
+      handleError(getSqlErrorForToast(error, 'Failed to update filter'));
     }
   };
 
