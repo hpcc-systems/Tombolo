@@ -3,9 +3,9 @@ import { Alert, Button, Card, Empty, Space, Table, Typography, message, Row, Col
 import { PlayCircleOutlined, SafetyOutlined, ReloadOutlined, StopOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { formatHours, formatCurrency } from '@tombolo/shared';
-import { apiClient } from '@/services/api';
 import axios from 'axios';
 import { relevantMetrics, forbiddenSqlKeywords } from '@tombolo/shared';
+import { analyticsService } from '@/services/workunitAnalytics.service';
 import Editor, { OnMount } from '@monaco-editor/react';
 import type { Monaco } from '@monaco-editor/react';
 import type { editor as MonacoEditor } from 'monaco-editor';
@@ -14,6 +14,7 @@ import styles from '../../workunitHistory.module.css';
 import { disposeSqlAutocomplete, registerSqlAutocomplete } from '@/components/common/sqlAutocomplete';
 import { compareQueryValues } from '@/components/common/sqlResultsSorting';
 import type { ColumnTypeMetadata, SortDirection } from '@/components/common/sqlResultsSorting';
+import { getSqlErrorForToast } from '@/components/common/sqlError';
 
 const { Text } = Typography;
 
@@ -24,19 +25,7 @@ interface Props {
   clusterName?: string;
 }
 
-type SchemaColumn = {
-  name: string;
-};
-
-type SchemaData = Record<string, SchemaColumn[]>;
-
-const FALLBACK_ALLOWED_TABLES = [
-  'work_unit_details',
-  'work_units',
-  'clusters',
-  'work_unit_exceptions',
-  'work_unit_files',
-];
+const FALLBACK_ALLOWED_TABLES = ['work_unit_details', 'work_units', 'work_unit_exceptions', 'work_unit_files'];
 
 const BASE_COLUMNS = ['id', 'wuId', 'clusterId', 'scopeId', 'scopeName', 'scopeType', 'label', 'fileName'];
 const SUGGEST_COLUMNS = Array.from(new Set([...BASE_COLUMNS, ...relevantMetrics]));
@@ -150,8 +139,7 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
 
     const fetchSchemaForAutocomplete = async () => {
       try {
-        const response = await apiClient.get('/workunitAnalytics/schema');
-        const schema = response.data as SchemaData;
+        const schema = await analyticsService.getScopedSchema();
 
         if (!mounted || !schema || typeof schema !== 'object') return;
 
@@ -201,31 +189,22 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
     setExecuting(true);
     setError(null);
     try {
-      const response = await apiClient.post(
-        '/workunitAnalytics/query',
+      const scopedResult = await analyticsService.executeScopedQuery(
+        currentSql,
         {
-          sql: currentSql,
-          options: {
-            scopeToWuid: wuid,
-            scopeToClusterId: clusterId,
-          },
+          scopeToWuid: wuid,
+          scopeToClusterId: clusterId,
         },
         { signal: controller.signal }
       );
-      setResult(response.data);
+      setResult(scopedResult);
       setResultsSort({ columnKey: null, order: null });
     } catch (err: unknown) {
       if (axios.isCancel(err)) {
         message.info('Query cancelled');
       } else {
-        const anyErr = err as {
-          response?: { data?: { message?: string } };
-          messages?: string[];
-          raw?: { message?: string };
-        };
-        const serverMsg = anyErr?.response?.data?.message || anyErr?.messages?.[0];
-        const detailedMsg = serverMsg || anyErr?.raw?.message || 'Failed to execute SQL';
-        setError(detailedMsg);
+        const detailedMsg = getSqlErrorForToast(err, 'Failed to execute SQL');
+        setError(Array.isArray(detailedMsg) ? detailedMsg.join('; ') : detailedMsg);
         message.error('Failed to execute SQL');
       }
     } finally {

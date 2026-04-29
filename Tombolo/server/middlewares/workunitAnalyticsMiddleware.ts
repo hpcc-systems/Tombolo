@@ -1,7 +1,6 @@
-import { body } from 'express-validator';
+import { body, query } from 'express-validator';
 import {
   stringBody,
-  stringQuery,
   intBody,
   booleanQuery,
   dateTimeQuery,
@@ -11,6 +10,8 @@ import logger from '../config/logger.js';
 import {
   ALLOWED_WORKUNIT_ANALYTICS_TABLES,
   ALLOWED_WORKUNIT_ANALYTICS_TABLE_SET,
+  SCOPEABLE_WORKUNIT_ANALYTICS_TABLES,
+  SCOPEABLE_WORKUNIT_ANALYTICS_TABLE_SET,
   SENSITIVE_WORKUNIT_ANALYTICS_CLUSTER_COLUMNS,
   WORKUNIT_ANALYTICS_SCOPE_VALUE_REGEX,
 } from '../config/workunitAnalyticsPolicy.js';
@@ -109,10 +110,72 @@ const validateAnalyticsQuery = [
 
 // Validation for GET /api/analytics/schema
 const validateGetSchema = [
-  stringQuery('tableName', true, {
-    isIn: [...ALLOWED_WORKUNIT_ANALYTICS_TABLES],
-    msg: `Only ${ALLOWED_WORKUNIT_ANALYTICS_TABLES.join(', ')} tables are available`,
+  query('tableName')
+    .optional({ values: 'falsy' })
+    .isString()
+    .withMessage('tableName must be a string')
+    .isLength({ max: 200 })
+    .withMessage('tableName must be less than 200 characters')
+    .isIn([...ALLOWED_WORKUNIT_ANALYTICS_TABLES])
+    .withMessage(
+      `Only ${ALLOWED_WORKUNIT_ANALYTICS_TABLES.join(', ')} tables are available`
+    ),
+];
+
+// Validation for POST /api/workunitAnalytics/scoped/query
+const validateScopedAnalyticsQuery = [
+  ...validateAnalyticsQuery,
+
+  body('options')
+    .exists()
+    .withMessage('options is required for scoped queries')
+    .bail()
+    .isObject()
+    .withMessage('options must be an object'),
+
+  body('options.scopeToWuid')
+    .exists({ values: 'falsy' })
+    .withMessage('scopeToWuid is required for scoped queries'),
+
+  body('options.scopeToClusterId')
+    .exists({ values: 'falsy' })
+    .withMessage('scopeToClusterId is required for scoped queries'),
+
+  body('sql').custom((value, { req }) => {
+    const parsed =
+      req.analyticsSqlContext ||
+      parseAndValidateAnalyticsSql(typeof value === 'string' ? value : '');
+
+    const tables = collectReferencedTables(parsed.ast);
+    const invalidTables = tables.filter(
+      table => !SCOPEABLE_WORKUNIT_ANALYTICS_TABLE_SET.has(table)
+    );
+
+    if (invalidTables.length > 0) {
+      throw new Error(
+        `Invalid table(s) for scoped query: ${invalidTables.join(', ')}. Scoped queries only allow: ${SCOPEABLE_WORKUNIT_ANALYTICS_TABLES.join(', ')}`
+      );
+    }
+
+    logger.debug('Scoped analytics SQL validated', {
+      normalizedSql: parsed.normalizedSql,
+      tableCount: tables.length,
+      tables,
+    });
+
+    return true;
   }),
+];
+
+// Validation for GET /api/workunitAnalytics/scoped/schema
+const validateGetScopedSchema = [
+  ...validateGetSchema,
+  query('tableName')
+    .optional({ values: 'falsy' })
+    .isIn([...SCOPEABLE_WORKUNIT_ANALYTICS_TABLES])
+    .withMessage(
+      `Only ${SCOPEABLE_WORKUNIT_ANALYTICS_TABLES.join(', ')} tables are available on the scoped schema endpoint`
+    ),
 ];
 
 // Validation for GET /api/analytics/stats
@@ -122,4 +185,10 @@ const validateGetDatabaseStats = [
   dateTimeQuery('endDate', true),
 ];
 
-export { validateAnalyticsQuery, validateGetSchema, validateGetDatabaseStats };
+export {
+  validateAnalyticsQuery,
+  validateGetSchema,
+  validateGetDatabaseStats,
+  validateScopedAnalyticsQuery,
+  validateGetScopedSchema,
+};

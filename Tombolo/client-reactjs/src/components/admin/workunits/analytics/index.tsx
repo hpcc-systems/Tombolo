@@ -62,6 +62,7 @@ import { LeftPanelIcon, RightPanelIcon } from '@/components/common/icons/PanelIc
 import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
 import analyticsFiltersService from '@/services/analyticsFilters.service';
 import { handleError, handleSuccess } from '@/components/common/handleResponse';
+import { getSqlErrorForToast } from '@/components/common/sqlError';
 import QUERY_TEMPLATES from './queryTemplates';
 import ChartModal from './ChartModal';
 import { disposeSqlAutocomplete, registerSqlAutocomplete } from '@/components/common/sqlAutocomplete';
@@ -440,7 +441,7 @@ const AnalyticsWorkspace = () => {
         const response = await apiClient.get('/workunitAnalytics/schema');
         setSchemaData(response.data);
       } catch (error) {
-        handleError(getBackendErrorForToast(error, 'Failed to load database schema'));
+        handleError(getSqlErrorForToast(error, 'Failed to load database schema'));
       } finally {
         setIsLoadingSchema(false);
       }
@@ -480,7 +481,7 @@ const AnalyticsWorkspace = () => {
         setSavedFilters(validFilters);
       } catch (error) {
         console.error('Failed to load filters:', error);
-        handleError(getBackendErrorForToast(error, 'Failed to load saved filters'));
+        handleError(getSqlErrorForToast(error, 'Failed to load saved filters'));
         setSavedFilters([]); // Ensure it's always an array
       }
     };
@@ -624,7 +625,7 @@ const AnalyticsWorkspace = () => {
       if (axios.isCancel(error)) {
         handleSuccess('Query cancelled');
       } else {
-        handleError(getBackendErrorForToast(error, 'Failed to execute query'));
+        handleError(getSqlErrorForToast(error, 'Failed to execute query'));
         console.error('Query execution error:', error);
       }
     } finally {
@@ -899,7 +900,7 @@ const AnalyticsWorkspace = () => {
       handleSuccess('Filter deleted successfully');
     } catch (error) {
       console.error('Failed to delete filter:', error);
-      handleError(getBackendErrorForToast(error, 'Failed to delete filter'));
+      handleError(getSqlErrorForToast(error, 'Failed to delete filter'));
     }
   };
 
@@ -942,7 +943,7 @@ const AnalyticsWorkspace = () => {
       handleSuccess(`Filter "${newFilter.name}" saved successfully`);
     } catch (error) {
       console.error('Failed to save filter:', error);
-      handleError(getBackendErrorForToast(error, 'Failed to save filter'));
+      handleError(getSqlErrorForToast(error, 'Failed to save filter'));
     }
   };
 
@@ -982,7 +983,7 @@ const AnalyticsWorkspace = () => {
       handleSuccess(`Updated "${appliedFilter.name}" successfully`);
     } catch (error) {
       console.error('Failed to update filter:', error);
-      handleError(getBackendErrorForToast(error, 'Failed to update filter'));
+      handleError(getSqlErrorForToast(error, 'Failed to update filter'));
     }
   };
 
