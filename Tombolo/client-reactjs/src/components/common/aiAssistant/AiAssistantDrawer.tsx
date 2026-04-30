@@ -154,9 +154,9 @@ export interface AiAssistantDrawerProps {
   enableSqlFeatures?: boolean;
 }
 
-const buildInitialChatMessages = (initialMessage: string): ChatMessage[] => [
+const buildInitialChatMessages = (initialMessage: string, initialId: number): ChatMessage[] => [
   {
-    id: Date.now(),
+    id: initialId,
     role: 'assistant',
     content: initialMessage,
   },
@@ -209,7 +209,11 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
   const chatMessagesWrapRef = useRef<HTMLDivElement | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const hasLoadedPersistedStateRef = useRef(false);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => buildInitialChatMessages(initialMessage));
+  const nextChatMessageIdRef = useRef<number>(Date.now());
+  const getNextChatMessageId = () => ++nextChatMessageIdRef.current;
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() =>
+    buildInitialChatMessages(initialMessage, nextChatMessageIdRef.current)
+  );
 
   const storageKey = useMemo(() => {
     if (typeof window === 'undefined') {
@@ -231,7 +235,7 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
     setHistoryIndex(-1);
     setEditingMessageId(null);
     setEditingPrompt('');
-    setChatMessages(buildInitialChatMessages(initialMessage));
+    setChatMessages(buildInitialChatMessages(initialMessage, getNextChatMessageId()));
   };
 
   const clearChatHistory = () => {
@@ -279,7 +283,7 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
     try {
       const rawState = window.localStorage.getItem(storageKey);
       if (!rawState) {
-        setChatMessages(buildInitialChatMessages(initialMessage));
+        setChatMessages(buildInitialChatMessages(initialMessage, getNextChatMessageId()));
         setPromptHistory([]);
         return;
       }
@@ -292,10 +296,18 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
         ? parsed.promptHistory.filter((entry): entry is string => typeof entry === 'string')
         : [];
 
-      setChatMessages(persistedMessages.length > 0 ? persistedMessages : buildInitialChatMessages(initialMessage));
+      if (persistedMessages.length > 0) {
+        const maxPersistedId = persistedMessages.reduce(
+          (max, message) => Math.max(max, message.id),
+          nextChatMessageIdRef.current
+        );
+        nextChatMessageIdRef.current = Math.max(nextChatMessageIdRef.current, maxPersistedId);
+      }
+
+      setChatMessages(persistedMessages.length > 0 ? persistedMessages : buildInitialChatMessages(initialMessage, getNextChatMessageId()));
       setPromptHistory(persistedPromptHistory);
     } catch {
-      setChatMessages(buildInitialChatMessages(initialMessage));
+      setChatMessages(buildInitialChatMessages(initialMessage, getNextChatMessageId()));
       setPromptHistory([]);
     } finally {
       hasLoadedPersistedStateRef.current = true;
@@ -449,7 +461,7 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
     setHistoryIndex(-1);
     setChatInput('');
     const userMessage: ChatMessage = {
-      id: Date.now(),
+      id: getNextChatMessageId(),
       role: 'user',
       content: request,
     };
@@ -469,7 +481,7 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
       const resolvedSql = answer.sql || fallbackSql;
 
       const assistantMessage: ChatMessage = {
-        id: Date.now() + 1,
+        id: getNextChatMessageId(),
         role: 'assistant',
         content: stripSqlFences(answer.content) || (resolvedSql ? 'Suggested SQL is shown below.' : 'Done.'),
         sql: resolvedSql,
@@ -491,7 +503,7 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
       setChatMessages(prev => [
         ...prev,
         {
-          id: Date.now() + 1,
+          id: getNextChatMessageId(),
           role: 'assistant',
           content: modelUnavailable ? unavailableText : 'I could not generate a response right now. Please try again.',
         },
@@ -573,7 +585,7 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
       const resolvedSql = answer.sql || fallbackSql;
 
       const assistantMessage: ChatMessage = {
-        id: Date.now() + 1,
+        id: getNextChatMessageId(),
         role: 'assistant',
         content: stripSqlFences(answer.content) || (resolvedSql ? 'Suggested SQL is shown below.' : 'Done.'),
         sql: resolvedSql,
@@ -595,7 +607,7 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
       setChatMessages(prev => [
         ...prev,
         {
-          id: Date.now() + 1,
+          id: getNextChatMessageId(),
           role: 'assistant',
           content: modelUnavailable ? unavailableText : 'I could not generate a response right now. Please try again.',
         },
@@ -629,7 +641,7 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
         JSON.stringify(capped, null, 2);
 
       const resultMessage: ChatMessage = {
-        id: Date.now(),
+        id: getNextChatMessageId(),
         role: 'assistant',
         content: summary,
         isResultSet: true,
@@ -639,7 +651,7 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
       const msg = String((err as { message?: string })?.message || 'Failed to execute SQL.');
       setChatMessages(prev => [
         ...prev,
-        { id: Date.now(), role: 'assistant', content: `Error running SQL: ${msg}`, isResultSet: true },
+        { id: getNextChatMessageId(), role: 'assistant', content: `Error running SQL: ${msg}`, isResultSet: true },
       ]);
     } finally {
       setSqlRunningId(null);
