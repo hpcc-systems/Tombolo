@@ -83,6 +83,7 @@ import {
   sanitizeValue,
   buildConditionString,
   stripComments,
+  stripSqlEditorPlaceholder,
   extractWhereClause,
   hasWhereClause as hasWhere,
   ensureSpacing,
@@ -498,6 +499,8 @@ const AnalyticsWorkspace = () => {
   // Execute SQL query
   const executeQuery = async () => {
     const currentSql = getCurrentSql();
+    const sanitizedCurrentSql = stripSqlEditorPlaceholder(currentSql);
+    const sqlForSavedArtifacts = sanitizedCurrentSql || currentSql.trim();
 
     if (!currentSql.trim()) {
       handleError('Please enter a SQL query');
@@ -529,8 +532,8 @@ const AnalyticsWorkspace = () => {
         typeof result.data.rowCount === 'number' ? result.data.rowCount : (result.data.rows as unknown[]).length;
 
       const resultPayload: SavedResultPayload = {
-        name: buildSavedResultName(currentSql.trim(), new Date().toISOString()),
-        sql: currentSql.trim(),
+        name: buildSavedResultName(sqlForSavedArtifacts, new Date().toISOString()),
+        sql: sqlForSavedArtifacts,
         savedAt: new Date().toISOString(),
         columns: result.data.columns,
         rows: result.data.rows,
@@ -559,7 +562,7 @@ const AnalyticsWorkspace = () => {
       // Add to query history
       const historyEntry: HistoryEntry = {
         id: Date.now(),
-        sql: currentSql.trim(),
+        sql: sqlForSavedArtifacts,
         timestamp: new Date().toISOString(),
         executionTime,
         rowCount: responseRowCount,
@@ -613,11 +616,17 @@ const AnalyticsWorkspace = () => {
 
   // Save query
   const saveQuery = (values: { name: string; description?: string }) => {
+    const sqlToSave = stripSqlEditorPlaceholder(querySqlToSave);
+    if (!sqlToSave) {
+      handleError('Please enter a SQL query');
+      return;
+    }
+
     const newQuery: SavedQuery = {
       id: Date.now(),
       name: values.name,
       description: values.description || '',
-      sql: querySqlToSave.trim(),
+      sql: sqlToSave,
       createdAt: new Date().toISOString(),
       favorite: false,
     };
@@ -634,8 +643,9 @@ const AnalyticsWorkspace = () => {
   // Handle save query button click with validation
   const handleSaveQueryClick = () => {
     const currentSql = getCurrentSql();
+    const sqlToSave = stripSqlEditorPlaceholder(currentSql);
 
-    if (!currentSql.trim()) {
+    if (!sqlToSave) {
       handleError('Please enter a SQL query');
       return;
     }
@@ -645,7 +655,7 @@ const AnalyticsWorkspace = () => {
       return;
     }
 
-    setQuerySqlToSave(currentSql);
+    setQuerySqlToSave(sqlToSave);
     setSaveModalVisible(true);
   };
 
