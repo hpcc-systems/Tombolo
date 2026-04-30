@@ -6,8 +6,9 @@ import type {
 export function normalizeSchemaData(rawSchemaData: Record<string, unknown>) {
   const schemaData: Record<string, unknown[]> = {};
   for (const table of Object.keys(rawSchemaData || {})) {
+    const rawTableSchema = rawSchemaData[table];
     schemaData[table] = (
-      (rawSchemaData[table] as Record<string, unknown>[]) || []
+      Array.isArray(rawTableSchema) ? rawTableSchema : []
     ).map((col: Record<string, unknown>) => ({
       name: col.name,
       type: col.type,
