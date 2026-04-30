@@ -4,8 +4,7 @@ import { getReadOnlySequelize } from '@tombolo/db';
 import { sendSuccess, sendError } from '../utils/response.js';
 import logger from '../config/logger.js';
 import { activityKindLabels } from '@tombolo/shared';
-import axios from 'axios';
-import { getAzureOpenAiConfig } from '../config/aiModels.js';
+import { buildAssistantContext, askAssistant } from '../ai/service.js';
 import type { Select } from 'node-sql-parser';
 import {
   applyScopeToSelect,
@@ -955,9 +954,15 @@ async function askAnalyticsAssistant(req: Request, res: Response) {
     const assistantContext = String(req.body.assistantContext || '');
     const knowledgeBase = String(req.body.knowledgeBase || '');
 
-    const azureOpenAiConfig = getAzureOpenAiConfig();
+    const context = buildAssistantContext({
+      message,
+      assistantContext,
+      knowledgeBase,
+      rawSchemaData: req.body.schemaData || {},
+      rawHistory: req.body.conversationHistory || [],
+    });
 
-    if (!azureOpenAiConfig) {
+    if (!context) {
       return sendError(
         res,
         'Azure OpenAI is not configured. Set AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_DEPLOYMENT, and AZURE_OPENAI_API_VERSION.',
@@ -965,152 +970,7 @@ async function askAnalyticsAssistant(req: Request, res: Response) {
       );
     }
 
-    // Filter schema to only essential fields: name, type, keyType (for FK relationships)
-    const rawSchemaData = req.body.schemaData || {};
-    const schemaData: Record<string, unknown[]> = {};
-    for (const table of Object.keys(rawSchemaData)) {
-      const rawTableSchema = Array.isArray(rawSchemaData[table])
-        ? rawSchemaData[table]
-        : [];
-      schemaData[table] = rawTableSchema.map(
-        (col: Record<string, unknown>) => ({
-          name: col.name,
-          type: col.type,
-          ...(col.keyType && { keyType: col.keyType }),
-        })
-      );
-    }
-
-    // Sanitised conversation history from the client
-    const rawHistory: Array<{ role: string; content: string }> = Array.isArray(
-      req.body.conversationHistory
-    )
-      ? req.body.conversationHistory
-      : [];
-    const conversationHistory = rawHistory
-      .filter(
-        m =>
-          (m.role === 'user' || m.role === 'assistant') &&
-          typeof m.content === 'string'
-      )
-      .slice(-20)
-      .map(m => ({
-        role: m.role,
-        content: m.content,
-      }));
-
-    const prompt = [
-      'You are a SQL analytics assistant.',
-      'Respond naturally and concisely for normal questions.',
-      'Only generate SQL when the user asks for SQL/query generation.',
-      'When the user asks to explain or diagnose an existing statement, explain it in plain language.',
-      'For explanation or diagnostic answers, do not quote, restate, or include SQL syntax in content.',
-      'If the provided statement has an issue and you can correct it, put the corrected statement in sql and keep content plain language.',
-      'If Context includes a "Reference SQL to use for this reply", use that exact statement for follow-up questions.',
-      'Do not switch to another statement unless the user explicitly asks for a new one.',
-      '',
-      '=== SQL GENERATION RULES ===',
-      'ALLOWED:',
-      '  - Single SELECT statements only',
-      '  - Explicit column names OR wildcards (*) for most tables',
-      '  - For clusters table ONLY: must explicitly list column names (e.g., SELECT id, name, status)',
-      '  - No wildcards from clusters table: SELECT * FROM clusters is FORBIDDEN',
-      '  - No semicolons at the end',
-      '  - No DML/DDL (INSERT, UPDATE, DELETE, CREATE, ALTER, DROP)',
-      '  - No UNION, UNION ALL, or multiple statements',
-      '  - JOINs are allowed if relationships exist in schema',
-      'NOT ALLOWED:',
-      '  - SELECT * FROM clusters - ALWAYS specify explicit columns for clusters table',
-      '  - Multiple statements',
-      '  - DML/DDL operations',
-      '  - UNIONs',
-      '  - Semicolons',
-      '',
-      'Use only known tables/columns/relationships from schema and KB below.',
-      'If user asks unknown table/column, respond exactly: OUT_OF_SCOPE: Requested table/column is not in KB',
-      'If join path is unknown, respond exactly: OUT_OF_SCOPE: Relationship not defined in KB',
-      '',
-      'Knowledge Base:',
-      knowledgeBase || '(none)',
-      '',
-      'Runtime Schema:',
-      JSON.stringify(schemaData),
-      '',
-      '',
-      assistantContext ? `Context: ${assistantContext}` : '',
-      `User request: ${message}`,
-      '',
-      'Return JSON with shape: {"content":"string","sql":"string|null"}',
-    ]
-      .filter(Boolean)
-      .join('\n');
-
-    const parseResponse = (rawText: string) => {
-      let parsed: { content?: string; sql?: string | null } | null = null;
-      try {
-        const unwrapped = extractJsonFromFences(rawText);
-        parsed = JSON.parse(unwrapped);
-      } catch {
-        parsed = null;
-      }
-
-      const content =
-        parsed?.content ||
-        (typeof rawText === 'string'
-          ? stripSqlFences(rawText)
-          : 'I could not parse response.');
-      const sqlCandidate = parsed?.sql || extractSqlFromText(rawText);
-
-      return {
-        content,
-        sql: sqlCandidate || null,
-      };
-    };
-
-    const askAzureOpenAi = async () => {
-      const requestUrl =
-        `${azureOpenAiConfig.endpoint}/openai/deployments/${encodeURIComponent(azureOpenAiConfig.deployment)}/chat/completions` +
-        `?api-version=${encodeURIComponent(azureOpenAiConfig.apiVersion)}`;
-
-      const response = await axios.post(
-        requestUrl,
-        {
-          temperature: 0.1,
-          response_format: { type: 'json_object' },
-          messages: [
-            {
-              role: 'system',
-              content:
-                'You are precise, safe, and schema-grounded. Never hallucinate schema.',
-            },
-            ...conversationHistory,
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
-        },
-        {
-          headers: {
-            'api-key': azureOpenAiConfig.apiKey,
-            'Content-Type': 'application/json',
-          },
-          timeout: 30000,
-        }
-      );
-
-      const rawText =
-        response?.data?.choices?.[0]?.message?.content ||
-        'I could not generate a response right now.';
-
-      return {
-        ...parseResponse(String(rawText)),
-        provider: 'azure-openai' as const,
-      };
-    };
-
-    const result = await askAzureOpenAi();
-
+    const result = await askAssistant(context);
     return sendSuccess(res, result);
   } catch (err: unknown) {
     const typedErr = err as {
