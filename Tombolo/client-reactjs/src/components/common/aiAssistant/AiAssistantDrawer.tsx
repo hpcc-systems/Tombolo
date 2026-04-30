@@ -304,7 +304,11 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
         nextChatMessageIdRef.current = Math.max(nextChatMessageIdRef.current, maxPersistedId);
       }
 
-      setChatMessages(persistedMessages.length > 0 ? persistedMessages : buildInitialChatMessages(initialMessage, getNextChatMessageId()));
+      setChatMessages(
+        persistedMessages.length > 0
+          ? persistedMessages
+          : buildInitialChatMessages(initialMessage, getNextChatMessageId())
+      );
       setPromptHistory(persistedPromptHistory);
     } catch {
       setChatMessages(buildInitialChatMessages(initialMessage, getNextChatMessageId()));
