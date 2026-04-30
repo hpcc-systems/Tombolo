@@ -969,7 +969,10 @@ async function askAnalyticsAssistant(req: Request, res: Response) {
     const rawSchemaData = req.body.schemaData || {};
     const schemaData: Record<string, unknown[]> = {};
     for (const table of Object.keys(rawSchemaData)) {
-      schemaData[table] = (rawSchemaData[table] || []).map(
+      const rawTableSchema = Array.isArray(rawSchemaData[table])
+        ? rawSchemaData[table]
+        : [];
+      schemaData[table] = rawTableSchema.map(
         (col: Record<string, unknown>) => ({
           name: col.name,
           type: col.type,
