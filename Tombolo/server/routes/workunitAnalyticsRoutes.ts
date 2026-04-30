@@ -88,7 +88,7 @@ router.get('/stats', validate(validateGetDatabaseStats), getDatabaseStats);
  * @route   POST /api/workunitAnalytics/assistant
  * @desc    Generate natural-language analytics response and optional SQL
  * @access  Private
- * @body    { message: string, knowledgeBase?: string, schemaData?: object, assistantContext?: string }
+ * @body    { message: string, knowledgeBase?: string, schemaData?: object, assistantContext?: string, conversationHistory?: object[] }
  */
 router.post(
   '/assistant',
