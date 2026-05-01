@@ -181,6 +181,77 @@
   overflow: hidden;
 }
 
+.scopedMonacoWrapper {
+  position: relative;
+}
+
+.scopedEditorToolbar,
+.scopedEditorFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.scopedEditorToolbar {
+  top: 8px;
+  justify-content: flex-end;
+}
+
+.scopedEditorFooter {
+  bottom: 8px;
+}
+
+.scopedEditorToolbarGroup {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: auto;
+}
+
+.scopedEditorToolbarSpacer {
+  flex: 1;
+}
+
+.editorActionBtn {
+  color: rgba(255, 255, 255, 0.92) !important;
+  background: rgba(30, 41, 59, 0.82) !important;
+  border: 1px solid rgba(148, 163, 184, 0.25) !important;
+  backdrop-filter: blur(6px);
+}
+
+.editorActionBtn:hover {
+  background: rgba(51, 65, 85, 0.92) !important;
+  color: #ffffff !important;
+}
+
+.executingQueryBtn,
+.executingQueryBtn.ant-btn-primary,
+.executingQueryBtn.ant-btn-primary:disabled,
+.executingQueryBtn.ant-btn-primary[disabled] {
+  color: #ffffff !important;
+}
+
+.executingQueryBtn .anticon {
+  color: #ffffff !important;
+}
+
+.cancelQueryBtn,
+.cancelQueryBtn.ant-btn-dangerous,
+.cancelQueryBtn.ant-btn-dangerous:disabled,
+.cancelQueryBtn.ant-btn-dangerous[disabled] {
+  color: var(--white, #fff) !important;
+}
+
+.cancelQueryBtn .anticon {
+  color: var(--white, #fff) !important;
+}
+
 /* AntD specific tweaks */
 .cardNoBodyPadding :global(.ant-card-body) {
   padding: 0;

@@ -1,11 +1,21 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Button, Card, Empty, Space, Table, Typography, message, Row, Col, Statistic, Tag } from 'antd';
-import { PlayCircleOutlined, SafetyOutlined, ReloadOutlined, RobotOutlined, StopOutlined } from '@ant-design/icons';
+import { Alert, Button, Card, Empty, Space, Table, Tooltip, Typography, message, Row, Col, Statistic, Tag } from 'antd';
+import {
+  ClearOutlined,
+  FormatPainterOutlined,
+  LoadingOutlined,
+  PlayCircleOutlined,
+  QuestionCircleOutlined,
+  ReloadOutlined,
+  SafetyOutlined,
+  StopOutlined,
+} from '@ant-design/icons';
 import AiAssistantDrawer, { type SchemaData } from '@/components/common/aiAssistant/AiAssistantDrawer';
 import dayjs from 'dayjs';
 import { formatHours, formatCurrency } from '@tombolo/shared';
 import axios from 'axios';
 import { relevantMetrics, forbiddenSqlKeywords } from '@tombolo/shared';
+import { format } from 'sql-formatter';
 import { analyticsService } from '@/services/workunitAnalytics.service';
 import Editor, { OnMount } from '@monaco-editor/react';
 import type { Monaco } from '@monaco-editor/react';
@@ -16,6 +26,7 @@ import { disposeSqlAutocomplete, registerSqlAutocomplete } from '@/components/co
 import { compareQueryValues } from '@/components/common/sqlResultsSorting';
 import type { ColumnTypeMetadata, SortDirection } from '@/components/common/sqlResultsSorting';
 import { getSqlErrorForToast } from '@/components/common/sqlError';
+import { SQL_FORMATTER_OPTIONS } from '@/components/admin/workunits/analytics/constants';
 
 const { Text } = Typography;
 
@@ -178,6 +189,32 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
     return validateSql(sqlForValidation);
   }, [sqlForValidation]);
 
+  const clearQueryState = useCallback(() => {
+    setResult(null);
+    setError(null);
+    setResultsSort({ columnKey: null, order: null });
+  }, []);
+
+  const formatSql = useCallback(() => {
+    try {
+      const formatted = format(getCurrentSql(), SQL_FORMATTER_OPTIONS);
+      setEditorSql(formatted);
+      message.success('SQL formatted successfully');
+    } catch {
+      message.error('Failed to format SQL');
+    }
+  }, [getCurrentSql, setEditorSql]);
+
+  const clearEditor = useCallback(() => {
+    setEditorSql('');
+    clearQueryState();
+  }, [clearQueryState, setEditorSql]);
+
+  const resetToDefault = useCallback(() => {
+    setEditorSql(DEFAULT_SQL);
+    clearQueryState();
+  }, [clearQueryState, setEditorSql]);
+
   const runQuery = async () => {
     const currentSql = getCurrentSql();
     const validation = validateSql(currentSql);
@@ -268,6 +305,11 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
     currentSqlRef.current = editor.getValue();
     registerCompletionProvider(monaco);
 
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+      void runQuery();
+    });
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, formatSql);
+
     editor.onDidChangeModelContent(() => {
       const nextValue = editor.getValue();
       currentSqlRef.current = nextValue;
@@ -340,24 +382,93 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
           />
 
           <div className={styles.editorContainer}>
-            <Editor
-              height="280px"
-              defaultLanguage="sql"
-              beforeMount={registerCompletionProvider}
-              defaultValue={currentSqlRef.current}
-              onMount={handleEditorMount}
-              theme="vs-dark"
-              options={{
-                minimap: { enabled: false },
-                fontSize: 13,
-                wordWrap: 'off',
-                lineNumbers: 'on',
-                scrollBeyondLastLine: false,
-                tabSize: 2,
-                automaticLayout: true,
-                suggestOnTriggerCharacters: true,
-              }}
-            />
+            <div className={styles.scopedMonacoWrapper}>
+              <div className={styles.scopedEditorToolbar}>
+                <div className={styles.scopedEditorToolbarGroup}>
+                  <Tooltip title="Reset to default">
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<ReloadOutlined />}
+                      onClick={resetToDefault}
+                      className={styles.editorActionBtn}
+                      disabled={executing}
+                    />
+                  </Tooltip>
+                  <Tooltip title="Format SQL (Ctrl/Cmd + K)">
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<FormatPainterOutlined />}
+                      onClick={formatSql}
+                      className={styles.editorActionBtn}
+                      disabled={executing}
+                    />
+                  </Tooltip>
+                  <Tooltip title="Clear editor">
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<ClearOutlined />}
+                      onClick={clearEditor}
+                      className={styles.editorActionBtn}
+                      disabled={executing}
+                    />
+                  </Tooltip>
+                  <Tooltip title="Ask SQL Assistant">
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<QuestionCircleOutlined />}
+                      onClick={() => setAssistantOpen(true)}
+                      className={styles.editorActionBtn}
+                    />
+                  </Tooltip>
+                </div>
+              </div>
+
+              <Editor
+                height="320px"
+                defaultLanguage="sql"
+                beforeMount={registerCompletionProvider}
+                defaultValue={currentSqlRef.current}
+                onMount={handleEditorMount}
+                theme="vs-dark"
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 13,
+                  wordWrap: 'off',
+                  lineNumbers: 'on',
+                  scrollBeyondLastLine: false,
+                  tabSize: 2,
+                  automaticLayout: true,
+                  suggestOnTriggerCharacters: true,
+                  padding: { top: 40, bottom: 56 },
+                }}
+              />
+
+              <div className={styles.scopedEditorFooter}>
+                <div className={styles.scopedEditorToolbarSpacer} />
+                <div className={styles.scopedEditorToolbarGroup}>
+                  <Button
+                    type="primary"
+                    icon={executing ? <LoadingOutlined spin /> : <PlayCircleOutlined />}
+                    onClick={() => void runQuery()}
+                    className={executing ? styles.executingQueryBtn : undefined}
+                    disabled={executing || !lintSql.ok}>
+                    {executing ? 'Executing...' : 'Execute Query'}
+                  </Button>
+                  <Button
+                    icon={<StopOutlined />}
+                    danger
+                    className={styles.cancelQueryBtn}
+                    disabled={!executing}
+                    onClick={() => abortControllerRef.current?.abort()}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
 
           {!lintSql.ok && (
@@ -370,32 +481,6 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
           )}
 
           {error && <Alert type="error" showIcon message="SQL Error" description={error} />}
-
-          <div className={styles.justifyBetween}>
-            <Space>
-              <Button
-                type="primary"
-                icon={<PlayCircleOutlined />}
-                loading={executing}
-                onClick={runQuery}
-                disabled={executing || !lintSql.ok}>
-                Run
-              </Button>
-              <Button
-                icon={<StopOutlined />}
-                danger
-                disabled={!executing}
-                onClick={() => abortControllerRef.current?.abort()}>
-                Cancel
-              </Button>
-              <Button icon={<ReloadOutlined />} onClick={() => setEditorSql(DEFAULT_SQL)} disabled={executing}>
-                Reset to default
-              </Button>
-            </Space>
-            <Button icon={<RobotOutlined />} onClick={() => setAssistantOpen(true)}>
-              AI Assistant
-            </Button>
-          </div>
 
           <Card size="small" title="Results" className={styles.resultsCardMarginTop}>
             {!result?.rows?.length ? (
