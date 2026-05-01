@@ -35,6 +35,7 @@ interface Props {
   clusterId: string;
   wuid: string;
   clusterName?: string;
+  assistantOpenRequest?: number;
 }
 
 const FALLBACK_ALLOWED_TABLES = ['work_unit_details', 'work_units', 'work_unit_exceptions', 'work_unit_files'];
@@ -90,7 +91,7 @@ type ResultsSortState = {
   order: SortDirection;
 };
 
-const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
+const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName, assistantOpenRequest = 0 }) => {
   const storageKey = `wuSql.${clusterId}.${wuid}`;
   const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
   const currentSqlRef = useRef(localStorage.getItem(storageKey) || DEFAULT_SQL);
@@ -324,6 +325,12 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
     };
   }, []);
 
+  useEffect(() => {
+    if (assistantOpenRequest > 0) {
+      setAssistantOpen(true);
+    }
+  }, [assistantOpenRequest]);
+
   return (
     <Space direction="vertical" size={16} style={{ width: '100%' }}>
       {/* Job Header */}
@@ -454,7 +461,7 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
                     type="primary"
                     icon={executing ? <LoadingOutlined spin /> : <PlayCircleOutlined />}
                     onClick={() => void runQuery()}
-                    className={executing ? styles.executingQueryBtn : undefined}
+                    className={styles.scopedExecuteQueryBtn}
                     disabled={executing || !lintSql.ok}>
                     {executing ? 'Executing...' : 'Execute Query'}
                   </Button>

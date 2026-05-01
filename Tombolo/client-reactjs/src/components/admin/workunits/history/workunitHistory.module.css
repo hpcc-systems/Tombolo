@@ -230,14 +230,14 @@
   color: #ffffff !important;
 }
 
-.executingQueryBtn,
-.executingQueryBtn.ant-btn-primary,
-.executingQueryBtn.ant-btn-primary:disabled,
-.executingQueryBtn.ant-btn-primary[disabled] {
+.scopedExecuteQueryBtn,
+.scopedExecuteQueryBtn.ant-btn-primary,
+.scopedExecuteQueryBtn.ant-btn-primary:disabled,
+.scopedExecuteQueryBtn.ant-btn-primary[disabled] {
   color: #ffffff !important;
 }
 
-.executingQueryBtn .anticon {
+.scopedExecuteQueryBtn .anticon {
   color: #ffffff !important;
 }
 
