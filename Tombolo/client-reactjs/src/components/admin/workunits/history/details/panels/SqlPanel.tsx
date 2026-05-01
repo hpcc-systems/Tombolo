@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Button, Card, Empty, Space, Table, Typography, message, Row, Col, Statistic, Tag } from 'antd';
-import { PlayCircleOutlined, SafetyOutlined, ReloadOutlined, StopOutlined } from '@ant-design/icons';
+import { PlayCircleOutlined, SafetyOutlined, ReloadOutlined, RobotOutlined, StopOutlined } from '@ant-design/icons';
+import AiAssistantDrawer, { type SchemaData } from '@/components/common/aiAssistant/AiAssistantDrawer';
 import dayjs from 'dayjs';
 import { formatHours, formatCurrency } from '@tombolo/shared';
 import axios from 'axios';
@@ -91,6 +92,8 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
   const abortControllerRef = useRef<AbortController | null>(null);
   const tableNamesRef = useRef<string[]>(FALLBACK_ALLOWED_TABLES);
   const columnNamesRef = useRef<string[]>(SUGGEST_COLUMNS);
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [scopedSchema, setScopedSchema] = useState<SchemaData | null>(null);
 
   const MIN_TABLE_ROWS = 15;
   const ROW_HEIGHT_PX = 28;
@@ -142,6 +145,8 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
         const schema = await analyticsService.getScopedSchema();
 
         if (!mounted || !schema || typeof schema !== 'object') return;
+
+        setScopedSchema(schema as SchemaData);
 
         const tableNames = Object.keys(schema);
         if (tableNames.length > 0) {
@@ -387,6 +392,9 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
                 Reset to default
               </Button>
             </Space>
+            <Button icon={<RobotOutlined />} onClick={() => setAssistantOpen(true)}>
+              AI Assistant
+            </Button>
           </div>
 
           <Card size="small" title="Results" className={styles.resultsCardMarginTop}>
@@ -420,6 +428,20 @@ const SqlPanel: React.FC<Props> = ({ wu, clusterId, wuid, clusterName }) => {
           </Card>
         </Space>
       </Card>
+      <AiAssistantDrawer
+        open={assistantOpen}
+        onClose={() => setAssistantOpen(false)}
+        schemaData={scopedSchema}
+        assistantContext={`Tombolo workunit analytics. Queries run against the following tables: work_unit_details, work_units, work_unit_exceptions, work_unit_files. This panel is already server-scoped to workunit "${wuid}" on cluster "${clusterName ?? 'unknown cluster'}". Those scope values are execution metadata, not SQL filter values. Do NOT add WHERE clauses for wuId or clusterId unless the user explicitly asks for them. Follow this query shape: SELECT scopeName, scopeType, label, fileName, TimeElapsed, TimeTotalExecute, NumRowsProcessed FROM work_unit_details WHERE 1=1 ORDER BY TimeElapsed DESC LIMIT 100`}
+        initialMessage={`SQL Assistant is ready. I can help you query performance data for workunit ${wuid}. Do not add wuId or clusterId filters — the server scopes queries to this workunit automatically.`}
+        currentEditorSql={getCurrentSql()}
+        onApplySql={async (sql, shouldExecute) => {
+          setEditorSql(sql);
+          if (shouldExecute) {
+            await runQuery();
+          }
+        }}
+      />
     </Space>
   );
 };
