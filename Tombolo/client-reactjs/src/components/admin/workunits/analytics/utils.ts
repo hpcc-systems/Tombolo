@@ -1,4 +1,5 @@
 import { message } from 'antd';
+import { SQL_EDITOR_PLACEHOLDER } from './constants';
 
 export interface WhereClauseRow {
   id: number;
@@ -28,6 +29,16 @@ export const buildConditionString = (row: WhereClauseRow): string => {
 
 export const stripComments = (sql: string): string => {
   return sql.replace(/--.*$/gm, '').trim();
+};
+
+const SQL_EDITOR_PLACEHOLDER_NORMALIZED = SQL_EDITOR_PLACEHOLDER.toLowerCase();
+
+export const stripSqlEditorPlaceholder = (sql: string): string => {
+  return sql
+    .split(/\r?\n/)
+    .filter(line => line.trim().toLowerCase() !== SQL_EDITOR_PLACEHOLDER_NORMALIZED)
+    .join('\n')
+    .trim();
 };
 
 export const extractWhereClause = (sql: string): string | null => {
@@ -127,4 +138,49 @@ export const exportToCSV = (columns: string[], rows: Record<string, unknown>[]):
 export const formatTime = (ms: number): string => {
   if (ms < 1000) return `${ms}ms`;
   return `${(ms / 1000).toFixed(2)}s`;
+};
+
+export type SizedSavedEntry = {
+  sizeBytes: number;
+};
+
+type SavedResultsRetentionPolicy = {
+  maxItems: number;
+  maxTotalBytes: number;
+};
+
+type SavedResultsRetentionResult<T extends SizedSavedEntry> = {
+  entries: T[];
+  evictedCount: number;
+  totalBytes: number;
+};
+
+export const getSerializedByteSize = (value: unknown): number => {
+  const serialized = JSON.stringify(value);
+  return new TextEncoder().encode(serialized).length;
+};
+
+// Applies oldest-first eviction to a newest-first array of saved entries.
+export const applySavedResultsRetentionPolicy = <T extends SizedSavedEntry>(
+  entries: T[],
+  policy: SavedResultsRetentionPolicy
+): SavedResultsRetentionResult<T> => {
+  const nextEntries = entries.slice(0, Math.max(policy.maxItems, 0));
+  let evictedCount = entries.length - nextEntries.length;
+  let totalBytes = nextEntries.reduce((sum, entry) => sum + entry.sizeBytes, 0);
+
+  while (totalBytes > policy.maxTotalBytes && nextEntries.length > 0) {
+    const removed = nextEntries.pop();
+    if (!removed) {
+      break;
+    }
+    totalBytes -= removed.sizeBytes;
+    evictedCount += 1;
+  }
+
+  return {
+    entries: nextEntries,
+    evictedCount,
+    totalBytes: Math.max(totalBytes, 0),
+  };
 };

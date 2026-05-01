@@ -5,88 +5,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // Mocks
 vi.mock('antd', async importOriginal => {
   const antd = await importOriginal();
-  const MockTable = ({ dataSource = [], columns = [], rowSelection }) => {
-    // Render a simple table: headers and rows with rendered cells
-    return (
-      <div>
-        <div data-testid="headers">
-          {columns.map((c, i) => (
-            <div key={i}>{c.title}</div>
-          ))}
-        </div>
-        <div data-testid="rows">
-          {dataSource.map((row, rIdx) => (
-            <div key={row.id ?? rIdx} data-testid={`row-${rIdx}`}>
-              {columns.map((col, cIdx) => {
-                const value = col.dataIndex ? row[col.dataIndex] : row;
-                const content = col.render ? col.render(value, row) : value;
-                return (
-                  <div key={cIdx} data-testid={`cell-${rIdx}-${cIdx}`}>
-                    {content}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-        {rowSelection ? (
-          <button
-            aria-label="select-first"
-            onClick={() => rowSelection.onChange?.([dataSource[0]?.id], [dataSource[0]])}>
-            select-first
-          </button>
-        ) : null}
-      </div>
-    );
-  };
-  const MockTooltip = ({ children }) => <>{children}</>;
-  const MockPopover = ({ children, content }) => (
-    <div>
-      <span>{children}</span>
-      <div data-testid="popover">{content}</div>
-    </div>
-  );
-  const MockPopconfirm = ({ children, onConfirm }) => (
-    <span>
-      <button aria-label="confirm" onClick={onConfirm}>
-        confirm
-      </button>
-      {children}
-    </span>
-  );
-  const MockTag = ({ children }) => <span>{children}</span>;
-  const notification = { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() };
-  return {
-    ...(antd as any),
-    Table: MockTable,
-    Tooltip: MockTooltip,
-    Popover: MockPopover,
-    Popconfirm: MockPopconfirm,
-    Tag: MockTag,
-    notification,
-  };
+  const { createTableAntdMocks } = await import('@/tests/application/testUtils/antdTableMock');
+  return { ...(antd as any), ...createTableAntdMocks() };
 });
 
-vi.mock('@ant-design/icons', () => ({
-  EyeOutlined: ({ onClick }) => (
-    <button aria-label="view" onClick={onClick}>
-      view
-    </button>
-  ),
-  EditOutlined: ({ onClick }) => (
-    <button aria-label="edit" onClick={onClick}>
-      edit
-    </button>
-  ),
-  DeleteOutlined: () => <span>del</span>,
-  CheckCircleFilled: () => <span>approveIcon</span>,
-  BellOutlined: () => <span>bell</span>,
-  PlayCircleOutlined: () => <span>play</span>,
-  PauseCircleOutlined: () => <span>pause</span>,
-  CopyOutlined: () => <span>copy</span>,
-  DownOutlined: () => <span>v</span>,
-  WarningFilled: () => <span>!</span>,
-}));
+vi.mock('@ant-design/icons', async () => {
+  const { monitoringTableIconMocks } = await import('@/tests/application/testUtils/antdIconMock');
+  return monitoringTableIconMocks;
+});
 
 // Mock redux selectors
 let mockState = {};
@@ -106,6 +32,7 @@ vi.mock('@/services/orbitProfileMonitoring.service', () => ({
 
 vi.mock('react-router-dom', () => ({ Link: ({ children, to }) => <a href={to}>{children}</a> }));
 import OrbitMonitoringTable from '@/components/application/orbitProfileMonitoring/OrbitMonitoringTable';
+import { clickSelectFirstRow, runCommonTableActions } from '@/tests/application/testUtils/tableAssertions';
 const OrbitMonitoringTableAny = OrbitMonitoringTable as any;
 
 const rowApproved = {
@@ -159,23 +86,22 @@ describe('OrbitMonitoringTable', () => {
       />
     );
 
-    // View details icon
-    await user.click(screen.getByRole('button', { name: 'view' }));
-    expect(setSelectedMonitoring).toHaveBeenCalledWith(rowApproved);
-    expect(setDisplayViewDetailsModal).toHaveBeenCalledWith(true);
-
-    // Edit icon
-    await user.click(screen.getByRole('button', { name: 'edit' }));
-    expect(onEdit).toHaveBeenCalledWith(rowApproved);
-
-    // More popover content is always rendered in mock; click Approve / Reject
-    await user.click(screen.getByText('Approve / Reject'));
-    expect(setSelectedMonitoring).toHaveBeenCalledWith(rowApproved);
-    expect(setApproveRejectModal).toHaveBeenCalledWith(true);
-
-    // Duplicate path
-    await user.click(screen.getByText('Duplicate'));
-    expect(onCopy).toHaveBeenCalledWith(rowApproved);
+    await runCommonTableActions(user, {
+      onView: () => {
+        expect(setSelectedMonitoring).toHaveBeenCalledWith(rowApproved);
+        expect(setDisplayViewDetailsModal).toHaveBeenCalledWith(true);
+      },
+      onEdit: () => {
+        expect(onEdit).toHaveBeenCalledWith(rowApproved);
+      },
+      onApproveReject: () => {
+        expect(setSelectedMonitoring).toHaveBeenCalledWith(rowApproved);
+        expect(setApproveRejectModal).toHaveBeenCalledWith(true);
+      },
+      onDuplicate: () => {
+        expect(onCopy).toHaveBeenCalledWith(rowApproved);
+      },
+    });
   });
 
   it('performs toggle when pause/start is clicked', async () => {
@@ -228,8 +154,7 @@ describe('OrbitMonitoringTable', () => {
       />
     );
 
-    // Select first row using mock button
-    await user.click(screen.getByRole('button', { name: 'select-first' }));
+    await clickSelectFirstRow(user);
     expect(setSelectedRows).toHaveBeenCalled();
   });
 });

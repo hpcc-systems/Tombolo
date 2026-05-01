@@ -560,6 +560,10 @@
   border-bottom: 1px solid var(--aw-border);
 }
 
+.result-history-warning {
+  margin-bottom: 12px;
+}
+
 .query-results .ant-table {
   background: var(--aw-bg-tertiary) !important;
   border: 1px solid var(--aw-border);

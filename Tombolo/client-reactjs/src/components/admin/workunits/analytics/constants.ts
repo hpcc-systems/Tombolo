@@ -1,6 +1,7 @@
 import type { WhereClauseRow } from './utils';
 
-export const DEFAULT_SQL = '-- Enter your SQL query here\nSELECT * FROM work_unit_details LIMIT 10';
+export const SQL_EDITOR_PLACEHOLDER = '-- Enter your SQL query here';
+export const DEFAULT_SQL = `${SQL_EDITOR_PLACEHOLDER}\nSELECT * FROM work_unit_details LIMIT 10`;
 
 export const WHERE_OPERATORS = ['=', '!=', '>', '<', '>=', '<=', 'LIKE', 'NOT LIKE', 'IN', 'IS NULL', 'IS NOT NULL'];
 
@@ -19,6 +20,10 @@ export const SQL_FORMATTER_OPTIONS = {
 
 export const QUERY_TIMEOUT_MS = 300_000;
 export const MAX_HISTORY_ITEMS = 20;
+export const SAVED_RESULTS_STORAGE_KEY = 'analytics_saved_results';
+export const MAX_SAVED_RESULTS_ITEMS = 10;
+export const MAX_SAVED_RESULT_BYTES = 250_000;
+export const MAX_SAVED_RESULTS_TOTAL_BYTES = 1_000_000;
 
 export const KEYBOARD_SHORTCUTS = [
   { keys: 'Ctrl/Cmd + Enter', description: 'Execute' },

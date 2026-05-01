@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Layout,
   Button,
+  Alert,
   Input,
   Table,
   Tooltip,
@@ -57,6 +57,7 @@ import type { Monaco } from '@monaco-editor/react';
 import { format } from 'sql-formatter';
 import axios from 'axios';
 import { apiClient } from '@/services/api';
+import { formatBytes } from '@tombolo/shared';
 import { LeftPanelIcon, RightPanelIcon } from '@/components/common/icons/PanelIcons';
 import { loadLocalStorage, saveLocalStorage } from '@tombolo/shared/browser';
 import analyticsFiltersService from '@/services/analyticsFilters.service';
@@ -75,11 +76,16 @@ import {
   SQL_FORMATTER_OPTIONS,
   QUERY_TIMEOUT_MS,
   MAX_HISTORY_ITEMS,
+  SAVED_RESULTS_STORAGE_KEY,
+  MAX_SAVED_RESULTS_ITEMS,
+  MAX_SAVED_RESULT_BYTES,
+  MAX_SAVED_RESULTS_TOTAL_BYTES,
 } from './constants';
 import {
   sanitizeValue,
   buildConditionString,
   stripComments,
+  stripSqlEditorPlaceholder,
   extractWhereClause,
   hasWhereClause as hasWhere,
   ensureSpacing,
@@ -87,6 +93,8 @@ import {
   cleanUpSQLFormatting,
   exportToCSV as exportResults,
   formatTime,
+  getSerializedByteSize,
+  applySavedResultsRetentionPolicy,
 } from './utils';
 import type { WhereClauseRow } from './utils';
 import { compareQueryValues } from '@/components/common/sqlResultsSorting';
@@ -101,6 +109,7 @@ interface QueryResult {
   rows: Record<string, unknown>[];
   executionTime: number;
   rowCount: number;
+  limited?: boolean;
   columnTypes?: Record<string, ColumnTypeMetadata>;
 }
 
@@ -127,6 +136,23 @@ interface HistoryEntry {
   rowCount: number;
 }
 
+interface SavedResultPayload {
+  name: string;
+  sql: string;
+  savedAt: string;
+  columns: string[];
+  rows: Record<string, unknown>[];
+  rowCount: number;
+  executionTime: number;
+  limited?: boolean;
+  columnTypes?: Record<string, ColumnTypeMetadata>;
+}
+
+interface SavedResultEntry extends SavedResultPayload {
+  id: number;
+  sizeBytes: number;
+}
+
 interface SchemaColumn {
   name: string;
   type: string;
@@ -148,8 +174,76 @@ type ResultsSortState = {
   order: 'ascend' | 'descend' | null;
 };
 
+const SAVED_QUERIES_STORAGE_KEY = 'analytics_saved_queries';
+const QUERY_HISTORY_STORAGE_KEY = 'analytics_query_history';
+
+const truncatePreview = (value: string, maxLen: number): string => {
+  if (value.length <= maxLen) {
+    return value;
+  }
+  return `${value.slice(0, maxLen - 3)}...`;
+};
+
+const buildSavedResultName = (sql: string, timestamp: string): string => {
+  const firstMeaningfulLine = sql
+    .split('\n')
+    .map(line => line.trim())
+    .find(line => line.length > 0 && !line.startsWith('--'));
+  const baseName = firstMeaningfulLine ? truncatePreview(firstMeaningfulLine, 64) : 'Result history entry';
+  return `${baseName} (${new Date(timestamp).toLocaleTimeString()})`;
+};
+
+const normalizeSavedResult = (value: unknown): SavedResultEntry | null => {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const candidate = value as Partial<SavedResultEntry>;
+  if (typeof candidate.id !== 'number') {
+    return null;
+  }
+
+  if (!Array.isArray(candidate.columns) || !Array.isArray(candidate.rows) || typeof candidate.sql !== 'string') {
+    return null;
+  }
+
+  const sanitizedColumns = candidate.columns.filter((column): column is string => typeof column === 'string');
+  const sanitizedRows = candidate.rows.filter(
+    (row): row is Record<string, unknown> => Boolean(row) && typeof row === 'object' && !Array.isArray(row)
+  );
+
+  const payload: SavedResultPayload = {
+    name:
+      typeof candidate.name === 'string' && candidate.name.trim().length > 0 ? candidate.name : 'Result history entry',
+    sql: candidate.sql,
+    savedAt: typeof candidate.savedAt === 'string' ? candidate.savedAt : new Date(candidate.id).toISOString(),
+    columns: sanitizedColumns,
+    rows: sanitizedRows,
+    rowCount: typeof candidate.rowCount === 'number' ? candidate.rowCount : sanitizedRows.length,
+    executionTime: typeof candidate.executionTime === 'number' ? candidate.executionTime : 0,
+    limited: Boolean(candidate.limited),
+    columnTypes:
+      candidate.columnTypes && typeof candidate.columnTypes === 'object'
+        ? (candidate.columnTypes as Record<string, ColumnTypeMetadata>)
+        : undefined,
+  };
+
+  try {
+    const fallbackSize = getSerializedByteSize(payload);
+    return {
+      id: candidate.id,
+      ...payload,
+      sizeBytes:
+        typeof candidate.sizeBytes === 'number' && candidate.sizeBytes > 0
+          ? Math.floor(candidate.sizeBytes)
+          : fallbackSize,
+    };
+  } catch {
+    return null;
+  }
+};
+
 const AnalyticsWorkspace = () => {
-  const navigate = useNavigate();
   const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
   const completionProviderRef = useRef<{ dispose: () => void } | null>(null);
   const schemaDataRef = useRef<SchemaData | null>(null);
@@ -163,6 +257,9 @@ const AnalyticsWorkspace = () => {
   const [isExecuting, setIsExecuting] = useState(false);
   const [queryHistory, setQueryHistory] = useState<HistoryEntry[]>([]);
   const [savedQueries, setSavedQueries] = useState<SavedQuery[]>([]);
+  const [savedResults, setSavedResults] = useState<SavedResultEntry[]>([]);
+  const [selectedSavedResultId, setSelectedSavedResultId] = useState<number | null>(null);
+  const [resultHistoryWarning, setResultHistoryWarning] = useState<string | null>(null);
   const [saveModalVisible, setSaveModalVisible] = useState(false);
   const [variableModalVisible, setVariableModalVisible] = useState(false);
   const [templateVariables, setTemplateVariables] = useState<Record<string, string>>({});
@@ -219,7 +316,23 @@ const AnalyticsWorkspace = () => {
     }));
   }, [queryResults, resultsSort]);
 
+  const savedResultsTotalBytes = useMemo(
+    () => savedResults.reduce((sum, result) => sum + result.sizeBytes, 0),
+    [savedResults]
+  );
+
   const getCurrentSql = useCallback(() => currentSqlRef.current, []);
+
+  const persistSavedResults = useCallback((nextSavedResults: SavedResultEntry[]): boolean => {
+    try {
+      localStorage.setItem(SAVED_RESULTS_STORAGE_KEY, JSON.stringify(nextSavedResults));
+      setSavedResults(nextSavedResults);
+      return true;
+    } catch (error) {
+      console.error('Failed to persist saved results:', error);
+      return false;
+    }
+  }, []);
 
   const setQueryExecutedState = useCallback((executed: boolean) => {
     isQueryExecutedRef.current = executed;
@@ -296,22 +409,25 @@ const AnalyticsWorkspace = () => {
 
   // Load saved queries from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem('analytics_saved_queries');
-    if (saved) {
-      try {
-        setSavedQueries(JSON.parse(saved));
-      } catch {
-        handleError('Failed to load saved queries');
-      }
-    }
+    const loadedSavedQueries = loadLocalStorage<unknown[]>(SAVED_QUERIES_STORAGE_KEY, []);
+    setSavedQueries(Array.isArray(loadedSavedQueries) ? (loadedSavedQueries as SavedQuery[]) : []);
 
-    const storedHistory = localStorage.getItem('analytics_query_history');
-    if (storedHistory) {
-      try {
-        setQueryHistory(JSON.parse(storedHistory));
-      } catch {
-        handleError('Failed to load query history');
-      }
+    const loadedHistory = loadLocalStorage<unknown[]>(QUERY_HISTORY_STORAGE_KEY, []);
+    setQueryHistory(Array.isArray(loadedHistory) ? (loadedHistory as HistoryEntry[]) : []);
+
+    const loadedSavedResults = loadLocalStorage<unknown[]>(SAVED_RESULTS_STORAGE_KEY, []);
+    const normalizedSavedResults = Array.isArray(loadedSavedResults)
+      ? loadedSavedResults.map(normalizeSavedResult).filter((entry): entry is SavedResultEntry => Boolean(entry))
+      : [];
+
+    const retained = applySavedResultsRetentionPolicy(normalizedSavedResults, {
+      maxItems: MAX_SAVED_RESULTS_ITEMS,
+      maxTotalBytes: MAX_SAVED_RESULTS_TOTAL_BYTES,
+    });
+
+    setSavedResults(retained.entries);
+    if (retained.entries.length !== normalizedSavedResults.length) {
+      saveLocalStorage(SAVED_RESULTS_STORAGE_KEY, retained.entries);
     }
 
     // Load filters from backend API
@@ -383,8 +499,13 @@ const AnalyticsWorkspace = () => {
     }
   }, [whereClauses, filterBuilderVisible, sqlWhenBuilderOpened, getCurrentSql, setEditorSql]);
 
-  const executeQueryWithSql = async (queryText: string) => {
-    if (!queryText.trim()) {
+  // Execute SQL query
+  const executeQueryWithText = async (sqlText: string) => {
+    const currentSql = sqlText;
+    const sanitizedCurrentSql = stripSqlEditorPlaceholder(currentSql);
+    const sqlForSavedArtifacts = sanitizedCurrentSql || currentSql.trim();
+
+    if (!currentSql.trim()) {
       handleError('Please enter a SQL query');
       return;
     }
@@ -400,7 +521,7 @@ const AnalyticsWorkspace = () => {
       const result = await apiClient.post(
         '/workunitAnalytics/query',
         {
-          sql: queryText,
+          sql: sqlForSavedArtifacts,
           options: {},
         },
         {
@@ -410,34 +531,51 @@ const AnalyticsWorkspace = () => {
       );
 
       const executionTime = Date.now() - startTime;
+      const responseRowCount =
+        typeof result.data.rowCount === 'number' ? result.data.rowCount : (result.data.rows as unknown[]).length;
+
+      const resultPayload: SavedResultPayload = {
+        name: buildSavedResultName(sqlForSavedArtifacts, new Date().toISOString()),
+        sql: sqlForSavedArtifacts,
+        savedAt: new Date().toISOString(),
+        columns: result.data.columns,
+        rows: result.data.rows,
+        rowCount: responseRowCount,
+        executionTime,
+        limited: Boolean(result.data.limited),
+        columnTypes: result.data.columnTypes,
+      };
 
       setQueryResults({
         columns: result.data.columns,
         rows: result.data.rows,
         executionTime,
-        rowCount: result.data.rows.length,
+        rowCount: responseRowCount,
+        limited: Boolean(result.data.limited),
         columnTypes: result.data.columnTypes,
       });
       setResultsSort({ columnKey: null, order: null });
 
       setExecutionStats({
         executionTime,
-        rowCount: result.data.rows.length,
+        rowCount: responseRowCount,
         columnCount: result.data.columns.length,
       });
 
       // Add to query history
       const historyEntry: HistoryEntry = {
         id: Date.now(),
-        sql: queryText.trim(),
+        sql: sqlForSavedArtifacts,
         timestamp: new Date().toISOString(),
         executionTime,
-        rowCount: result.data.rows.length,
+        rowCount: responseRowCount,
       };
 
       const newHistory = [historyEntry, ...queryHistory].slice(0, MAX_HISTORY_ITEMS);
       setQueryHistory(newHistory);
-      localStorage.setItem('analytics_query_history', JSON.stringify(newHistory));
+      saveLocalStorage(QUERY_HISTORY_STORAGE_KEY, newHistory);
+
+      autoSaveResultToHistory(resultPayload);
 
       // Mark query as executed
       setQueryExecutedState(true);
@@ -456,9 +594,8 @@ const AnalyticsWorkspace = () => {
     }
   };
 
-  // Execute SQL query
   const executeQuery = async () => {
-    await executeQueryWithSql(getCurrentSql());
+    await executeQueryWithText(getCurrentSql());
   };
 
   const applySuggestedSql = async (suggestedSql: string, shouldExecute: boolean) => {
@@ -475,7 +612,7 @@ const AnalyticsWorkspace = () => {
     }
 
     if (shouldExecute) {
-      await executeQueryWithSql(normalizedSql);
+      await executeQueryWithText(normalizedSql);
     }
   };
 
@@ -495,6 +632,8 @@ const AnalyticsWorkspace = () => {
     setEditorSql('');
     setQueryResults(null);
     setExecutionStats(null);
+    setSelectedSavedResultId(null);
+    setResultHistoryWarning(null);
     setAppliedFilterId(null);
     setResultsSort({ columnKey: null, order: null });
     setQueryExecutedState(false);
@@ -502,18 +641,24 @@ const AnalyticsWorkspace = () => {
 
   // Save query
   const saveQuery = (values: { name: string; description?: string }) => {
+    const sqlToSave = stripSqlEditorPlaceholder(querySqlToSave);
+    if (!sqlToSave) {
+      handleError('Please enter a SQL query');
+      return;
+    }
+
     const newQuery: SavedQuery = {
       id: Date.now(),
       name: values.name,
       description: values.description || '',
-      sql: querySqlToSave.trim(),
+      sql: sqlToSave,
       createdAt: new Date().toISOString(),
       favorite: false,
     };
 
     const updated = [...savedQueries, newQuery];
     setSavedQueries(updated);
-    localStorage.setItem('analytics_saved_queries', JSON.stringify(updated));
+    saveLocalStorage(SAVED_QUERIES_STORAGE_KEY, updated);
 
     setSaveModalVisible(false);
     setQuerySqlToSave('');
@@ -523,8 +668,9 @@ const AnalyticsWorkspace = () => {
   // Handle save query button click with validation
   const handleSaveQueryClick = () => {
     const currentSql = getCurrentSql();
+    const sqlToSave = stripSqlEditorPlaceholder(currentSql);
 
-    if (!currentSql.trim()) {
+    if (!sqlToSave) {
       handleError('Please enter a SQL query');
       return;
     }
@@ -534,7 +680,7 @@ const AnalyticsWorkspace = () => {
       return;
     }
 
-    setQuerySqlToSave(currentSql);
+    setQuerySqlToSave(sqlToSave);
     setSaveModalVisible(true);
   };
 
@@ -549,7 +695,7 @@ const AnalyticsWorkspace = () => {
   const deleteSavedQuery = (queryId: number) => {
     const updated = savedQueries.filter(q => q.id !== queryId);
     setSavedQueries(updated);
-    localStorage.setItem('analytics_saved_queries', JSON.stringify(updated));
+    saveLocalStorage(SAVED_QUERIES_STORAGE_KEY, updated);
     handleSuccess('Query deleted');
   };
 
@@ -557,7 +703,91 @@ const AnalyticsWorkspace = () => {
   const toggleFavorite = (queryId: number) => {
     const updated = savedQueries.map(q => (q.id === queryId ? { ...q, favorite: !q.favorite } : q));
     setSavedQueries(updated);
-    localStorage.setItem('analytics_saved_queries', JSON.stringify(updated));
+    saveLocalStorage(SAVED_QUERIES_STORAGE_KEY, updated);
+  };
+
+  const autoSaveResultToHistory = useCallback(
+    (payload: SavedResultPayload) => {
+      let sizeBytes = 0;
+      try {
+        sizeBytes = getSerializedByteSize(payload);
+      } catch {
+        setSelectedSavedResultId(null);
+        setResultHistoryWarning(
+          'This result could not be serialized for Result History. If you leave this page, the current result cannot be reloaded.'
+        );
+        return;
+      }
+
+      if (sizeBytes > MAX_SAVED_RESULT_BYTES) {
+        setSelectedSavedResultId(null);
+        setResultHistoryWarning(
+          `This result is ${formatBytes(sizeBytes)} and exceeds the ${formatBytes(
+            MAX_SAVED_RESULT_BYTES
+          )} per-result limit. If you leave this page, the current result cannot be reloaded.`
+        );
+        return;
+      }
+
+      const nextSavedResult: SavedResultEntry = {
+        id: Date.now(),
+        ...payload,
+        sizeBytes,
+      };
+
+      const retained = applySavedResultsRetentionPolicy([nextSavedResult, ...savedResults], {
+        maxItems: MAX_SAVED_RESULTS_ITEMS,
+        maxTotalBytes: MAX_SAVED_RESULTS_TOTAL_BYTES,
+      });
+
+      if (!persistSavedResults(retained.entries)) {
+        setSelectedSavedResultId(null);
+        setResultHistoryWarning(
+          'Result History is full or unavailable in this browser. If you leave this page, the current result cannot be reloaded.'
+        );
+        return;
+      }
+
+      setSelectedSavedResultId(nextSavedResult.id);
+      setResultHistoryWarning(null);
+    },
+    [savedResults, persistSavedResults]
+  );
+
+  const loadSavedResult = (savedResult: SavedResultEntry) => {
+    setEditorSql(savedResult.sql, { markUnexecuted: false });
+    setQueryResults({
+      columns: savedResult.columns,
+      rows: savedResult.rows,
+      executionTime: savedResult.executionTime,
+      rowCount: savedResult.rowCount,
+      limited: savedResult.limited,
+      columnTypes: savedResult.columnTypes,
+    });
+    setExecutionStats({
+      executionTime: savedResult.executionTime,
+      rowCount: savedResult.rowCount,
+      columnCount: savedResult.columns.length,
+    });
+    setResultsSort({ columnKey: null, order: null });
+    setSelectedSavedResultId(savedResult.id);
+    setResultHistoryWarning(null);
+    setQueryExecutedState(true);
+    handleSuccess(`Loaded result history entry: ${savedResult.name}`);
+  };
+
+  const deleteSavedResult = (savedResultId: number) => {
+    const updated = savedResults.filter(savedResult => savedResult.id !== savedResultId);
+    if (!persistSavedResults(updated)) {
+      handleError('Unable to update Result History. Browser storage may be unavailable.');
+      return;
+    }
+
+    if (selectedSavedResultId === savedResultId) {
+      setSelectedSavedResultId(null);
+    }
+
+    handleSuccess('Result history entry deleted');
   };
 
   // Load template
@@ -1131,6 +1361,97 @@ const AnalyticsWorkspace = () => {
           header={
             <div className={styles.panelHeaderWithAction}>
               <Space>
+                <TableOutlined />
+                <Text strong>
+                  Result History
+                  {(savedResults?.length || 0) > 0 && <span className={styles.badgeCount}>{savedResults.length}</span>}
+                </Text>
+              </Space>
+              {savedResults.length > 0 && (
+                <Tooltip title="Clear result history">
+                  <Button
+                    size="small"
+                    type="primary"
+                    shape="circle"
+                    icon={<DeleteOutlined />}
+                    className={styles.panelAddBtn}
+                    onClick={e => {
+                      e.stopPropagation();
+                      if (!persistSavedResults([])) {
+                        handleError('Unable to clear Result History. Browser storage may be unavailable.');
+                        return;
+                      }
+                      setSelectedSavedResultId(null);
+                      handleSuccess('Result History cleared');
+                    }}
+                  />
+                </Tooltip>
+              )}
+            </div>
+          }
+          key="saved-results">
+          <div className={styles.panelScrollContent}>
+            {savedResults.length === 0 ? (
+              <Empty description="No result history" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            ) : (
+              <Space direction="vertical" className={styles.spaceFullWidth} size={8}>
+                <div className={styles.savedQueriesList}>
+                  {savedResults.map(savedResult => (
+                    <Tooltip
+                      key={savedResult.id}
+                      title={
+                        <div>
+                          <Text type="secondary" style={{ color: 'var(--white)' }}>
+                            {savedResult.rowCount} rows • {savedResult.executionTime}ms •{' '}
+                            {formatBytes(savedResult.sizeBytes)}
+                          </Text>
+                          <pre className={styles.templatePreview}>{truncatePreview(savedResult.sql, 180)}</pre>
+                        </div>
+                      }
+                      placement="top">
+                      <div
+                        className={`${styles.savedQueryCard} ${
+                          selectedSavedResultId === savedResult.id ? styles.selectedQuery : ''
+                        }`}
+                        onClick={() => loadSavedResult(savedResult)}>
+                        <div className={styles.savedQueryHeader}>
+                          <Text ellipsis>{savedResult.name}</Text>
+                          <Space size={2} className={styles.whereCardActions}>
+                            <Tooltip title="Delete" placement="bottom">
+                              <Button
+                                type="text"
+                                size="small"
+                                danger
+                                className={styles.deleteButton}
+                                icon={<DeleteOutlined />}
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  deleteSavedResult(savedResult.id);
+                                }}
+                              />
+                            </Tooltip>
+                          </Space>
+                        </div>
+                        <Text type="secondary" className={styles.textTiny}>
+                          {savedResult.rowCount} rows • {savedResult.executionTime}ms •{' '}
+                          {new Date(savedResult.savedAt).toLocaleString()}
+                        </Text>
+                      </div>
+                    </Tooltip>
+                  ))}
+                </div>
+                <Text type="secondary" className={styles.textTiny}>
+                  History storage: {formatBytes(savedResultsTotalBytes)} / {formatBytes(MAX_SAVED_RESULTS_TOTAL_BYTES)}
+                </Text>
+              </Space>
+            )}
+          </div>
+        </Panel>
+
+        <Panel
+          header={
+            <div className={styles.panelHeaderWithAction}>
+              <Space>
                 <HistoryOutlined />
                 <Text strong>
                   Recent Queries
@@ -1149,7 +1470,7 @@ const AnalyticsWorkspace = () => {
                     onClick={e => {
                       e.stopPropagation();
                       setQueryHistory([]);
-                      localStorage.removeItem('analytics_query_history');
+                      saveLocalStorage(QUERY_HISTORY_STORAGE_KEY, []);
                       handleSuccess('Query history cleared');
                     }}
                   />
@@ -1305,10 +1626,14 @@ const AnalyticsWorkspace = () => {
       sortDirections: ['ascend', 'descend'] as ('ascend' | 'descend')[],
       render: (text: unknown, record: Record<string, unknown>) => {
         // If column is wuId, make it clickable
-        if (col === 'wuId' && record.clusterId) {
+        if (col === 'wuId' && record.clusterId != null && text != null) {
+          const clusterId = String(record.clusterId);
+          const wuId = String(text);
+          const workunitUrl = `/workunits/history/${encodeURIComponent(clusterId)}/${encodeURIComponent(wuId)}`;
+
           return (
-            <Button type="link" size="small" onClick={() => navigate(`/workunits/history/${record.clusterId}/${text}`)}>
-              {String(text)}
+            <Button type="link" size="small" href={workunitUrl} target="_blank" rel="noopener noreferrer">
+              {wuId}
             </Button>
           );
         }
@@ -1335,6 +1660,16 @@ const AnalyticsWorkspace = () => {
             </Button>
           </Space>
         </div>
+
+        {resultHistoryWarning && (
+          <Alert
+            type="warning"
+            showIcon
+            className={styles.resultHistoryWarning}
+            message="Current result is not in Result History"
+            description={resultHistoryWarning}
+          />
+        )}
 
         <Table
           columns={columns}

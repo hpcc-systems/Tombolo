@@ -2,7 +2,6 @@ import {
   LandingZoneMonitoring,
   Cluster,
   MonitoringType,
-  NotificationQueue,
   AsrProduct,
   AsrDomain,
 } from '@tombolo/db';

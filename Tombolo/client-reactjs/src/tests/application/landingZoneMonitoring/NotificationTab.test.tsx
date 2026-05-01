@@ -2,21 +2,41 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { Form, FormInstance } from 'antd';
-
-vi.mock('@/components/common/Monitoring/NotificationContacts', () => ({
-  default: ({ children }: { children?: React.ReactNode }) => <div data-testid="notification-contacts">{children}</div>,
-}));
+import { act } from '@testing-library/react';
 
 import NotificationTab from '@/components/application/LandingZoneMonitoring/AddEditModal/NotificationTab';
 
 describe('LandingZoneMonitoring NotificationTab', () => {
-  it('renders NotificationContacts with provided form', () => {
+  it('enforces required and email format validations', async () => {
+    let capturedForm: FormInstance | undefined;
+
     const Wrapper: React.FC = () => {
       const [form] = Form.useForm() as unknown as [FormInstance, any];
+      capturedForm = form;
       return <NotificationTab form={form} />;
     };
 
     render(<Wrapper />);
-    expect(screen.getByLabelText('Notify on')).toBeInTheDocument();
+
+    await expect(capturedForm!.validateFields()).rejects.toBeTruthy();
+
+    await act(async () => {
+      capturedForm!.setFieldsValue({
+        notifyOn: 'thresholdExceeded',
+        notificationType: 'email',
+        frequency: 10,
+        toEmail: 'not-an-email',
+      });
+    });
+
+    await expect(capturedForm!.validateFields()).rejects.toBeTruthy();
+
+    await act(async () => {
+      capturedForm!.setFieldsValue({
+        toEmail: 'valid@example.com',
+      });
+    });
+
+    await expect(capturedForm!.validateFields()).resolves.toBeTruthy();
   });
 });

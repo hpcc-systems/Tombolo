@@ -111,20 +111,6 @@ interface SchemaColumnRow {
   keyType: 'PRI' | 'FK' | 'MUL' | null;
 }
 
-function extractSqlFromText(text: string): string | null {
-  const fencedMatch = text.match(/```sql\s*([\s\S]*?)```/i);
-  if (fencedMatch?.[1]) {
-    return fencedMatch[1].trim();
-  }
-
-  const selectMatch = text.match(/\bselect\b[\s\S]*?(?=(?:\n\n|$))/i);
-  return selectMatch?.[0]?.trim() || null;
-}
-
-function stripSqlFences(text: string): string {
-  return text.replace(/```sql\s*[\s\S]*?```/gi, '').trim();
-}
-
 function extractFirstJsonObject(text: string): string | null {
   const start = text.indexOf('{');
   if (start === -1) {
@@ -165,22 +151,6 @@ function extractFirstJsonObject(text: string): string | null {
   }
 
   return null;
-}
-
-function extractJsonFromFences(text: string): string {
-  // Try to extract from ```json fences (Ollama wraps JSON this way)
-  const jsonMatch = text.match(/```json\s*([\s\S]*?)```/i);
-  if (jsonMatch?.[1]) {
-    return jsonMatch[1].trim();
-  }
-  // Also try generic ``` fences containing {
-  const genericMatch = text.match(/```\s*([\s\S]*?)```/i);
-  if (genericMatch?.[1] && genericMatch[1].trim().startsWith('{')) {
-    return genericMatch[1].trim();
-  }
-
-  const withoutSpecialTokens = text.replace(/<\|[^|>]+\|>/g, ' ').trim();
-  return extractFirstJsonObject(withoutSpecialTokens) || withoutSpecialTokens;
 }
 
 type ColumnSortFamily =

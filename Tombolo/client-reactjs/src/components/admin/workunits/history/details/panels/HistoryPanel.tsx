@@ -194,27 +194,27 @@ const HistoryPanel: React.FC<Props> = ({ wu, clusterId, clusterName, filterType 
   }, [filteredHistory]);
 
   // Performance comparison with previous run
-  const comparison = useMemo(() => {
-    if (!wu || filteredHistory.length < 2) return null;
+  // const comparison = useMemo(() => {
+  //   if (!wu || filteredHistory.length < 2) return null;
 
-    const currentIndex = filteredHistory.findIndex((h: any) => h.wuId === wu.wuId);
-    if (currentIndex === -1 || currentIndex === filteredHistory.length - 1) return null;
+  //   const currentIndex = filteredHistory.findIndex((h: any) => h.wuId === wu.wuId);
+  //   if (currentIndex === -1 || currentIndex === filteredHistory.length - 1) return null;
 
-    const previous = filteredHistory[currentIndex + 1];
-    const durationChange = getPercentChange(wu.totalClusterTime, previous.totalClusterTime);
-    const costChange =
-      wu.totalCost == null || previous.totalCost == null
-        ? null
-        : getPercentChange(roundToDecimals(wu.totalCost, 2), roundToDecimals(previous.totalCost, 2));
+  //   const previous = filteredHistory[currentIndex + 1];
+  //   const durationChange = getPercentChange(wu.totalClusterTime, previous.totalClusterTime);
+  //   const costChange =
+  //     wu.totalCost == null || previous.totalCost == null
+  //       ? null
+  //       : getPercentChange(roundToDecimals(wu.totalCost, 2), roundToDecimals(previous.totalCost, 2));
 
-    return {
-      previous,
-      durationChange,
-      costChange,
-      durationIndicator: getPerformanceIndicator(durationChange),
-      costIndicator: getPerformanceIndicator(costChange),
-    };
-  }, [wu, filteredHistory]);
+  //   return {
+  //     previous,
+  //     durationChange,
+  //     costChange,
+  //     durationIndicator: getPerformanceIndicator(durationChange),
+  //     costIndicator: getPerformanceIndicator(costChange),
+  //   };
+  // }, [wu, filteredHistory]);
 
   // Chart data for trend
   const chartData = useMemo(() => {

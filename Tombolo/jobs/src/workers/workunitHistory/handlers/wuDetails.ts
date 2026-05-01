@@ -1,6 +1,7 @@
 import { IOptions, WsWorkunits, Workunit } from '@hpcc-js/comms';
 import { getClusters, getClusterOptions } from '@tombolo/core';
 import { WorkUnit, WorkUnitDetails } from '@tombolo/db';
+import { Op } from 'sequelize';
 import {
   retryWithBackoff,
   truncateString,
@@ -765,7 +766,10 @@ async function getWorkunitDetails() {
         const workunitsToProcess = await WorkUnit.findAll({
           where: {
             clusterId,
-            state: TERMINAL_STATES,
+            [Op.or]: [
+              { state: TERMINAL_STATES },
+              { state: 'compiled', actionEx: 'compile' },
+            ],
             detailsFetchedAt: null,
             clusterDeleted: false, // Only process workunits that still exist on cluster
           },

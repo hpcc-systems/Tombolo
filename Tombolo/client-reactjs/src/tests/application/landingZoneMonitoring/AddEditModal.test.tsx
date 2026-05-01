@@ -1,35 +1,17 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { assertModalTitles } from '@/tests/application/testUtils/modalAssertions';
+import {
+  assertControlledFinalTabActionFlow,
+  assertFirstTabNavigationFlow,
+  createModalPropsFactory,
+} from '@/tests/application/testUtils/modalHarness';
 
 vi.mock('antd', async importOriginal => {
   const antd = await importOriginal();
-  const MockModal = ({ open, title, footer, children, onCancel }) =>
-    open ? (
-      <div>
-        <div data-testid="title">{title}</div>
-        <div>{children}</div>
-        <div>{footer}</div>
-        <button aria-label="modal-cancel" onClick={onCancel}>
-          x
-        </button>
-      </div>
-    ) : null;
-  const MockTabs = ({ items, activeKey, onChange }) => (
-    <div>
-      <div data-testid="tabs">
-        {items.map(it => (
-          <button key={it.key} aria-label={`tab-${it.key}`} onClick={() => onChange?.(it.key)}>
-            {it.label}
-          </button>
-        ))}
-      </div>
-      <div data-testid="tab-content">{items.find(i => i.key === activeKey)?.children}</div>
-    </div>
-  );
-  const MockButton = ({ children, onClick }) => <button onClick={onClick}>{children}</button>;
-  const MockBadge = () => null;
-  return { ...(antd as any), Modal: MockModal, Tabs: MockTabs, Button: MockButton, Badge: MockBadge };
+  const { createModalAntdMocks } = await import('@/tests/application/testUtils/antdModalMock');
+  return { ...(antd as any), ...createModalAntdMocks() };
 });
 
 vi.mock('@/components/application/LandingZoneMonitoring/AddEditModal/BasicTab', () => ({
@@ -80,39 +62,51 @@ describe('LandingZone AddEditModal', () => {
   });
 
   it('renders modal and tabs; title reflects mode', () => {
-    const { rerender } = render(<AddEditModal {...baseProps} />);
+    const makeProps = createModalPropsFactory(baseProps);
+    const { rerender } = render(<AddEditModal {...makeProps()} />);
     expect(screen.getByTestId('tabs')).toBeInTheDocument();
-    expect(screen.getByTestId('title')).toHaveTextContent('Add Landing Zone Monitoring');
 
-    rerender(<AddEditModal {...baseProps} isEditing />);
-    expect(screen.getByTestId('title')).toHaveTextContent('Edit Landing Zone Monitoring');
+    assertModalTitles({
+      rerender,
+      renderModal: (props = {}) => <AddEditModal {...makeProps(props)} />,
+      cases: [
+        { title: 'Add Landing Zone Monitoring' },
+        { title: 'Edit Landing Zone Monitoring', props: { isEditing: true } },
+      ],
+    });
   });
 
-  it('navigates tabs via activeTab prop and triggers submit/update handlers', async () => {
+  it('navigates first tab and resets on cancel', async () => {
     const user = userEvent.setup();
-    const { rerender } = render(<AddEditModal {...baseProps} />);
+    const makeProps = createModalPropsFactory(baseProps);
+    render(<AddEditModal {...makeProps()} />);
 
-    // move to tab 1
-    rerender(<AddEditModal {...baseProps} activeTab={'1'} />);
-    // move to last tab 2
-    rerender(<AddEditModal {...baseProps} activeTab={'2'} />);
+    await assertFirstTabNavigationFlow({
+      user,
+      nextTab: '1',
+      setActiveTabSpy: baseProps.setActiveTab,
+      cancelAction: () => user.click(screen.getByLabelText('modal-cancel')),
+    });
 
-    // On last tab, when not editing, shows Submit
-    const submitBtn = screen.getByText('Submit');
-    await user.click(submitBtn);
-    expect(baseProps.handleSaveLzmonitoring).toHaveBeenCalled();
-
-    // Editing shows Update
-    rerender(<AddEditModal {...baseProps} isEditing activeTab={'2'} />);
-    const updateBtn = screen.getByText('Update');
-    await user.click(updateBtn);
-    expect(baseProps.handleUpdateLzMonitoring).toHaveBeenCalled();
-
-    // Cancel resets state
-    await user.click(screen.getByLabelText('modal-cancel'));
     expect(baseProps.resetStates).toHaveBeenCalled();
-    expect(baseProps.setActiveTab).toHaveBeenCalledWith('0');
     expect(baseProps.setCopying).toHaveBeenCalledWith(false);
     expect(baseProps.setLzMonitoringType).toHaveBeenCalledWith(null);
+  });
+
+  it('submits and updates on final tab', async () => {
+    const user = userEvent.setup();
+    const makeProps = createModalPropsFactory(baseProps);
+    const { rerender } = render(<AddEditModal {...makeProps()} />);
+
+    await assertControlledFinalTabActionFlow({
+      user,
+      rerender,
+      renderModal: overrides => <AddEditModal {...makeProps(overrides)} />,
+      lastTab: '2',
+      saveLabel: 'Submit',
+      updateLabel: 'Update',
+      saveSpy: baseProps.handleSaveLzmonitoring,
+      updateSpy: baseProps.handleUpdateLzMonitoring,
+    });
   });
 });

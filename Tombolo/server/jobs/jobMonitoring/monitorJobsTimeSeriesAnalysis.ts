@@ -2,11 +2,7 @@ import logger from '../../config/logger.js';
 import { logOrPostMessage } from '../jobUtils.js';
 import Sequelize from 'sequelize';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  NotificationQueue,
-  JobMonitoringData,
-  JobMonitoring,
-} from '@tombolo/db';
+import { JobMonitoringData, JobMonitoring } from '@tombolo/db';
 import {
   WUAlertDataPoints,
   convertTotalClusterTimeToSeconds,

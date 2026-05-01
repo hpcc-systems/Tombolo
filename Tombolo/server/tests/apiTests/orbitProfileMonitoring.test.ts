@@ -1,5 +1,4 @@
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { blacklistTokenIntervalId } from '../../utils/tokenBlackListing.js';
+import { vi, describe, it, expect } from 'vitest';
 import request from 'supertest';
 import { app } from '../test_server.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -12,88 +11,99 @@ import {
   getUuids,
 } from '../helpers.js';
 import { APPROVAL_STATUS } from '../../config/constants.js';
+import {
+  defineApiCase,
+  defineMutationCase,
+  useMonitoringApiRouteLifecycle,
+} from './monitoringCrudContract.js';
 
 describe('orbitProfileMonitoring Routes', () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    if (blacklistTokenIntervalId) {
-      clearInterval(blacklistTokenIntervalId as NodeJS.Timeout);
-    }
+  useMonitoringApiRouteLifecycle();
+
+  defineApiCase({
+    title: 'POST / should create a new orbit profile monitoring',
+    method: 'post',
+    path: () => '/api/orbitProfileMonitoring',
+    buildEntity: () => getOrbitProfileMonitoring({}, true),
+    expectedStatus: 201,
+    assertSuccess: true,
+    arrange: orbitProfileMonitoring => {
+      OrbitProfileMonitoring.create.mockResolvedValue(orbitProfileMonitoring);
+      OrbitProfileMonitoring.findByPk.mockResolvedValue(orbitProfileMonitoring);
+    },
+    assert: (res, orbitProfileMonitoring) => {
+      expect(res.body.data).toEqual(orbitProfileMonitoring);
+      expect(OrbitProfileMonitoring.create).toHaveBeenCalledTimes(1);
+      expect(OrbitProfileMonitoring.create).toHaveBeenCalledWith({
+        applicationId: orbitProfileMonitoring.applicationId,
+        monitoringName: orbitProfileMonitoring.monitoringName,
+        description: orbitProfileMonitoring.description,
+        metaData: orbitProfileMonitoring.metaData,
+        createdBy: AUTHED_USER_ID,
+        lastUpdatedBy: AUTHED_USER_ID,
+        approvalStatus: 'pending',
+        isActive: false,
+      });
+    },
   });
 
-  afterEach(() => {
-    vi.clearAllTimers();
-    vi.clearAllMocks();
+  defineApiCase({
+    title:
+      'GET /getAll/:applicationId should get all orbit profile monitorings for an application',
+    method: 'get',
+    path: orbitProfileMonitoring =>
+      `/api/orbitProfileMonitoring/getAll/${orbitProfileMonitoring.applicationId}`,
+    buildEntity: () =>
+      getOrbitProfileMonitoring({ applicationId: uuidv4() }, true),
+    expectedStatus: 200,
+    assertSuccess: true,
+    arrange: orbitProfileMonitoring => {
+      const orbitProfileMonitorings = [
+        orbitProfileMonitoring,
+        getOrbitProfileMonitoring({ id: uuidv4() }, true),
+        getOrbitProfileMonitoring({ id: uuidv4() }, true),
+      ];
+      OrbitProfileMonitoring.findAll.mockResolvedValue(orbitProfileMonitorings);
+    },
+    assert: (res, orbitProfileMonitoring) => {
+      expect(res.body.data.length).toBe(3);
+      expect(res.body.data[0]).toEqual(orbitProfileMonitoring);
+      expect(OrbitProfileMonitoring.findAll).toHaveBeenCalledTimes(1);
+    },
   });
 
-  it('POST / should create a new orbit profile monitoring', async () => {
-    const orbitProfileMonitoring = getOrbitProfileMonitoring({}, true);
-    OrbitProfileMonitoring.create.mockResolvedValue(orbitProfileMonitoring);
-    OrbitProfileMonitoring.findByPk.mockResolvedValue(orbitProfileMonitoring);
-
-    const res = await request(app)
-      .post(`/api/orbitProfileMonitoring`)
-      .send(orbitProfileMonitoring);
-
-    expect(res.status).toBe(201);
-    expect(res.body.success).toBe(true);
-    expect(res.body.data).toEqual(orbitProfileMonitoring);
-    expect(OrbitProfileMonitoring.create).toHaveBeenCalledTimes(1);
-    expect(OrbitProfileMonitoring.create).toHaveBeenCalledWith({
-      applicationId: orbitProfileMonitoring.applicationId,
-      monitoringName: orbitProfileMonitoring.monitoringName,
-      description: orbitProfileMonitoring.description,
-      metaData: orbitProfileMonitoring.metaData,
-      createdBy: AUTHED_USER_ID,
-      lastUpdatedBy: AUTHED_USER_ID,
-      approvalStatus: 'pending',
-      isActive: false,
-    });
+  defineApiCase({
+    title: 'GET /getOne/:id should get orbit profile monitoring by ID',
+    method: 'get',
+    path: orbitProfileMonitoring =>
+      `/api/orbitProfileMonitoring/getOne/${orbitProfileMonitoring.id}`,
+    buildEntity: () => getOrbitProfileMonitoring({}, true),
+    expectedStatus: 200,
+    assertSuccess: true,
+    arrange: orbitProfileMonitoring => {
+      OrbitProfileMonitoring.findOne.mockResolvedValue(orbitProfileMonitoring);
+    },
+    assert: (res, orbitProfileMonitoring) => {
+      expect(res.body.data).toEqual(orbitProfileMonitoring);
+      expect(OrbitProfileMonitoring.findOne).toHaveBeenCalledTimes(1);
+    },
   });
 
-  it('GET /getAll/:applicationId should get all orbit profile monitorings for an application', async () => {
-    const applicationId = uuidv4();
-    const orbitProfileMonitorings = [
-      getOrbitProfileMonitoring({ applicationId: applicationId }, true),
-      getOrbitProfileMonitoring({ id: uuidv4() }, true),
-      getOrbitProfileMonitoring({ id: uuidv4() }, true),
-    ];
-    OrbitProfileMonitoring.findAll.mockResolvedValue(orbitProfileMonitorings);
-    const res = await request(app).get(
-      `/api/orbitProfileMonitoring/getAll/${applicationId}`
-    );
-
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(res.body.data.length).toBe(3);
-    expect(res.body.data[0]).toEqual(orbitProfileMonitorings[0]);
-    expect(OrbitProfileMonitoring.findAll).toHaveBeenCalledTimes(1);
-  });
-
-  it('GET /getOne/:id should get orbit profile monitoring by ID', async () => {
-    const orbitProfileMonitoring = getOrbitProfileMonitoring({}, true);
-    OrbitProfileMonitoring.findOne.mockResolvedValue(orbitProfileMonitoring);
-
-    const res = await request(app).get(
-      `/api/orbitProfileMonitoring/getOne/${orbitProfileMonitoring.id}`
-    );
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(res.body.data).toEqual(orbitProfileMonitoring);
-    expect(OrbitProfileMonitoring.findOne).toHaveBeenCalledTimes(1);
-  });
-
-  it('GET /getOne/:id should 404 if invalid monitoring id', async () => {
-    const orbitProfileMonitoring = getOrbitProfileMonitoring({}, true);
-    OrbitProfileMonitoring.findOne.mockResolvedValue(null);
-
-    const res = await request(app).get(
-      `/api/orbitProfileMonitoring/getOne/${orbitProfileMonitoring.id}`
-    );
-    expect(res.status).toBe(404);
-    expect(res.body.success).toBe(false);
-    expect(res.body.message).toEqual('Orbit profile monitoring not found');
-    expect(OrbitProfileMonitoring.findOne).toHaveBeenCalledTimes(1);
+  defineApiCase({
+    title: 'GET /getOne/:id should 404 if invalid monitoring id',
+    method: 'get',
+    path: orbitProfileMonitoring =>
+      `/api/orbitProfileMonitoring/getOne/${orbitProfileMonitoring.id}`,
+    buildEntity: () => getOrbitProfileMonitoring({}, true),
+    expectedStatus: 404,
+    assertSuccess: false,
+    arrange: () => {
+      OrbitProfileMonitoring.findOne.mockResolvedValue(null);
+    },
+    assert: res => {
+      expect(res.body.message).toEqual('Orbit profile monitoring not found');
+      expect(OrbitProfileMonitoring.findOne).toHaveBeenCalledTimes(1);
+    },
   });
 
   it('PUT /:id should update orbit profile monitoring successfully', async () => {
@@ -186,253 +196,209 @@ describe('orbitProfileMonitoring Routes', () => {
     });
   });
 
-  it('DELETE / should delete orbit profile monitorings successfully', async () => {
-    const uuids = getUuids(3);
-    const reqBody = {
-      ids: uuids,
-    };
+  defineMutationCase({
+    title: 'DELETE / should delete orbit profile monitorings successfully',
+    method: 'delete',
+    path: '/api/orbitProfileMonitoring/',
+    buildBody: () => ({ ids: getUuids(3) }),
+    expectedStatus: 200,
+    assertSuccess: true,
+    expectedMessage: 'Orbit profile monitoring deleted successfully',
+    arrange: () => {
+      const mockTransaction = { commit: vi.fn(), rollback: vi.fn() };
+      vi.spyOn(sequelize, 'transaction').mockImplementation(async callback => {
+        return await callback(mockTransaction);
+      });
 
-    // Mock transaction - for callback pattern sequelize.transaction(async t => {...})
-    const mockTransaction = { commit: vi.fn(), rollback: vi.fn() };
-    vi.spyOn(sequelize, 'transaction').mockImplementation(async callback => {
-      return await callback(mockTransaction);
-    });
-
-    OrbitProfileMonitoring.update.mockResolvedValue([3]); // Mock successful update of 3 records
-
-    const res = await request(app)
-      .delete('/api/orbitProfileMonitoring/')
-      .send(reqBody);
-
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(res.body.message).toBe(
-      'Orbit profile monitoring deleted successfully'
-    );
-    expect(res.body.data).toEqual(uuids);
-    expect(sequelize.transaction).toHaveBeenCalled();
-    expect(OrbitProfileMonitoring.update).toHaveBeenCalledWith(
-      {
-        deletedBy: AUTHED_USER_ID,
-        deletedAt: expect.any(Date),
-      },
-      {
-        where: { id: { [Op.in]: uuids } },
-        transaction: mockTransaction,
-      }
-    );
+      OrbitProfileMonitoring.update.mockResolvedValue([3]);
+    },
+    assert: (res, reqBody) => {
+      expect(res.body.data).toEqual(reqBody.ids);
+      expect(sequelize.transaction).toHaveBeenCalled();
+      expect(OrbitProfileMonitoring.update).toHaveBeenCalledWith(
+        {
+          deletedBy: AUTHED_USER_ID,
+          deletedAt: expect.any(Date),
+        },
+        {
+          where: { id: { [Op.in]: reqBody.ids } },
+          transaction: expect.any(Object),
+        }
+      );
+    },
   });
 
-  it('PATCH /toggleStatus should toggle orbit profile monitoring status successfully', async () => {
-    const uuids = getUuids(2);
-    const reqBody = {
-      ids: uuids,
+  defineMutationCase({
+    title:
+      'PATCH /toggleStatus should toggle orbit profile monitoring status successfully',
+    method: 'patch',
+    path: '/api/orbitProfileMonitoring/toggleStatus',
+    buildBody: () => ({
+      ids: getUuids(2),
       isActive: true,
-    };
-
-    const orbitMonitoringOne = getOrbitProfileMonitoring(
-      {
-        id: uuids[0],
-        isActive: false,
-        approvalStatus: APPROVAL_STATUS.APPROVED,
-      },
-      true
-    );
-
-    const orbitMonitoringTwo = getOrbitProfileMonitoring(
-      {
-        id: uuids[1],
-        isActive: false,
-        approvalStatus: APPROVAL_STATUS.APPROVED,
-      },
-      true
-    );
-
-    const updatedMonitoringOne = {
-      ...orbitMonitoringOne,
-      isActive: true,
-      lastUpdatedBy: AUTHED_USER_ID,
-    };
-    const updatedMonitoringTwo = {
-      ...orbitMonitoringTwo,
-      isActive: true,
-      lastUpdatedBy: AUTHED_USER_ID,
-    };
-
-    // Mock first findAll call (checking for approved monitorings)
-    OrbitProfileMonitoring.findAll
-      .mockResolvedValueOnce([orbitMonitoringOne, orbitMonitoringTwo])
-      .mockResolvedValueOnce([updatedMonitoringOne, updatedMonitoringTwo]);
-
-    OrbitProfileMonitoring.update.mockResolvedValue([2]);
-
-    const res = await request(app)
-      .patch('/api/orbitProfileMonitoring/toggleStatus')
-      .send(reqBody);
-
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(res.body.message).toBe('Monitoring status updated successfully');
-    expect(res.body.data).toHaveLength(2);
-    expect(res.body.data[0]).toMatchObject(updatedMonitoringOne);
-    expect(res.body.data[1]).toMatchObject(updatedMonitoringTwo);
-
-    expect(OrbitProfileMonitoring.findAll).toHaveBeenCalledTimes(2);
-    expect(OrbitProfileMonitoring.findAll).toHaveBeenNthCalledWith(1, {
-      where: {
-        id: { [Op.in]: uuids },
-        approvalStatus: APPROVAL_STATUS.APPROVED,
-      },
-    });
-
-    expect(OrbitProfileMonitoring.update).toHaveBeenCalledWith(
-      {
-        isActive: true,
-        lastUpdatedBy: AUTHED_USER_ID,
-      },
-      {
-        where: {
-          id: { [Op.in]: uuids },
+    }),
+    expectedStatus: 200,
+    assertSuccess: true,
+    expectedMessage: 'Monitoring status updated successfully',
+    arrange: reqBody => {
+      const orbitMonitoringOne = getOrbitProfileMonitoring(
+        {
+          id: reqBody.ids[0],
+          isActive: false,
           approvalStatus: APPROVAL_STATUS.APPROVED,
         },
-      }
-    );
-  });
+        true
+      );
 
-  it('PATCH /toggleStatus should return 404 when no eligible orbit profile monitorings found', async () => {
-    const uuids = getUuids(2);
-    const reqBody = {
-      ids: uuids,
-      isActive: true,
-    };
+      const orbitMonitoringTwo = getOrbitProfileMonitoring(
+        {
+          id: reqBody.ids[1],
+          isActive: false,
+          approvalStatus: APPROVAL_STATUS.APPROVED,
+        },
+        true
+      );
 
-    OrbitProfileMonitoring.findAll.mockResolvedValue([]);
-
-    const res = await request(app)
-      .patch('/api/orbitProfileMonitoring/toggleStatus')
-      .send(reqBody);
-
-    expect(res.status).toBe(404);
-    expect(res.body.success).toBe(false);
-    expect(res.body.message).toBe(
-      'No eligible orbit profile monitorings found'
-    );
-
-    expect(OrbitProfileMonitoring.findAll).toHaveBeenCalledWith({
-      where: {
-        id: { [Op.in]: uuids },
-        approvalStatus: APPROVAL_STATUS.APPROVED,
-      },
-    });
-
-    expect(OrbitProfileMonitoring.update).not.toHaveBeenCalled();
-  });
-
-  it('PATCH /evaluate should evaluate orbit profile monitoring successfully', async () => {
-    const uuids = getUuids(2);
-    const reqBody = {
-      ids: uuids,
-      approvalStatus: APPROVAL_STATUS.APPROVED,
-      approverComment: 'Monitoring looks good to go',
-      isActive: true,
-    };
-
-    const orbitMonitoringOne = getOrbitProfileMonitoring(
-      {
-        id: uuids[0],
-        approvalStatus: APPROVAL_STATUS.PENDING,
-      },
-      true
-    );
-
-    const orbitMonitoringTwo = getOrbitProfileMonitoring(
-      {
-        id: uuids[1],
-        approvalStatus: APPROVAL_STATUS.PENDING,
-      },
-      true
-    );
-
-    const mockApprovedAt = new Date();
-
-    const evaluatedMonitoringOne = {
-      ...orbitMonitoringOne,
-      approvalStatus: APPROVAL_STATUS.APPROVED,
-      approverComment: 'Monitoring looks good to go',
-      isActive: true,
-      approvedBy: AUTHED_USER_ID,
-      approvedAt: mockApprovedAt,
-      lastUpdatedBy: AUTHED_USER_ID,
-    };
-
-    const evaluatedMonitoringTwo = {
-      ...orbitMonitoringTwo,
-      approvalStatus: APPROVAL_STATUS.APPROVED,
-      approverComment: 'Monitoring looks good to go',
-      isActive: true,
-      approvedBy: AUTHED_USER_ID,
-      approvedAt: mockApprovedAt,
-      lastUpdatedBy: AUTHED_USER_ID,
-    };
-
-    OrbitProfileMonitoring.update.mockResolvedValue([2]);
-    OrbitProfileMonitoring.findAll.mockResolvedValue([
-      evaluatedMonitoringOne,
-      evaluatedMonitoringTwo,
-    ]);
-
-    const res = await request(app)
-      .patch('/api/orbitProfileMonitoring/evaluate')
-      .send(reqBody);
-
-    expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(res.body.message).toBe(
-      'Orbit profile monitoring approved successfully'
-    );
-    expect(res.body.data).toHaveLength(2);
-    expect(res.body.data[0]).toMatchObject({
-      id: orbitMonitoringOne.id,
-      applicationId: orbitMonitoringOne.applicationId,
-      monitoringName: orbitMonitoringOne.monitoringName,
-      description: orbitMonitoringOne.description,
-      approvalStatus: APPROVAL_STATUS.APPROVED,
-      approverComment: 'Monitoring looks good to go',
-      isActive: true,
-      approvedBy: AUTHED_USER_ID,
-      lastUpdatedBy: AUTHED_USER_ID,
-    });
-    expect(res.body.data[0].approvedAt).toBeTruthy();
-    expect(res.body.data[1]).toMatchObject({
-      id: orbitMonitoringTwo.id,
-      applicationId: orbitMonitoringTwo.applicationId,
-      monitoringName: orbitMonitoringTwo.monitoringName,
-      description: orbitMonitoringTwo.description,
-      approvalStatus: APPROVAL_STATUS.APPROVED,
-      approverComment: 'Monitoring looks good to go',
-      isActive: true,
-      approvedBy: AUTHED_USER_ID,
-      lastUpdatedBy: AUTHED_USER_ID,
-    });
-    expect(res.body.data[1].approvedAt).toBeTruthy();
-
-    expect(OrbitProfileMonitoring.update).toHaveBeenCalledWith(
-      {
-        approverComment: 'Monitoring looks good to go',
-        approvalStatus: APPROVAL_STATUS.APPROVED,
+      const updatedMonitoringOne = {
+        ...orbitMonitoringOne,
         isActive: true,
-        approvedBy: AUTHED_USER_ID,
-        approvedAt: expect.any(Date),
         lastUpdatedBy: AUTHED_USER_ID,
-      },
-      {
-        where: { id: { [Op.in]: uuids } },
-      }
-    );
+      };
+      const updatedMonitoringTwo = {
+        ...orbitMonitoringTwo,
+        isActive: true,
+        lastUpdatedBy: AUTHED_USER_ID,
+      };
 
-    expect(OrbitProfileMonitoring.findAll).toHaveBeenCalledWith({
-      where: { id: { [Op.in]: uuids } },
-      include: expect.any(Array),
-    });
+      OrbitProfileMonitoring.findAll
+        .mockResolvedValueOnce([orbitMonitoringOne, orbitMonitoringTwo])
+        .mockResolvedValueOnce([updatedMonitoringOne, updatedMonitoringTwo]);
+
+      OrbitProfileMonitoring.update.mockResolvedValue([2]);
+    },
+    assert: (res, reqBody) => {
+      expect(res.body.data).toHaveLength(2);
+
+      expect(OrbitProfileMonitoring.findAll).toHaveBeenCalledTimes(2);
+      expect(OrbitProfileMonitoring.findAll).toHaveBeenNthCalledWith(1, {
+        where: {
+          id: { [Op.in]: reqBody.ids },
+          approvalStatus: APPROVAL_STATUS.APPROVED,
+        },
+      });
+
+      expect(OrbitProfileMonitoring.update).toHaveBeenCalledWith(
+        {
+          isActive: true,
+          lastUpdatedBy: AUTHED_USER_ID,
+        },
+        {
+          where: {
+            id: { [Op.in]: reqBody.ids },
+            approvalStatus: APPROVAL_STATUS.APPROVED,
+          },
+        }
+      );
+    },
+  });
+
+  defineMutationCase({
+    title:
+      'PATCH /toggleStatus should return 404 when no eligible orbit profile monitorings found',
+    method: 'patch',
+    path: '/api/orbitProfileMonitoring/toggleStatus',
+    buildBody: () => ({
+      ids: getUuids(2),
+      isActive: true,
+    }),
+    expectedStatus: 404,
+    assertSuccess: false,
+    expectedMessage: 'No eligible orbit profile monitorings found',
+    arrange: () => {
+      OrbitProfileMonitoring.findAll.mockResolvedValue([]);
+    },
+    assert: (_res, reqBody) => {
+      expect(OrbitProfileMonitoring.findAll).toHaveBeenCalledWith({
+        where: {
+          id: { [Op.in]: reqBody.ids },
+          approvalStatus: APPROVAL_STATUS.APPROVED,
+        },
+      });
+
+      expect(OrbitProfileMonitoring.update).not.toHaveBeenCalled();
+    },
+  });
+
+  defineMutationCase({
+    title:
+      'PATCH /evaluate should evaluate orbit profile monitoring successfully',
+    method: 'patch',
+    path: '/api/orbitProfileMonitoring/evaluate',
+    buildBody: () => ({
+      ids: getUuids(2),
+      approvalStatus: APPROVAL_STATUS.APPROVED,
+      approverComment: 'Monitoring looks good to go',
+      isActive: true,
+    }),
+    expectedStatus: 200,
+    assertSuccess: true,
+    expectedMessage: 'Orbit profile monitoring approved successfully',
+    arrange: reqBody => {
+      const evaluatedMonitoringOne = getOrbitProfileMonitoring(
+        {
+          id: reqBody.ids[0],
+          approvalStatus: APPROVAL_STATUS.APPROVED,
+          approverComment: 'Monitoring looks good to go',
+          isActive: true,
+          approvedBy: AUTHED_USER_ID,
+          approvedAt: new Date(),
+          lastUpdatedBy: AUTHED_USER_ID,
+        },
+        true
+      );
+
+      const evaluatedMonitoringTwo = getOrbitProfileMonitoring(
+        {
+          id: reqBody.ids[1],
+          approvalStatus: APPROVAL_STATUS.APPROVED,
+          approverComment: 'Monitoring looks good to go',
+          isActive: true,
+          approvedBy: AUTHED_USER_ID,
+          approvedAt: new Date(),
+          lastUpdatedBy: AUTHED_USER_ID,
+        },
+        true
+      );
+
+      OrbitProfileMonitoring.update.mockResolvedValue([2]);
+      OrbitProfileMonitoring.findAll.mockResolvedValue([
+        evaluatedMonitoringOne,
+        evaluatedMonitoringTwo,
+      ]);
+    },
+    assert: (res, reqBody) => {
+      expect(res.body.data).toHaveLength(2);
+      expect(res.body.data[0].approvedAt).toBeTruthy();
+      expect(res.body.data[1].approvedAt).toBeTruthy();
+
+      expect(OrbitProfileMonitoring.update).toHaveBeenCalledWith(
+        {
+          approverComment: 'Monitoring looks good to go',
+          approvalStatus: APPROVAL_STATUS.APPROVED,
+          isActive: true,
+          approvedBy: AUTHED_USER_ID,
+          approvedAt: expect.any(Date),
+          lastUpdatedBy: AUTHED_USER_ID,
+        },
+        {
+          where: { id: { [Op.in]: reqBody.ids } },
+        }
+      );
+
+      expect(OrbitProfileMonitoring.findAll).toHaveBeenCalledWith({
+        where: { id: { [Op.in]: reqBody.ids } },
+        include: expect.any(Array),
+      });
+    },
   });
 });

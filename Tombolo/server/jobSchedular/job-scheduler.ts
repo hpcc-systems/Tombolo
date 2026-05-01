@@ -30,10 +30,6 @@ import {
   scheduleFileMonitoringBreeJob,
   // scheduleFileMonitoring,
 } from '../jobSchedularMethods/hpccFiles.js';
-import {
-  scheduleEmailNotificationProcessing,
-  //   scheduleTeamsNotificationProcessing,
-} from '../jobSchedularMethods/notificationJobs.js';
 
 import {
   startJobMonitoring,
@@ -154,7 +150,6 @@ class JobScheduler {
     (async () => {
       await this.scheduleClusterTimezoneOffset();
       // await this.scheduleFileMonitoring();
-      await this.scheduleEmailNotificationProcessing();
       await this.startJobMonitoring();
       await this.startIntermediateJobsMonitoring();
       await this.startJobPunctualityMonitoring();
@@ -377,9 +372,6 @@ class JobScheduler {
   }
 
   //Process notification queue
-  scheduleEmailNotificationProcessing(): any {
-    return scheduleEmailNotificationProcessing.call(this);
-  }
 
   // createOrbitMonitoringJob({ orbitMonitoring_id, cron }) {
   //   return createOrbitMonitoringJob.call(this, { orbitMonitoring_id, cron });
