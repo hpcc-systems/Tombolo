@@ -340,8 +340,6 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
 
   const stripSqlFences = (text: string): string => text.replace(/```sql\s*[\s\S]*?```/gi, '').trim();
 
-  const normalizeSqlForComparison = (value: string): string => value.replace(/\s+/g, ' ').trim().toLowerCase();
-
   const isStatementFollowUpRequest = (request: string): boolean =>
     /\b(this|that|same|previous|earlier|above|it)\b.*\b(sql|query|statement)\b|\b(sql|query|statement)\b.*\b(this|that|same|previous|earlier|above|it)\b/i.test(
       request
