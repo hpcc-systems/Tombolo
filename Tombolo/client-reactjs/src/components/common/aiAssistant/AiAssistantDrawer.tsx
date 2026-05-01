@@ -117,6 +117,43 @@ interface PersistedAssistantState {
   promptHistory: string[];
 }
 
+const MAX_PERSISTED_CHAT_MESSAGES = 40;
+const MAX_PERSISTED_PROMPT_HISTORY = 20;
+const MAX_PERSISTED_MESSAGE_CHARS = 4000;
+const MAX_PERSISTED_SQL_CHARS = 4000;
+
+const truncatePersistedText = (value: string, maxChars: number): string => {
+  if (value.length <= maxChars) {
+    return value;
+  }
+
+  return `${value.slice(0, maxChars - 1)}…`;
+};
+
+const trimPersistedChatMessages = (messages: ChatMessage[]): ChatMessage[] =>
+  messages.slice(-MAX_PERSISTED_CHAT_MESSAGES).map(message => ({
+    ...message,
+    content: truncatePersistedText(message.content, MAX_PERSISTED_MESSAGE_CHARS),
+    ...(message.sql
+      ? {
+          sql: truncatePersistedText(message.sql, MAX_PERSISTED_SQL_CHARS),
+        }
+      : {}),
+  }));
+
+const trimPersistedPromptHistory = (history: string[]): string[] =>
+  history
+    .slice(0, MAX_PERSISTED_PROMPT_HISTORY)
+    .map(entry => truncatePersistedText(entry, MAX_PERSISTED_MESSAGE_CHARS));
+
+const buildPersistedAssistantState = (
+  chatMessages: ChatMessage[],
+  promptHistory: string[]
+): PersistedAssistantState => ({
+  chatMessages: trimPersistedChatMessages(chatMessages),
+  promptHistory: trimPersistedPromptHistory(promptHistory),
+});
+
 export interface AiAssistantDrawerProps {
   // Drawer open/close control
   open: boolean;
@@ -290,10 +327,10 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
 
       const parsed = JSON.parse(rawState) as Partial<PersistedAssistantState>;
       const persistedMessages = Array.isArray(parsed.chatMessages)
-        ? parsed.chatMessages.filter(isValidChatMessage)
+        ? trimPersistedChatMessages(parsed.chatMessages.filter(isValidChatMessage))
         : [];
       const persistedPromptHistory = Array.isArray(parsed.promptHistory)
-        ? parsed.promptHistory.filter((entry): entry is string => typeof entry === 'string')
+        ? trimPersistedPromptHistory(parsed.promptHistory.filter((entry): entry is string => typeof entry === 'string'))
         : [];
 
       if (persistedMessages.length > 0) {
@@ -323,12 +360,13 @@ const AiAssistantDrawer: FC<AiAssistantDrawerProps> = ({
       return;
     }
 
-    const persistedState: PersistedAssistantState = {
-      chatMessages,
-      promptHistory,
-    };
+    const persistedState = buildPersistedAssistantState(chatMessages, promptHistory);
 
-    window.localStorage.setItem(storageKey, JSON.stringify(persistedState));
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(persistedState));
+    } catch {
+      // Ignore quota and storage availability issues; keep the live chat usable.
+    }
   }, [chatMessages, promptHistory, storageKey]);
 
   useEffect(() => {
