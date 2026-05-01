@@ -50,6 +50,7 @@ import {
   RollbackOutlined,
   EllipsisOutlined,
   CloseOutlined,
+  MessageOutlined,
 } from '@ant-design/icons';
 import Editor from '@monaco-editor/react';
 import type { Monaco } from '@monaco-editor/react';
@@ -64,6 +65,7 @@ import { handleError, handleSuccess } from '@/components/common/handleResponse';
 import { getSqlErrorForToast } from '@/components/common/sqlError';
 import QUERY_TEMPLATES from './queryTemplates';
 import ChartModal from './ChartModal';
+import AiAssistantDrawer from '@/components/common/aiAssistant/AiAssistantDrawer';
 import { disposeSqlAutocomplete, registerSqlAutocomplete } from '@/components/common/sqlAutocomplete';
 
 import type { editor as MonacoEditor } from 'monaco-editor';
@@ -277,6 +279,7 @@ const AnalyticsWorkspace = () => {
   const [sqlWhenBuilderOpened, setSqlWhenBuilderOpened] = useState('');
   const [appliedFilterId, setAppliedFilterId] = useState<string | null>(null);
   const [isQueryExecuted, setIsQueryExecuted] = useState(false);
+  const [assistantDrawerOpen, setAssistantDrawerOpen] = useState(false);
   const isQueryExecutedRef = useRef(false);
   const [hasWhereClauseInEditor, setHasWhereClauseInEditor] = useState(() => hasWhere(DEFAULT_SQL));
   const [querySqlToSave, setQuerySqlToSave] = useState('');
@@ -497,8 +500,8 @@ const AnalyticsWorkspace = () => {
   }, [whereClauses, filterBuilderVisible, sqlWhenBuilderOpened, getCurrentSql, setEditorSql]);
 
   // Execute SQL query
-  const executeQuery = async () => {
-    const currentSql = getCurrentSql();
+  const executeQueryWithText = async (sqlText: string) => {
+    const currentSql = sqlText;
     const sanitizedCurrentSql = stripSqlEditorPlaceholder(currentSql);
     const sqlForSavedArtifacts = sanitizedCurrentSql || currentSql.trim();
 
@@ -518,7 +521,7 @@ const AnalyticsWorkspace = () => {
       const result = await apiClient.post(
         '/workunitAnalytics/query',
         {
-          sql: currentSql,
+          sql: sqlForSavedArtifacts,
           options: {},
         },
         {
@@ -588,6 +591,28 @@ const AnalyticsWorkspace = () => {
     } finally {
       abortControllerRef.current = null;
       setIsExecuting(false);
+    }
+  };
+
+  const executeQuery = async () => {
+    await executeQueryWithText(getCurrentSql());
+  };
+
+  const applySuggestedSql = async (suggestedSql: string, shouldExecute: boolean) => {
+    const normalizedSql = suggestedSql.trim();
+    if (!normalizedSql) {
+      handleError('No SQL found in assistant response');
+      return;
+    }
+
+    setEditorSql(normalizedSql);
+    setIsQueryExecuted(false);
+    if (!shouldExecute) {
+      handleSuccess('Added SQL to editor');
+    }
+
+    if (shouldExecute) {
+      await executeQueryWithText(normalizedSql);
     }
   };
 
@@ -1703,6 +1728,14 @@ const AnalyticsWorkspace = () => {
               onClick={() => setRightCollapsed(!rightCollapsed)}
             />
           </Tooltip>
+          <Tooltip title="Open SQL Assistant" placement="bottom">
+            <Button
+              type="text"
+              className={`${styles.sidebarToggleBtn} ${assistantDrawerOpen ? styles.sidebarToggleBtnActive : ''}`}
+              icon={<MessageOutlined />}
+              onClick={() => setAssistantDrawerOpen(true)}
+            />
+          </Tooltip>
         </Space>
       </div>
       <div className={styles.analyticsWorkspace}>
@@ -1861,6 +1894,15 @@ const AnalyticsWorkspace = () => {
                       size="small"
                       icon={<ClearOutlined />}
                       onClick={clearEditor}
+                      className={styles.editorActionBtn}
+                    />
+                  </Tooltip>
+                  <Tooltip title="Ask SQL Assistant">
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<QuestionCircleOutlined />}
+                      onClick={() => setAssistantDrawerOpen(true)}
                       className={styles.editorActionBtn}
                     />
                   </Tooltip>
@@ -2099,6 +2141,16 @@ const AnalyticsWorkspace = () => {
 
         {/* Chart Modal */}
         <ChartModal visible={chartModalVisible} onClose={() => setChartModalVisible(false)} data={queryResults} />
+
+        <AiAssistantDrawer
+          open={assistantDrawerOpen}
+          onClose={() => setAssistantDrawerOpen(false)}
+          schemaData={schemaData}
+          currentEditorSql={getCurrentSql()}
+          assistantContext="Tombolo workunits analytics. Prefer queries on work_units, work_unit_details, and clusters."
+          initialMessage="SQL Assistant is ready. Ask in plain English and I will generate query suggestions from known schema only."
+          onApplySql={applySuggestedSql}
+        />
       </div>
     </div>
   );

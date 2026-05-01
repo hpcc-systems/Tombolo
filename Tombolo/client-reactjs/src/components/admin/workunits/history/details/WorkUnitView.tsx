@@ -8,6 +8,8 @@ import {
   FieldTimeOutlined,
   FileTextOutlined,
   HistoryOutlined,
+  ReloadOutlined,
+  RobotOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
@@ -47,6 +49,7 @@ const WorkUnitView: React.FC<Props> = ({ wu, details, inputFiles, outputFiles, c
 
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [historyFilter, setHistoryFilter] = useState<'all' | 'completed'>('all');
+  const [sqlAssistantOpenRequest, setSqlAssistantOpenRequest] = useState(0);
   return (
     <div className={`${styles.pageContainer} ${styles.pageBgLighter}`}>
       <Tabs
@@ -55,11 +58,18 @@ const WorkUnitView: React.FC<Props> = ({ wu, details, inputFiles, outputFiles, c
         activeKey={activeTab}
         onChange={setActiveTab}
         tabBarExtraContent={
-          onRefresh && (
-            <Button onClick={onRefresh} type="primary">
-              Refresh
-            </Button>
-          )
+          <Space>
+            {onRefresh && (
+              <Button onClick={onRefresh} type="primary" icon={<ReloadOutlined />}>
+                Refresh
+              </Button>
+            )}
+            {activeTab === 'sql' && isAdminOrOwner && (
+              <Button icon={<RobotOutlined />} onClick={() => setSqlAssistantOpenRequest(count => count + 1)}>
+                SQL Assistant
+              </Button>
+            )}
+          </Space>
         }>
         <TabPane
           tab={
@@ -213,7 +223,13 @@ const WorkUnitView: React.FC<Props> = ({ wu, details, inputFiles, outputFiles, c
               </span>
             }
             key="sql">
-            <SqlPanel wu={wu} clusterId={wu.clusterId} wuid={wu.wuId} clusterName={clusterName} />
+            <SqlPanel
+              wu={wu}
+              clusterId={wu.clusterId}
+              wuid={wu.wuId}
+              clusterName={clusterName}
+              assistantOpenRequest={sqlAssistantOpenRequest}
+            />
           </TabPane>
         )}
       </Tabs>

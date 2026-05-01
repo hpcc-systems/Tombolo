@@ -1,0 +1,257 @@
+.chatHintCard {
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.chatDrawerTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.chatDrawerTitleContent {
+  min-width: 0;
+}
+
+.chatDrawerMenuButton {
+  flex-shrink: 0;
+}
+
+.chatDrawerBody {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 100px);
+  margin-bottom: 1rem;
+}
+
+.chatMessagesWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+  margin-bottom: 12px;
+  /* background: blue; */
+}
+
+.chatMessageRow {
+  display: flex;
+}
+
+.chatMessageUser {
+  justify-content: flex-end;
+}
+
+.chatMessageAssistant {
+  justify-content: flex-start;
+}
+
+.chatMessageCard {
+  max-width: 92%;
+}
+
+.chatMessageCard :global(.ant-card-body) {
+  padding: 8px 10px;
+}
+
+.chatMessageWithSql .chatMessageCard {
+  width: 100%;
+  max-width: 100%;
+}
+
+.chatMessageUser .chatMessageCard {
+  background: var(--light);
+  border-color: var(--secondary-light);
+  overflow: visible;
+}
+
+.chatMessageUser .chatMessageCard :global(.ant-typography) {
+  font-weight: 500;
+}
+
+.chatUserMessageHeader {
+  position: relative;
+}
+
+.chatUserMessageActions {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+  z-index: 2;
+}
+
+.chatMessageUser:hover .chatUserMessageActions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.chatPromptActionButton {
+  border: 1px solid var(--secondary-light);
+  background: var(--white, #fff);
+  color: var(--text, #222);
+}
+
+.chatPromptActionButton:hover,
+.chatPromptActionButton:focus {
+  border-color: var(--primary, #1677ff);
+  color: var(--primary, #1677ff);
+}
+
+.chatUserEditInput {
+  width: 100%;
+}
+
+.chatUserEditActions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.chatMessageAssistant .chatMessageCard {
+  background: var(--white, #fff);
+  border: none;
+  box-shadow: none;
+  width: 100%;
+  max-width: 100%;
+}
+
+.chatMessageResultSet {
+  border-left: 3px solid var(--primary, #1677ff) !important;
+  background: #f6f8ff !important;
+}
+
+.chatMessageResultSet :global(.ant-typography) {
+  font-family: monospace;
+  font-size: 11px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.chatSqlEditorWrap {
+  position: relative;
+  width: 100%;
+  margin-top: 10px;
+  min-height: 58px;
+  /* border: 1px solid var(--secondary-light); */
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.chatMessageWithSql .chatSqlEditorWrap {
+  width: 100%;
+}
+
+.chatSqlEditorActions {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: flex;
+  gap: 6px;
+  z-index: 10;
+}
+
+.thinkingDots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 4px 0;
+}
+
+.thinkingDots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary, #1677ff);
+  animation: thinkingBounce 1.2s ease-in-out infinite;
+}
+
+.thinkingDots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.thinkingDots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes thinkingBounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.chatInputBar {
+  display: flex;
+  /* border-top: 1px solid var(--secondary-light); */
+  padding-top: 10px;
+  background: var(--light);
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+}
+
+.chatComposer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid var(--primary);
+  border-radius: 10px;
+  background: var(--white, #fff);
+  padding: 6px 8px;
+}
+
+.chatComposerInput {
+  width: 100%;
+}
+
+.chatComposerInput :global(textarea) {
+  resize: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 6px 0 !important;
+}
+
+.chatComposerFooter {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: 100%;
+  min-height: 24px;
+}
+
+.chatLeftControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.chatSendButton {
+  min-width: 24px;
+  width: 24px;
+  height: 24px;
+}
+
+.chatModelSelect {
+  width: 200px;
+  font-size: 12px;
+}

@@ -4,6 +4,7 @@ import { getReadOnlySequelize } from '@tombolo/db';
 import { sendSuccess, sendError } from '../utils/response.js';
 import logger from '../config/logger.js';
 import { activityKindLabels } from '@tombolo/shared';
+import { buildAssistantContext, askAssistant } from '../ai/service.js';
 import type { Select } from 'node-sql-parser';
 import {
   applyScopeToSelect,
@@ -108,6 +109,48 @@ interface SchemaColumnRow {
   description: string;
   ORDINAL_POSITION: number;
   keyType: 'PRI' | 'FK' | 'MUL' | null;
+}
+
+function extractFirstJsonObject(text: string): string | null {
+  const start = text.indexOf('{');
+  if (start === -1) {
+    return null;
+  }
+
+  let depth = 0;
+  let inString = false;
+  let isEscaped = false;
+
+  for (let index = start; index < text.length; index += 1) {
+    const char = text[index];
+
+    if (inString) {
+      if (isEscaped) {
+        isEscaped = false;
+      } else if (char === '\\') {
+        isEscaped = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (char === '"') {
+      inString = true;
+      continue;
+    }
+
+    if (char === '{') {
+      depth += 1;
+    } else if (char === '}') {
+      depth -= 1;
+      if (depth === 0) {
+        return text.slice(start, index + 1);
+      }
+    }
+  }
+
+  return null;
 }
 
 type ColumnSortFamily =
@@ -448,11 +491,8 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
         }
       )) as Array<{ id: number }>;
       connectionId = connIdRows[0]?.id ?? null;
-    } catch (connIdErr) {
-      logger.debug(
-        'Could not retrieve CONNECTION_ID, cancellation will be unavailable:',
-        connIdErr
-      );
+    } catch {
+      // CONNECTION_ID can fail on some connection states; cancellation is best-effort.
     }
 
     // Always attach a close listener so isCancelled is set regardless of whether
@@ -476,13 +516,10 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
         readOnlySequelize
           .query(`KILL QUERY ${connectionId}`)
           .then(() => {
-            logger.debug(
-              `Cancelled analytics query on MySQL connection ${connectionId}`
-            );
+            // best-effort cancellation
           })
-          .catch(killErr => {
+          .catch(() => {
             // ER_NO_SUCH_THREAD (1094) fires when the query already finished — safe to ignore.
-            logger.debug('KILL QUERY result (may be harmless):', killErr);
           });
       }
     };
@@ -496,7 +533,6 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
     try {
       rows = (await readOnlySequelize.query(finalSql, {
         type: QueryTypes.SELECT,
-        logging: sql => logger.debug('Analytics query:', sql),
         transaction: t,
       })) as Record<string, unknown>[];
     } finally {
@@ -504,11 +540,8 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
       // releases the connection back to the pool.
       try {
         await t.rollback();
-      } catch (rbErr) {
-        logger.debug(
-          'Transaction rollback error (may be harmless after kill):',
-          rbErr
-        );
+      } catch {
+        // rollback may fail if connection was already terminated
       }
     }
 
@@ -529,15 +562,6 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
       outputToSourceColumnMap
     );
 
-    logger.debug('Activity kind mapping analysis', {
-      ...logContext,
-      aliasMapSize: activityKindMappingStats.aliasMapSize,
-      aliasMap: outputToSourceColumnMap,
-      kindOutputColumns: activityKindMappingStats.kindOutputColumns,
-      mappedRows: activityKindMappingStats.mappedRows,
-      mappedCells: activityKindMappingStats.mappedCells,
-    });
-
     // Extract column names
     const columns =
       Array.isArray(rows) && rows.length > 0 ? Object.keys(rows[0]) : [];
@@ -556,6 +580,7 @@ async function executeAnalyticsQuery(req: Request, res: Response) {
       columnCount: columns.length,
       unresolvedTypeColumns: unresolvedColumns,
       unresolvedTypeCount: unresolvedColumns.length,
+      activityKindMappingStats,
     });
 
     logger.info('Analytics SQL query completed', {
@@ -890,4 +915,51 @@ async function getDatabaseStats(req: Request, res: Response) {
   }
 }
 
-export { executeAnalyticsQuery, getSchema, getScopedSchema, getDatabaseStats };
+/**
+ * NL -> SQL and schema Q&A assistant powered by Azure OpenAI
+ */
+async function askAnalyticsAssistant(req: Request, res: Response) {
+  try {
+    const message = String(req.body.message || '').trim();
+    const assistantContext = String(req.body.assistantContext || '');
+    const knowledgeBase = String(req.body.knowledgeBase || '');
+
+    const context = buildAssistantContext({
+      message,
+      assistantContext,
+      knowledgeBase,
+      rawSchemaData: req.body.schemaData || {},
+      rawHistory: req.body.conversationHistory || [],
+    });
+
+    if (!context) {
+      return sendError(
+        res,
+        'Azure OpenAI is not configured. Set AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_DEPLOYMENT, and AZURE_OPENAI_API_VERSION.',
+        500
+      );
+    }
+
+    const result = await askAssistant(context);
+    return sendSuccess(res, result);
+  } catch (err: unknown) {
+    const typedErr = err as {
+      response?: { data?: { error?: { message?: string } } };
+      message?: string;
+    };
+    logger.error('Analytics assistant error:', err);
+    const message =
+      typedErr?.response?.data?.error?.message ||
+      typedErr?.message ||
+      'Failed to generate assistant response';
+    return sendError(res, message, 502);
+  }
+}
+
+export {
+  executeAnalyticsQuery,
+  getSchema,
+  getScopedSchema,
+  getDatabaseStats,
+  askAnalyticsAssistant,
+};
